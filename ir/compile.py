@@ -63,6 +63,29 @@ def validate(ir: dict) -> None:
     _require(ir.get("mechanism") in MECHANISM, f"bad mechanism: {ir.get('mechanism')}")
     _require(ir.get("action") == "block", "action must be 'block'")
 
+    ttl = ir.get("ttl_s", 86400)
+    _require(isinstance(ttl, int) and 60 <= ttl <= 2592000, "ttl_s out of range")
+
+    sc = ir.get("scope", {})
+    _require(isinstance(sc, dict), "scope must be an object")
+    if "endpoint_prefix" in sc:
+        _require(isinstance(sc["endpoint_prefix"], str) and len(sc["endpoint_prefix"]) <= 200,
+                 "bad endpoint_prefix")
+        _require('"' not in sc["endpoint_prefix"], "endpoint_prefix may not contain quotes")
+    for meth in sc.get("methods", []):
+        _require(meth in METHODS, f"bad method: {meth}")
+
+    # Rate-limit rules are stateful and have no payload match; validate the rate
+    # block and the (required) scope instead, then return.
+    if ir["mechanism"] == "rate_limit":
+        rate = ir.get("rate")
+        _require(isinstance(rate, dict), "rate_limit needs a rate block")
+        _require(isinstance(rate.get("count"), int) and rate["count"] >= 1, "rate.count >= 1")
+        _require(isinstance(rate.get("window_s"), int) and rate["window_s"] >= 1, "rate.window_s >= 1")
+        _require(ir.get("key", "actor") == "actor", "rate_limit key must be 'actor'")
+        _require(bool(sc.get("endpoint_prefix")), "rate_limit needs scope.endpoint_prefix")
+        return
+
     m = ir.get("match")
     _require(isinstance(m, dict), "match required")
     _require(m.get("target") in TARGET, f"bad target: {m.get('target')}")
@@ -80,23 +103,25 @@ def validate(ir: dict) -> None:
     if m["operator"] in ("gt", "ge"):
         _require(str(val).lstrip("-").isdigit(), "gt/ge value must be numeric")
 
-    sc = ir.get("scope", {})
-    _require(isinstance(sc, dict), "scope must be an object")
-    if "endpoint_prefix" in sc:
-        _require(isinstance(sc["endpoint_prefix"], str) and len(sc["endpoint_prefix"]) <= 200,
-                 "bad endpoint_prefix")
-        _require('"' not in sc["endpoint_prefix"], "endpoint_prefix may not contain quotes")
-    for meth in sc.get("methods", []):
-        _require(meth in METHODS, f"bad method: {meth}")
-
-    ttl = ir.get("ttl_s", 86400)
-    _require(isinstance(ttl, int) and 60 <= ttl <= 2592000, "ttl_s out of range")
-
-    if ir["mechanism"] == "rate_limit":
-        _require(isinstance(ir.get("rate"), dict), "rate_limit needs a rate block")
-
     # No quotes in the value that could break out of the SecRule operator arg.
     _require('"' not in str(val), "match.value may not contain a double quote")
+
+
+def compile_rate(ir: dict) -> dict:
+    """Compile a validated rate_limit IR to the gateway-native rate-rule spec
+    (NOT a SecRule -- rate limiting is stateful, enforced by the gateway's
+    per-actor sliding-window limiter, keyed on the session fingerprint)."""
+    validate(ir)
+    _require(ir["mechanism"] == "rate_limit", "compile_rate is only for rate_limit")
+    sc = ir.get("scope", {})
+    return {
+        "id": ir["id"], "numeric_id": numeric_id(ir), "attack_class": ir["attack_class"],
+        "endpoint_prefix": sc["endpoint_prefix"],
+        "methods": sc.get("methods") or ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        "count": ir["rate"]["count"], "window_s": ir["rate"]["window_s"],
+        "ttl_s": ir.get("ttl_s", 86400),
+        "description": ir.get("description", f"rate-limit {ir['attack_class']}"),
+    }
 
 
 def numeric_id(ir: dict) -> int:

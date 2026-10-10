@@ -34,6 +34,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -86,6 +87,86 @@ type Record struct {
 	FailOpen    bool   `json:"fail_open"`
 	FailReason  string `json:"fail_reason,omitempty"`
 	Mode        string `json:"mode"`
+	RateRule    string `json:"rate_rule,omitempty"`
+}
+
+// rateRule is one gateway-native rate limit, compiled from a rate_limit IR by
+// ir/compile.compile_rate. Enforced per actor (session) with a sliding window.
+type rateRule struct {
+	ID             string   `json:"id"`
+	AttackClass    string   `json:"attack_class"`
+	EndpointPrefix string   `json:"endpoint_prefix"`
+	Methods        []string `json:"methods"`
+	Count          int      `json:"count"`
+	WindowS        int      `json:"window_s"`
+}
+
+func (rr rateRule) matches(method, path string) bool {
+	if !strings.HasPrefix(path, rr.EndpointPrefix) {
+		return false
+	}
+	if len(rr.Methods) == 0 {
+		return true
+	}
+	for _, m := range rr.Methods {
+		if m == method {
+			return true
+		}
+	}
+	return false
+}
+
+// rateLimiter holds per-(actor,rule) hit timestamps and the same sliding-window
+// logic the gate validates (gate/ratelimit.py). Mirror the two deliberately.
+type rateLimiter struct {
+	mu    sync.Mutex
+	rules []rateRule
+	hits  map[string][]time.Time
+}
+
+// check reports whether this request exceeds any rate rule for this actor. It
+// records the hit first, then counts the trailing window: block the (count+1)-th
+// and beyond. Returns the offending rule id, or "" if within limits.
+func (rl *rateLimiter) check(actor, method, path string) string {
+	if rl == nil || len(rl.rules) == 0 {
+		return ""
+	}
+	now := time.Now()
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	for i := range rl.rules {
+		rr := rl.rules[i]
+		if !rr.matches(method, path) {
+			continue
+		}
+		key := actor + "\x00" + rr.ID
+		win := append(rl.hits[key], now)
+		cutoff := now.Add(-time.Duration(rr.WindowS) * time.Second)
+		j := 0
+		for ; j < len(win); j++ {
+			if win[j].After(cutoff) {
+				break
+			}
+		}
+		win = win[j:]
+		rl.hits[key] = win
+		if len(win) > rr.Count {
+			return rr.ID
+		}
+	}
+	return ""
+}
+
+func loadRateRules(path string) ([]rateRule, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var rules []rateRule
+	if err := json.Unmarshal(b, &rules); err != nil {
+		return nil, err
+	}
+	return rules, nil
 }
 
 type gateway struct {
@@ -93,6 +174,7 @@ type gateway struct {
 	proxy   *httputil.ReverseProxy
 	logs    chan Record
 	enforce bool
+	rl      *rateLimiter
 	dropped atomic.Int64
 }
 
@@ -292,6 +374,15 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rec.BodyLen = int(r.ContentLength)
 	}
 
+	// Rate-limit check (stateful, per-actor). Independent of the WAF; a panic
+	// here must not take the app down, so guard it and fail open.
+	rateHit := ""
+	func() {
+		defer func() { _ = recover() }()
+		rateHit = g.rl.check(rec.Session, r.Method, r.URL.Path)
+	}()
+	rec.RateRule = rateHit
+
 	var it *types.Interruption
 	if !rec.FailOpen {
 		wafStart := time.Now()
@@ -305,7 +396,13 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sw := &statusWriter{ResponseWriter: w}
-	if it != nil && g.enforce {
+	switch {
+	case rateHit != "" && g.enforce:
+		rec.Blocked = true
+		sw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		sw.WriteHeader(http.StatusTooManyRequests)
+		fmt.Fprintf(sw, "Rate limit exceeded (AEGIS %s, ref %s)\n", rateHit, rec.ID)
+	case it != nil && g.enforce:
 		status := it.Status
 		if status == 0 {
 			status = http.StatusForbidden
@@ -314,7 +411,7 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sw.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		sw.WriteHeader(status)
 		fmt.Fprintf(sw, "Request blocked by AEGIS (ref %s)\n", rec.ID)
-	} else {
+	default:
 		g.proxy.ServeHTTP(sw, r)
 	}
 
@@ -357,6 +454,7 @@ func main() {
 	logPath := flag.String("log", "logs/gateway/requests.jsonl", "request log (JSONL, appended)")
 	mode := flag.String("mode", "enforce", "enforce = block on CRS verdict; detect = log verdict, never block")
 	rules := flag.String("rules", "", "optional extra rules file (loaded after CRS)")
+	rateRulesPath := flag.String("raterules", "", "optional JSON file of AEGIS rate-limit rules")
 	flag.Parse()
 
 	if *mode != "enforce" && *mode != "detect" {
@@ -382,7 +480,18 @@ func main() {
 		w.WriteHeader(http.StatusBadGateway)
 	}
 
-	g := &gateway{waf: waf, proxy: proxy, logs: make(chan Record, 8192), enforce: *mode == "enforce"}
+	var rl *rateLimiter
+	if *rateRulesPath != "" {
+		rrules, err := loadRateRules(*rateRulesPath)
+		if err != nil {
+			log.Fatalf("load rate rules: %v", err)
+		}
+		rl = &rateLimiter{rules: rrules, hits: make(map[string][]time.Time)}
+		log.Printf("loaded %d rate-limit rule(s) from %s", len(rrules), *rateRulesPath)
+	}
+
+	g := &gateway{waf: waf, proxy: proxy, logs: make(chan Record, 8192),
+		enforce: *mode == "enforce", rl: rl}
 	go writeLogs(*logPath, g.logs)
 
 	srv := &http.Server{

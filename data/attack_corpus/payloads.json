@@ -45,23 +45,11 @@
   "credentials": [
     [
       "admin@juice-sh.op",
-      "admin123"
-    ],
-    [
-      "admin@juice-sh.op",
       "password"
     ],
     [
       "admin@juice-sh.op",
       "123456"
-    ],
-    [
-      "jim@juice-sh.op",
-      "ncc-1701"
-    ],
-    [
-      "bender@juice-sh.op",
-      "OhGod10%close"
     ],
     [
       "test@test.com",
@@ -82,6 +70,18 @@
     [
       "admin@juice-sh.op",
       "qwerty"
+    ],
+    [
+      "admin@juice-sh.op",
+      "admin123"
+    ],
+    [
+      "jim@juice-sh.op",
+      "ncc-1701"
+    ],
+    [
+      "bender@juice-sh.op",
+      "OhGod10%close"
     ]
   ],
   "seed_users": [

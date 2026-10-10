@@ -29,3 +29,7 @@ Thumbs.db
 # generated candidate rules & run metrics (regenerable)
 rules/generated/*.json
 eval/metrics.jsonl
+
+# campaign memory database (regenerable)
+memory/*.db
+logs/ab_*.txt

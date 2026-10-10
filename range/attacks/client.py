@@ -103,7 +103,7 @@ class Actor:
             err = f"{type(e).__name__}: {e}"
         elapsed = (time.time() - t0) * 1000
 
-        blocked = status == 403
+        blocked = status in (403, 429)
         self.fired += 1
         self.blocked_count += blocked
         if self.out is not None:

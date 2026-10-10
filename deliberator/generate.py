@@ -108,7 +108,7 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # credential_stuffing / user_enumeration / idor_bola -> rate_limit
         # mechanism, whose compilation is deferred (M2b). Emit the IR so the
         # record exists and the gate explicitly reports it as not-yet-compilable.
-        c.append(_rate_ir(attack_class, dossier))
+        c.extend(_rate_ir(attack_class, dossier))
 
     return c
 
@@ -130,16 +130,25 @@ def _ir(cls: str, n: int, mechanism: str, target: str, operator: str, value: str
     return ir
 
 
-def _rate_ir(cls: str, dossier: dict) -> dict:
-    counts = {"credential_stuffing": (5, 60), "user_enumeration": (5, 60),
-              "idor_bola": (10, 30)}
-    n, w = counts.get(cls, (10, 60))
-    return {
-        "id": f"aegis-{cls}-1", "description": f"rate-limit {cls}",
-        "attack_class": cls, "mechanism": "rate_limit", "action": "block",
-        "ttl_s": 86400, "rate": {"count": n, "window_s": w},
-        "match": {"target": "uri", "operator": "contains", "value": "/"},
+def _rate_ir(cls: str, dossier: dict) -> list[dict]:
+    """Rate-limit candidates, scoped to the endpoint(s) the campaign abused.
+    Two specificities so the gate can choose: a tight count and a looser one."""
+    cfg = {
+        "credential_stuffing": ("/rest/user/login", ["POST"], [(5, 60), (10, 60)]),
+        "user_enumeration": ("/rest/user/security-question", ["GET"], [(5, 60), (8, 120)]),
+        "idor_bola": ("/rest/basket", ["GET"], [(8, 30), (15, 60)]),
     }
+    endpoint, methods, rates = cfg.get(cls, ("/rest", ["GET", "POST"], [(10, 60)]))
+    out = []
+    for i, (n, w) in enumerate(rates, 1):
+        out.append({
+            "id": f"aegis-{cls}-{i}", "description": f"rate-limit {cls}: >{n} req/{w}s to {endpoint}",
+            "attack_class": cls, "mechanism": "rate_limit", "action": "block",
+            "ttl_s": 86400, "key": "actor",
+            "scope": {"endpoint_prefix": endpoint, "methods": methods},
+            "rate": {"count": n, "window_s": w},
+        })
+    return out
 
 
 def main() -> int:

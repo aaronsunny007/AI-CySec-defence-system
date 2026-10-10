@@ -8,7 +8,8 @@
 param(
     [ValidateSet("enforce", "detect")] [string]$Mode = "enforce",
     [string]$JuiceShop = "$env:USERPROFILE\tools\juice-shop",
-    [string]$Rules = ""   # optional extra candidate rule file loaded after CRS
+    [string]$Rules = "",      # optional extra candidate rule file loaded after CRS
+    [string]$RateRules = ""   # optional AEGIS rate-limit rules JSON
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -40,6 +41,11 @@ if ($Rules -ne "") {
     Write-Host "Starting gateway (mode=$Mode, +candidate rules $Rules) ..."
 } else {
     Write-Host "Starting gateway (mode=$Mode) ..."
+}
+if ($RateRules -ne "") {
+    if (-not (Test-Path $RateRules)) { Stop-Process -Id $js.Id -Force; Write-Host "rate rules file not found: $RateRules"; exit 1 }
+    $gwArgs += " -raterules `"$RateRules`""
+    Write-Host "  + rate-limit rules: $RateRules"
 }
 $g = Start-Process $gw -ArgumentList $gwArgs -WorkingDirectory $root -PassThru -WindowStyle Hidden `
     -RedirectStandardOutput "$logs\gateway.out.log" -RedirectStandardError "$logs\gateway.err.log"

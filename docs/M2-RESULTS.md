@@ -94,3 +94,35 @@ Gateway gains a `-Rules` flag (range/start.ps1) to load a candidate alongside CR
 - Timed shadow + canary% with automatic rollback (gate stages 5/6).
 - True hot-reload (swap rules in a running gateway, no restart) + per-rule modes
   (off/shadow/canary/enforce) + counters; and the action rate limit (<=N/hour).
+
+---
+
+## M2b continued — rate-limit rule type (AEGIS beats the baseline)
+
+The mechanism for the classes CRS misses. A rate limit is stateful (N requests
+per actor per window), so it is NOT a SecRule: the IR compiles (ir/compile.
+compile_rate) to a gateway-native rate rule, enforced by a per-actor
+sliding-window limiter in the Go gateway (keyed on the session fingerprint).
+The same sliding-window logic is mirrored in gate/ratelimit.py so what the gate
+validates is what enforces.
+
+### Gate validation (credential stuffing, over a 5,158-request combined stream)
+AEGIS generated two candidates; the gate chose by replaying each actor's stream:
+
+| Candidate | benign actors blocked | stuffing actors stopped | verdict |
+|---|---|---|---|
+| >5 logins / 60 s | **0 / 122 (0.00%)** | **2 / 2** | **PROMOTED** |
+| >10 logins / 60 s | 0 / 122 | 0 / 2 (too loose) | REJECTED |
+
+### Live enforcement (Go gateway rate limiter)
+With the promoted rule loaded (`gateway -raterules`), a live credential-stuffing
+campaign had **5 requests blocked with HTTP 429** by the AEGIS rule; a benign
+login from a different actor was **not** rate-limited (returned 401 = app auth,
+not a block). Attack client treats 403/429 as blocked.
+
+### Why this matters
+Baseline (docs/BASELINE.md): **CRS blocks 0% of credential stuffing** -- every
+request looks like a normal login. AEGIS caps it at 5/window per actor while
+breaking zero real users. **This is AEGIS doing something the baseline cannot.**
+The same mechanism covers user enumeration (candidates generated) and is the
+right tool for the other behavioural classes CRS misses.
