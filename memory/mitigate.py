@@ -64,8 +64,14 @@ def _quick_blocks(ir: dict, campaign_requests: list[dict], tmp: Path) -> bool:
     return res["total"] > 0 and res["matched"] == res["total"]
 
 
+# Action rate limit on AEGIS itself (invariant 7): at most this many NEW
+# enforcing rules promoted per hour. Reuse/generalise do not count -- they
+# deploy an already-proven rule, so they are always allowed.
+MAX_NEW_RULES_PER_HOUR = 10
+
+
 def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
-             mem: Memory) -> dict:
+             mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR) -> dict:
     cls = (dossier.get("techniques") or [dossier.get("attack_class", "")])[0]
     campaign_id, sig = mem.record_campaign(dossier)
     t0 = time.perf_counter()
@@ -89,7 +95,16 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
                 mem.record_outcome(campaign_id, "generalised", ir["id"], ttm)
                 return {"source": "generalised", "rule": ir["id"], "ttm_s": ttm, "signature": sig}
 
-        # 3) fresh synthesis + full gate
+        # 3) fresh synthesis + full gate -- but first the action rate limit:
+        # a fresh rule is a NEW enforcing action, so it is capped per hour.
+        recent = mem.promotions_since(time.time() - 3600)
+        if recent >= max_new_per_hour:
+            ttm = time.perf_counter() - t0
+            mem.record_outcome(campaign_id, "governor_blocked", None, ttm)
+            return {"source": "governor_blocked", "rule": None, "ttm_s": ttm,
+                    "signature": sig, "detail": f"{recent} rules promoted in last hour "
+                    f">= cap {max_new_per_hour}; new synthesis refused"}
+
         candidates = deliberator.candidates_for(cls, dossier)
         promoted = None
         for ir in candidates:

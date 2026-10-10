@@ -37,13 +37,17 @@ CREATE TABLE IF NOT EXISTS candidates (
     campaign_id INTEGER, ir_id TEXT, mechanism TEXT, verdict TEXT,
     rejected_at TEXT, stages TEXT);
 CREATE TABLE IF NOT EXISTS rules (
-    ir_id TEXT PRIMARY KEY, signature TEXT, attack_class TEXT, mechanism TEXT,
+    ir_id TEXT PRIMARY KEY, attack_class TEXT, mechanism TEXT,
     ir TEXT, status TEXT, promoted_ts REAL, last_matched_ts REAL,
     match_count INTEGER DEFAULT 0, ttl_s INTEGER);
+-- one rule can defend many campaign signatures (repeats + variants), so the
+-- signature->rule mapping is its own table, not a column on rules.
+CREATE TABLE IF NOT EXISTS rule_signatures (
+    signature TEXT PRIMARY KEY, ir_id TEXT, ts REAL);
 CREATE TABLE IF NOT EXISTS outcomes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     campaign_id INTEGER, source TEXT, rule_ir_id TEXT, ttm_s REAL, ts REAL);
-CREATE INDEX IF NOT EXISTS idx_rules_sig ON rules(signature);
+CREATE INDEX IF NOT EXISTS idx_rulesig ON rule_signatures(signature);
 CREATE INDEX IF NOT EXISTS idx_rules_class ON rules(attack_class);
 """
 
@@ -87,12 +91,17 @@ class Memory:
         self.con.commit()
 
     def promote_rule(self, ir: dict, sig: str) -> None:
+        now = time.time()
         self.con.execute(
-            "INSERT OR REPLACE INTO rules(ir_id,signature,attack_class,mechanism,ir,"
+            "INSERT OR REPLACE INTO rules(ir_id,attack_class,mechanism,ir,"
             "status,promoted_ts,last_matched_ts,match_count,ttl_s)"
-            " VALUES(?,?,?,?,?,?,?,?,COALESCE((SELECT match_count FROM rules WHERE ir_id=?),0),?)",
-            (ir["id"], sig, ir["attack_class"], ir["mechanism"], json.dumps(ir),
-             "active", time.time(), time.time(), ir["id"], ir.get("ttl_s", 86400)))
+            " VALUES(?,?,?,?,?,?,?,COALESCE((SELECT match_count FROM rules WHERE ir_id=?),0),?)",
+            (ir["id"], ir["attack_class"], ir["mechanism"], json.dumps(ir),
+             "active", now, now, ir["id"], ir.get("ttl_s", 86400)))
+        # map this campaign signature to the rule (many signatures -> one rule)
+        self.con.execute(
+            "INSERT OR REPLACE INTO rule_signatures(signature,ir_id,ts) VALUES(?,?,?)",
+            (sig, ir["id"], now))
         self.con.commit()
 
     def record_outcome(self, campaign_id: int, source: str, rule_ir_id: str | None,
@@ -104,10 +113,10 @@ class Memory:
 
     # --- recall ---
     def rule_for_signature(self, sig: str) -> dict | None:
-        """Exact repeat: an active promoted rule for this exact campaign."""
+        """Exact repeat: the active rule mapped to this exact campaign signature."""
         row = self.con.execute(
-            "SELECT ir FROM rules WHERE signature=? AND status='active' ORDER BY promoted_ts DESC",
-            (sig,)).fetchone()
+            "SELECT r.ir FROM rule_signatures s JOIN rules r ON r.ir_id=s.ir_id"
+            " WHERE s.signature=? AND r.status='active'", (sig,)).fetchone()
         return json.loads(row["ir"]) if row else None
 
     def rules_for_class(self, attack_class: str) -> list[dict]:
@@ -116,6 +125,14 @@ class Memory:
             "SELECT ir FROM rules WHERE attack_class=? AND status='active'",
             (attack_class,)).fetchall()
         return [json.loads(r["ir"]) for r in rows]
+
+    def promotions_since(self, since_ts: float) -> int:
+        """How many NEW rules were promoted since since_ts. Used to enforce the
+        action rate limit on AEGIS itself (invariant 7 / FR-V8): cap new
+        enforcing rules per hour so a rule-generation storm cannot happen."""
+        row = self.con.execute(
+            "SELECT COUNT(*) n FROM rules WHERE promoted_ts >= ?", (since_ts,)).fetchone()
+        return row["n"]
 
     def touch_rule(self, ir_id: str) -> None:
         self.con.execute(
