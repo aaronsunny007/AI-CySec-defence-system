@@ -1,3 +1,10 @@
+> **Update 2026-10-11:** the path-traversal failure reported below has been fixed
+> (template no longer uses `normalizePath`, targets the URI, and the mutation engine
+> now mutates paths; promoted offline at 100% of the campaign and of 84 mutants, 0
+> false positives). The arms-race table below is the original run and has **not**
+> been re-run with the fix. The induced self-DoS result is unaffected (it replays
+> the benign corpus and does not depend on user-agents).
+
 # M4 — Adaptive adversary + induced self-DoS (first results)
 
 The highest-research-value milestone. Two experiments.

@@ -46,3 +46,59 @@ that session to reconstruct actors.
   stays behavioural. Stated as a limitation in docs/M1-RESULTS.md.
 - Real actor reconstruction across IP rotation + fingerprint is deferred; it is
   an M1-hardening / M4 item, not needed to prove the M1 detection thesis.
+
+## 2026-10-11 — Gateway: rule modes, hot reload, and why AEGIS rules `pass`
+
+**Decision.** AEGIS SecRules compile in *gateway form* (`pass,log`, tagged
+`aegis-rule:<id>`); the gateway decides per rule whether a match blocks, from the
+rule's mode `off | shadow | canary(x%) | enforce`. The replay tool and gate still
+use the `deny` form, since they test a single rule in isolation.
+Rules live in a manifest (`rules/active/manifest.json`) the gateway polls; on
+change a new immutable rule set is built in the background and swapped in with an
+atomic pointer, so in-flight requests finish on the old set (no dropped
+connection). A failed build keeps the old set. Rollback = mode `off`.
+
+**Why.** Per-rule modes, shadow, canary and sub-5-second rollback (FR-E2/E3/E5)
+are all "the same match, a different decision", so the decision belongs in one
+place that is not the rule text.
+
+**Consequences / limits.**
+- The admin API (stats, mode, rollback) is loopback-only and unauthenticated.
+  Manifest signing (PRD section 9, rule-store tampering) is NOT implemented.
+- The gateway validates manifest rule text independently of the compiler: each
+  line must be `SecRule <vars> "<op>" "<actions>"` and every action must be on an
+  allowlist (`id, phase, pass, log, msg, tag, t, chain`). An allowlist on the
+  parsed actions argument, not a substring blocklist, so legitimate regexes
+  containing e.g. "exec" are not rejected.
+- Canary membership is a stable hash of the actor, not per request. The
+  monitor supports one canary rule at a time (the canary slice is defined by the
+  highest canary_pct).
+
+## 2026-10-11 — AEGIS rules load BEFORE CRS
+
+Coraza stops evaluating once CRS's blocking rule (949110, phase 2) interrupts. A
+rule loaded after CRS would therefore never see any request CRS already blocked,
+and shadow counts would silently under-count. AEGIS rules now precede CRS in the
+directive order; being `pass` rules they never interrupt.
+
+## 2026-10-11 — Renamed observer/campaigns.py -> observer/detector.py
+
+Two modules were both called `campaigns` (the M1 detector and the attack
+scripts), so whichever directory was first on `sys.path` won. The detector is
+now `observer/detector.py`.
+
+## 2026-10-11 — Live range orchestration moved from PowerShell to Python
+
+`eval/rangectl.py` launches Juice Shop and the gateway directly, records only the
+PIDs it created, waits for real readiness, and terminates exactly those PIDs. The
+PowerShell start/stop loop repeatedly hung during multi-phase experiments.
+(`range/start.ps1`/`stop.ps1` remain for manual use.)
+
+## 2026-10-11 — LLM deliberator: local Mistral 7B behind a swappable interface
+
+Ollama 0.40.2 was already installed with `mistral:latest` (7B). The spec prefers
+Qwen2.5-Coder; the backend interface (`deliberator/llm.py`) is swappable, so a
+Qwen or API backend can be added for the planned local-vs-frontier ablation.
+The model sees only a fixed-vocabulary feature summary and known-route endpoint
+shapes — never raw traffic — and may emit only IR, which goes through the same
+compiler and gate as template candidates.

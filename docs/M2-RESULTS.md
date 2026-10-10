@@ -97,7 +97,7 @@ Gateway gains a `-Rules` flag (range/start.ps1) to load a candidate alongside CR
 
 ---
 
-## M2b continued — rate-limit rule type (AEGIS beats the baseline)
+## M2b continued — rate-limit rule type (throttles what CRS cannot see)
 
 The mechanism for the classes CRS misses. A rate limit is stateful (N requests
 per actor per window), so it is NOT a SecRule: the IR compiles (ir/compile.
@@ -107,22 +107,37 @@ The same sliding-window logic is mirrored in gate/ratelimit.py so what the gate
 validates is what enforces.
 
 ### Gate validation (credential stuffing, over a 5,158-request combined stream)
-AEGIS generated two candidates; the gate chose by replaying each actor's stream:
+AEGIS generated two candidates; the gate chose by replaying each actor's stream.
+"Rate-limited" means the actor had at least one request blocked -- it does NOT
+mean the attack failed (see the A/B below).
 
-| Candidate | benign actors blocked | stuffing actors stopped | verdict |
+| Candidate | benign actors rate-limited | stuffing actors rate-limited | verdict |
 |---|---|---|---|
 | >5 logins / 60 s | **0 / 122 (0.00%)** | **2 / 2** | **PROMOTED** |
 | >10 logins / 60 s | 0 / 122 | 0 / 2 (too loose) | REJECTED |
 
-### Live enforcement (Go gateway rate limiter)
-With the promoted rule loaded (`gateway -raterules`), a live credential-stuffing
-campaign had **5 requests blocked with HTTP 429** by the AEGIS rule; a benign
-login from a different actor was **not** rate-limited (returned 401 = app auth,
-not a block). Attack client treats 403/429 as blocked.
+### Live A/B with hot reload (one range boot, `eval/ab_stuffing.py`)
+Control (CRS only), then the rate rule hot-loaded with no restart, then the same
+campaign again:
+
+| | requests blocked | valid credentials the attacker found |
+|---|---|---|
+| A) CRS only | 0 / 12 | **3** of 3 |
+| B) CRS + AEGIS rate rule | 5 / 12 (HTTP 429) | **1** of 3 |
+
+- Hot reload took **0.53 s**; a benign user's logins were never rate-limited.
+- **Correction to earlier wording:** the rate limit *throttles*, it does not
+  *prevent*. The attacker's objective was still met in B because one valid
+  credential fell inside the first 5 attempts the limit allows. The honest
+  metric is accounts compromised (3 -> 1), not "attack stopped". A tighter limit
+  would cut that further but raises the false-positive risk for users who mistype
+  a password, which is exactly the trade-off the gate exists to arbitrate.
+- The limiter is keyed on the session fingerprint, so an attacker who rotates
+  that identifier (in production: rotates source IPs) is not slowed. Actor
+  reconstruction across rotation is not implemented (see M1 limitations).
 
 ### Why this matters
-Baseline (docs/BASELINE.md): **CRS blocks 0% of credential stuffing** -- every
-request looks like a normal login. AEGIS caps it at 5/window per actor while
-breaking zero real users. **This is AEGIS doing something the baseline cannot.**
-The same mechanism covers user enumeration (candidates generated) and is the
-right tool for the other behavioural classes CRS misses.
+Baseline: CRS blocks 0% of credential stuffing -- every request looks like a
+normal login. AEGIS cannot see it per request either; it sees it per actor over
+time, and bounds the damage without breaking real users. That is a real, measured
+improvement, smaller than "stops the attack".

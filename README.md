@@ -1,65 +1,120 @@
 # AEGIS — Autonomous Web-Application Defence Agent
 
-An autonomous defender for a web app: detects attack campaigns in live HTTP
-traffic, synthesises new blocking rules, **proves they don't break legitimate
-traffic** before enforcing them, and gets faster on repeat/variant attacks.
-Containment only — never offensive action.
+An autonomous defender for a web app: it watches live HTTP traffic, recognises an
+attack **campaign** in progress, invents a **new** blocking rule, **proves the rule
+does not break legitimate traffic** before enforcing it, deploys it without a
+restart, and gets faster on repeat and variant attacks. Containment only — never
+offensive action.
 
-- Spec (agent-executable): [CLAUDE.md](CLAUDE.md)
-- Full PRD, literature review, bibliography: [docs/AEGIS-PRD-v0.2.md](docs/AEGIS-PRD-v0.2.md)
-- Deviations from the spec and why: [docs/DECISIONS.md](docs/DECISIONS.md)
+The contribution is the **validation gate**, not the detection: anyone can build
+something that blocks traffic; the open problem is proving, automatically and
+before enforcement, that an autonomously invented mitigation will not harm the
+application it defends.
 
-## Status: M0 step 1 — range + logging ✅
+- Spec (agent-executable): [CLAUDE.md](CLAUDE.md) · PRD + literature review: [docs/AEGIS-PRD-v0.2.md](docs/AEGIS-PRD-v0.2.md)
+- Why things deviate from the spec: [docs/DECISIONS.md](docs/DECISIONS.md)
+
+## Status
+
+| Milestone | State | Results |
+|---|---|---|
+| M0 range + baseline | done; **baseline being re-measured** (the first one was confounded, see the banner in the file) | [docs/BASELINE.md](docs/BASELINE.md) |
+| M1 campaign detection | heuristics done; **re-measurement with corrected ground truth pending** | [docs/M1-RESULTS.md](docs/M1-RESULTS.md) |
+| M2 rule synthesis + 6-stage gate | done | [docs/M2-RESULTS.md](docs/M2-RESULTS.md), [docs/M2-LIVE-STAGES.md](docs/M2-LIVE-STAGES.md) |
+| M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
+| M3 LLM last-resort path | implemented and adversarially tested (16 tests); **not yet run against the real model** | `deliberator/llm.py`, `tests/` |
+| M4 adaptive adversary, induced self-DoS | first results | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
+| M5 write-up | not started (the results files are the raw material) | |
+
+Read the "Caveats" section of each results file before quoting a number. Early
+measurements that were later found to be flawed are corrected in place and the
+superseded versions kept (e.g. `docs/BASELINE.v1-tool-ua.md`).
+
+## Architecture
 
 ```
-client ──► gateway (Go + Coraza + OWASP CRS) 127.0.0.1:8080 ──► Juice Shop :3000
-                │
-                └─► logs/gateway/requests.jsonl   (one JSON line per request, schema v1)
+client -> gateway (Go + Coraza + AEGIS rules + CRS) :8080 -> Juice Shop :3000
+              | per-rule modes off/shadow/canary/enforce, hot-reloaded from a manifest
+              v
+       request log (JSONL) -> observer (actors, campaign detector, M1)
+                                   v dossier
+              deliberator: templates first; LLM only as a last resort -> typed Rule IR
+                                   v
+              ir/compile (the trusted boundary) -> VALIDATION GATE
+                1 benign replay (443k real requests)   FP <= 0.01%
+                2 campaign replay                      blocks the attack
+                3 live regression (A/B vs CRS only)
+                4 mutation test                        generalises, not memorised
+                5 shadow (live, M1 as the FP oracle)   live == replay prediction
+                6 canary x% + automatic rollback
+              memory (SQLite): reuse / generalise / fresh; rule GC; budgets
 ```
 
-### Run it (native Windows, no Docker)
+Invariants (CLAUDE.md section 2) that the code enforces: fail open; the LLM is
+unprivileged and sees only a fixed-vocabulary feature summary, never raw traffic;
+no rule reaches `enforce` without passing every stage; hard budgets (rules/hour,
+LLM calls/hour, tokens, candidates).
 
-One-time setup: Go zip in `%USERPROFILE%\tools\go`, Juice Shop
-`juice-shop-20.2.0_node24_win32_x64.zip` in `%USERPROFILE%\tools\juice-shop`, Node 24.
+## Run it (native Windows — no Docker, no WSL)
+
+One-time: Go (zip) in `%USERPROFILE%\tools\go`, Juice Shop
+`juice-shop-20.2.0_node24_win32_x64.zip` in `%USERPROFILE%\tools\juice-shop`, Node 24,
+Python 3.12.
 
 ```powershell
-cd gateway; go build -o ..\bin\gateway.exe .; cd ..      # build once
-.\range\start.ps1                                        # start (add -Mode detect to log-only)
-python eval\smoke.py                                     # sanity check
-.\range\stop.ps1                                         # stop
+cd gateway; go build -o ..\bin\gateway.exe .; go build -o ..\bin\replay.exe .\cmd\replay; cd ..
+python -m venv .venv
+.venv\Scripts\pip install -r range\benign\requirements.txt
+.venv\Scripts\python -m playwright install chromium
 ```
 
-Browse Juice Shop through the WAF at http://localhost:8080.
+Tests (no network, no range needed):
 
-### Alternative: Docker (where WSL2/Docker work)
+```powershell
+cd gateway; go test ./...; cd ..
+.venv\Scripts\python -m unittest discover -s tests -v
+```
 
-`docker compose up -d` runs Juice Shop behind the nginx ModSecurity/CRS image;
-`python observer/normalise.py` converts its audit log to the same v1 schema.
+Experiments (each starts and stops its own range through `eval/rangectl.py`):
 
-### Layout (grows per milestone)
+| Command | What it does |
+|---|---|
+| `python eval/baseline.py` | CRS-only baseline -> `docs/BASELINE.md` |
+| `python eval/m1_episode.py` | campaign detection, correct attribution, slow-and-low evasion |
+| `python eval/ab_stuffing.py` | credential-stuffing A/B using a hot-loaded rate rule |
+| `python eval/run_live_stages.py` | gate stages 5 + 6: shadow, canary, auto-rollback |
+| `python eval/hotreload_stress.py` | no dropped requests across 48 reloads; corrupt manifest refused |
+| `python eval/self_dos.py` | induced self-DoS with and without the gate |
+| `python eval/arms_race.py` | adaptive adversary vs memory |
+| `python memory/mitigate.py --novel data/attack_corpus/novel_ssti.json --llm ollama` | last-resort LLM path (needs Ollama + a local model) |
+
+The benign corpus (`data/benign_corpus/`, ~260 MB) is not in git; regenerate it
+with `python range/benign/generate.py --workers 4 --fast --duration 180` while the
+gateway runs in `detect` mode.
+
+## Layout
 
 | Path | Plane | Purpose |
 |---|---|---|
-| `gateway/` | Enforcement | Go reverse proxy: Coraza + CRS, fail-open, JSONL logging, enforce/detect modes |
-| `range/start.ps1`, `stop.ps1` | Range | Bring the native range up/down |
-| `range/benign/` | Range | Playwright robot shoppers: 11 journeys, random personas, weird-but-legitimate input |
-| `range/attacks/` | Range | 8 scripted attack campaigns (SQLi, XSS, traversal, cmdi, SSRF, user-enum, IDOR/BOLA, cred-stuffing) |
-| `observer/normalise.py` | Observation | ModSecurity audit log → v1 schema (Docker path) |
-| `eval/smoke.py` | Eval | Sanity check the range is wired up |
-| `docker-compose.yml` | Range | Docker alternative |
+| `gateway/` | Enforcement | Go reverse proxy: Coraza + CRS, fail-open, modes, hot reload, counters, admin API, rate limiter; `cmd/replay` = real-engine replay for the gate |
+| `observer/` | Observation | actor reconstruction, behavioural campaign detector, known-route learner |
+| `deliberator/` | Deliberation | template candidates; `llm.py` last-resort model path |
+| `ir/` | trusted boundary | Rule IR schema + validator/compiler (injection-hardened) |
+| `gate/` | Validation gate | offline stages, live regression, shadow, canary, rate-limit evaluator, rule store client |
+| `memory/` | Memory | SQLite store, mitigation loop, budgets |
+| `range/` | Range | benign Playwright journeys, 8 attack campaigns, mutation engine |
+| `eval/` | Evaluation | experiments above |
+| `tests/`, `gateway/*_test.go` | | adversarial tests for the LLM boundary and the rule guard |
+| `docker-compose.yml` | Range | Docker alternative where WSL2 works |
 
-Benign traffic (one-time: `python -m venv .venv`, `.venv\Scripts\pip install -r range\benign\requirements.txt`, `.venv\Scripts\python -m playwright install chromium`):
+## Limitations (headline ones)
 
-```powershell
-.\range\start.ps1 -Mode detect
-.venv\Scripts\python range\benign\generate.py --workers 4 --fast --duration 30
-```
+One app (Juice Shop), eight attack classes we wrote, one laptop. Actor
+reconstruction uses a per-client cookie that stands in for distinct source IPs; a
+real deployment's IP rotation is not handled. Rate limits throttle rather than
+prevent. The manifest and admin API are unauthenticated. See each results file.
 
-Early (pre-baseline) results: [docs/FINDINGS.md](docs/FINDINGS.md).
+## Licence
 
-### Next (M0)
-1. ~~Playwright benign traffic generator~~ ✅
-2. ≥100k-request benign corpus
-3. ~~Scripted attack campaigns (8 classes)~~ ✅ (`range/attacks/`)
-4. Episode harness → `metrics.jsonl`
-5. **Baseline number in `docs/BASELINE.md`** — no AI before this exists.
+MIT (own code). GPL/AGPL range tools (sqlmap, nikto, DVWA, Grafana) run as
+separate processes and are not linked.
