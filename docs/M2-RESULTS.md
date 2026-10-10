@@ -65,3 +65,32 @@ breaking **zero** of 443k legitimate requests (0.0045% < 0.01% budget).
 - `range/mutate/mutate.py` — payload mutation engine
 - `gate/gate.py` — the gate
 - `gateway/cmd/replay/` -> `bin/replay.exe` — real-engine replay
+
+---
+
+## M2b — live validation stage (gate stage 3)
+
+`gate/live_validate.py` enforces the promoted rule in the LIVE gateway and runs
+a controlled comparison (same benign seed): A) CRS only, B) CRS + candidate.
+
+Result for the promoted SQLi rule (60 benign journeys, live SQLi campaign):
+
+| Run | benign broken by defence | attack blocked |
+|---|---|---|
+| A) CRS only | 2 / 60 | 8 / 8 |
+| B) CRS + candidate | 2 / 60 | 8 / 8 |
+
+- **Candidate's added benign breakage: 0** -> safe to enforce.
+- **Candidate's attack-block gain over CRS: +0%** -> honest finding: CRS already
+  blocks all SQLi, so the AEGIS rule is safe-but-redundant *for this class*.
+  AEGIS's security value shows on the classes CRS misses (credential stuffing,
+  IDOR/BOLA, user enumeration), which need the `rate_limit` mechanism.
+- **Verdict: CLEARED FOR ENFORCEMENT** (0 added breakage AND attack blocked live).
+
+Gateway gains a `-Rules` flag (range/start.ps1) to load a candidate alongside CRS.
+
+### Still remaining for full M2
+- `rate_limit` mechanism compilation -> the mitigation for the CRS-missed classes.
+- Timed shadow + canary% with automatic rollback (gate stages 5/6).
+- True hot-reload (swap rules in a running gateway, no restart) + per-rule modes
+  (off/shadow/canary/enforce) + counters; and the action rate limit (<=N/hour).

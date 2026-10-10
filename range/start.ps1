@@ -7,7 +7,8 @@
 
 param(
     [ValidateSet("enforce", "detect")] [string]$Mode = "enforce",
-    [string]$JuiceShop = "$env:USERPROFILE\tools\juice-shop"
+    [string]$JuiceShop = "$env:USERPROFILE\tools\juice-shop",
+    [string]$Rules = ""   # optional extra candidate rule file loaded after CRS
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -32,8 +33,15 @@ $js = Start-Process node -ArgumentList "build/app" -WorkingDirectory $JuiceShop 
     -RedirectStandardOutput "$logs\juiceshop.out.log" -RedirectStandardError "$logs\juiceshop.err.log"
 if (-not (Wait-Http "http://127.0.0.1:3000" 120)) { Stop-Process -Id $js.Id -Force; Write-Host "Juice Shop did not come up - see logs\juiceshop.*.log"; exit 1 }
 
-Write-Host "Starting gateway (mode=$Mode) ..."
-$g = Start-Process $gw -ArgumentList "-mode $Mode -log logs/gateway/requests.jsonl" -WorkingDirectory $root -PassThru -WindowStyle Hidden `
+$gwArgs = "-mode $Mode -log logs/gateway/requests.jsonl"
+if ($Rules -ne "") {
+    if (-not (Test-Path $Rules)) { Stop-Process -Id $js.Id -Force; Write-Host "rules file not found: $Rules"; exit 1 }
+    $gwArgs += " -rules `"$Rules`""
+    Write-Host "Starting gateway (mode=$Mode, +candidate rules $Rules) ..."
+} else {
+    Write-Host "Starting gateway (mode=$Mode) ..."
+}
+$g = Start-Process $gw -ArgumentList $gwArgs -WorkingDirectory $root -PassThru -WindowStyle Hidden `
     -RedirectStandardOutput "$logs\gateway.out.log" -RedirectStandardError "$logs\gateway.err.log"
 if (-not (Wait-Http "http://127.0.0.1:8080" 30)) { Stop-Process -Id $g.Id, $js.Id -Force; Write-Host "Gateway did not come up - see logs\gateway.err.log"; exit 1 }
 
