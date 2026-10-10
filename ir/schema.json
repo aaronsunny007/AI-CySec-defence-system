@@ -30,7 +30,8 @@
         "credential_stuffing",
         "user_enumeration",
         "idor_bola",
-        "scan"
+        "scan",
+        "other"
       ]
     },
     "mechanism": {

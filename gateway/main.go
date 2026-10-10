@@ -1,10 +1,11 @@
 // Command gateway is the AEGIS enforcement plane: a reverse proxy that runs
-// every request through OWASP Coraza + the OWASP Core Rule Set before
-// forwarding it to the protected app.
+// every request through OWASP Coraza + the OWASP Core Rule Set, plus any AEGIS
+// rules in its (hot-reloadable) manifest, before forwarding to the protected app.
 //
-// Invariants (see CLAUDE.md §2):
+// Invariants (see CLAUDE.md section 2):
 //   - Fail open. Any error or panic inside the WAF path forwards the request
-//     unmodified and is logged with fail_open=true.
+//     unmodified and is logged with fail_open=true. A failed rule reload keeps
+//     the previous rules.
 //   - No network calls, no LLM, nothing unbounded in the request path.
 //   - Every request is logged, benign or not, one JSON object per line, in the
 //     same v1 schema that observer/normalise.py produces.
@@ -69,10 +70,10 @@ type Record struct {
 	CookiePresent bool   `json:"cookie_present"`
 	AuthPresent   bool   `json:"auth_present"`
 	// Session: short, non-reversible fingerprint of the caller's identity
-	// (bearer token / session cookie, else client IP). Lets the observer
-	// reconstruct one actor across requests without logging secrets. NOT a
-	// detection signal on its own -- actors are grouped by it, then judged on
-	// behaviour.
+	// (visitor nonce / bearer token / session cookie, else client IP). Lets the
+	// observer reconstruct one actor across requests without logging secrets.
+	// NOT a detection signal on its own -- actors are grouped by it, then judged
+	// on behaviour.
 	Session      string   `json:"session"`
 	Body         string   `json:"body"`
 	BodyLen      int      `json:"body_len"`
@@ -88,120 +89,84 @@ type Record struct {
 	FailReason  string `json:"fail_reason,omitempty"`
 	Mode        string `json:"mode"`
 	RateRule    string `json:"rate_rule,omitempty"`
+	// AegisMatches lists AEGIS rules that matched this request as
+	// "id|mode|blocked" or "id|mode|shadow" (what the rule's mode did).
+	AegisMatches []string `json:"aegis_matches,omitempty"`
+	Canary       bool     `json:"canary"`
+	RulesVersion int      `json:"rules_version"`
+	// GTLabel is RANGE-ONLY ground truth ("benign" or "attack:<campaign>"),
+	// read from the visitor cookie the range's own clients set. It exists so
+	// evaluation does not have to key on the user-agent (which an attacker
+	// controls and CRS itself matches on). No detector, gate or rule may read
+	// it; it is empty for any real traffic.
+	GTLabel string `json:"gt_label,omitempty"`
 }
 
-// rateRule is one gateway-native rate limit, compiled from a rate_limit IR by
-// ir/compile.compile_rate. Enforced per actor (session) with a sliding window.
-type rateRule struct {
-	ID             string   `json:"id"`
-	AttackClass    string   `json:"attack_class"`
-	EndpointPrefix string   `json:"endpoint_prefix"`
-	Methods        []string `json:"methods"`
-	Count          int      `json:"count"`
-	WindowS        int      `json:"window_s"`
-}
-
-func (rr rateRule) matches(method, path string) bool {
-	if !strings.HasPrefix(path, rr.EndpointPrefix) {
-		return false
-	}
-	if len(rr.Methods) == 0 {
-		return true
-	}
-	for _, m := range rr.Methods {
-		if m == method {
-			return true
-		}
-	}
-	return false
-}
-
-// rateLimiter holds per-(actor,rule) hit timestamps and the same sliding-window
-// logic the gate validates (gate/ratelimit.py). Mirror the two deliberately.
-type rateLimiter struct {
-	mu    sync.Mutex
-	rules []rateRule
-	hits  map[string][]time.Time
-}
-
-// check reports whether this request exceeds any rate rule for this actor. It
-// records the hit first, then counts the trailing window: block the (count+1)-th
-// and beyond. Returns the offending rule id, or "" if within limits.
-func (rl *rateLimiter) check(actor, method, path string) string {
-	if rl == nil || len(rl.rules) == 0 {
+// gtLabel derives the range-only ground-truth label from the aegis_vid cookie.
+func gtLabel(r *http.Request) string {
+	c, err := r.Cookie("aegis_vid")
+	if err != nil {
 		return ""
 	}
-	now := time.Now()
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
-	for i := range rl.rules {
-		rr := rl.rules[i]
-		if !rr.matches(method, path) {
-			continue
+	switch {
+	case strings.HasPrefix(c.Value, "atk-"):
+		v := strings.TrimPrefix(c.Value, "atk-")
+		if i := strings.LastIndex(v, "-"); i > 0 {
+			v = v[:i]
 		}
-		key := actor + "\x00" + rr.ID
-		win := append(rl.hits[key], now)
-		cutoff := now.Add(-time.Duration(rr.WindowS) * time.Second)
-		j := 0
-		for ; j < len(win); j++ {
-			if win[j].After(cutoff) {
-				break
-			}
-		}
-		win = win[j:]
-		rl.hits[key] = win
-		if len(win) > rr.Count {
-			return rr.ID
-		}
+		return "attack:" + v
+	case strings.HasPrefix(c.Value, "benign"), strings.HasPrefix(c.Value, "witness"),
+		strings.HasPrefix(c.Value, "stress"):
+		return "benign"
 	}
 	return ""
 }
 
-func loadRateRules(path string) ([]rateRule, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var rules []rateRule
-	if err := json.Unmarshal(b, &rules); err != nil {
-		return nil, err
-	}
-	return rules, nil
-}
-
 type gateway struct {
-	waf     coraza.WAF
 	proxy   *httputil.ReverseProxy
 	logs    chan Record
 	enforce bool
 	rl      *rateLimiter
 	dropped atomic.Int64
+
+	rs            atomic.Pointer[ruleSet]
+	manifestPath  string
+	staticInclude string
+	reloadMu      sync.Mutex
+
+	cmu    sync.RWMutex
+	cnt    map[string]*ruleCounters
+	slices [2]*sliceStats // 0 = control, 1 = canary
 }
 
-func newWAF(extra string) (coraza.WAF, error) {
-	directives := `
+// Directive order matters. Coraza stops evaluating a transaction once CRS's
+// blocking rule (949110, phase 2) interrupts it, so any AEGIS rule loaded AFTER
+// CRS would never see a request CRS already blocks -- shadow counts would
+// silently under-count and AEGIS matches could not be attributed. AEGIS rules
+// therefore load BEFORE CRS. They only `pass`, so they never interrupt.
+const wafHead = `
 Include @coraza.conf-recommended
-Include @crs-setup.conf.example
-Include @owasp_crs/*.conf
 SecRuleEngine On
 SecResponseBodyAccess Off
-` + extra
+`
+
+const wafCRS = `
+Include @crs-setup.conf.example
+Include @owasp_crs/*.conf
+`
+
+func newWAF(extra string) (coraza.WAF, error) {
 	return coraza.NewWAF(coraza.NewWAFConfig().
-		WithDirectives(directives).
+		WithDirectives(wafHead + extra + "\n" + wafCRS).
 		WithRootFS(mergefs.Merge(coreruleset.FS, mergefsio.OSFS)))
 }
 
-// sessionID derives a stable, non-reversible actor fingerprint. It prefers the
-// bearer token, then Juice Shop's auth cookies, then the session cookie id,
-// and finally falls back to the client IP. The raw value is hashed so no token
-// or cookie is ever written to the log.
+// sessionID derives a stable, non-reversible actor fingerprint. aegis_vid (the
+// range's per-client nonce, standing in for distinct source IPs; see
+// docs/DECISIONS.md) wins, then bearer token, then Juice Shop cookies, then the
+// client IP. The raw value is hashed so no token or cookie reaches the log.
 func sessionID(r *http.Request, ip string) string {
 	raw := ""
-	// aegis_vid: a per-client nonce the range sets so one client maps to one
-	// actor for its whole lifecycle (anonymous + logged in). It stands in for
-	// the distinct source IPs a real deployment has; see docs/DECISIONS.md. The
-	// observer uses the resulting actor id only to GROUP requests, never as a
-	// detection feature.
 	if c, err := r.Cookie("aegis_vid"); err == nil && c.Value != "" {
 		raw = "v:" + c.Value
 	} else if a := r.Header.Get("Authorization"); a != "" {
@@ -247,16 +212,16 @@ func (w *statusWriter) Write(b []byte) (int, error) {
 }
 
 // inspect runs the request through Coraza. It returns the interruption (nil
-// means allow) and fills the WAF fields of rec. A panic inside Coraza is
-// converted into an error so the caller can fail open.
-func (g *gateway) inspect(r *http.Request, body []byte, rec *Record) (it *types.Interruption, err error) {
+// means allow) and the AEGIS rule ids that matched, and fills the WAF fields of
+// rec. A panic inside Coraza is converted into an error so the caller fails open.
+func (g *gateway) inspect(waf coraza.WAF, r *http.Request, body []byte, rec *Record) (it *types.Interruption, aegisIDs []string, err error) {
 	defer func() {
 		if p := recover(); p != nil {
-			it, err = nil, fmt.Errorf("panic: %v", p)
+			it, aegisIDs, err = nil, nil, fmt.Errorf("panic: %v", p)
 		}
 	}()
 
-	tx := g.waf.NewTransactionWithID(rec.ID)
+	tx := waf.NewTransactionWithID(rec.ID)
 	defer func() {
 		tx.ProcessLogging()
 		_ = tx.Close()
@@ -279,18 +244,24 @@ func (g *gateway) inspect(r *http.Request, body []byte, rec *Record) (it *types.
 	it = tx.ProcessRequestHeaders()
 	if it == nil && tx.IsRequestBodyAccessible() && len(body) > 0 {
 		if it, _, err = tx.WriteRequestBody(body); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if it == nil {
 		if it, err = tx.ProcessRequestBody(); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	tags := map[string]bool{}
 	ids := map[string]bool{}
+	aegis := map[string]bool{}
 	for _, mr := range tx.MatchedRules() {
+		for _, t := range mr.Rule().Tags() {
+			if strings.HasPrefix(t, "aegis-rule:") {
+				aegis[strings.TrimPrefix(t, "aegis-rule:")] = true
+			}
+		}
 		if m := scoreRE.FindStringSubmatch(mr.Message() + " " + mr.Data()); m != nil {
 			if s, _ := strconv.Atoi(m[1]); s > rec.AnomalyScore {
 				rec.AnomalyScore = s
@@ -310,7 +281,7 @@ func (g *gateway) inspect(r *http.Request, body []byte, rec *Record) (it *types.
 	}
 	rec.RuleIDs = sortedKeys(ids)
 	rec.AttackTags = sortedKeys(tags)
-	return it, nil
+	return it, sortedKeys(aegis), nil
 }
 
 // isDetectionRule reports whether a matched rule is an actual detection.
@@ -335,6 +306,7 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	ip, portStr, _ := net.SplitHostPort(r.RemoteAddr)
 	port, _ := strconv.Atoi(portStr)
+	rs := g.rs.Load() // one immutable snapshot for the whole request
 	rec := Record{
 		V:             schemaVersion,
 		TS:            start.UTC().Format(time.RFC3339Nano),
@@ -353,7 +325,11 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		RuleIDs:       []string{},
 		AttackTags:    []string{},
 		Mode:          map[bool]string{true: "enforce", false: "detect"}[g.enforce],
+		RulesVersion:  rs.version,
+		GTLabel:       gtLabel(r),
 	}
+	bucket := bucketOf(rec.Session)
+	rec.Canary = rs.maxCanary > 0 && bucket < rs.maxCanary
 
 	// Buffer up to maxBody for inspection; stitch the rest back on for the app.
 	var body []byte
@@ -374,34 +350,66 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rec.BodyLen = int(r.ContentLength)
 	}
 
-	// Rate-limit check (stateful, per-actor). Independent of the WAF; a panic
-	// here must not take the app down, so guard it and fail open.
-	rateHit := ""
+	blockedBy, blockStatus := "", 0
+	apply := func(id string, cfg ManifestRule) {
+		act := actNow(cfg.Mode, cfg.CanaryPct, bucket, g.enforce)
+		g.bump(id, act)
+		outcome := "shadow"
+		if act {
+			outcome = "blocked"
+			if blockedBy == "" {
+				blockedBy = id
+			}
+		}
+		rec.AegisMatches = append(rec.AegisMatches, id+"|"+cfg.Mode+"|"+outcome)
+	}
+
+	// Rate limits (stateful, per actor). A panic here must not take the app
+	// down: guard and fail open.
 	func() {
 		defer func() { _ = recover() }()
-		rateHit = g.rl.check(rec.Session, r.Method, r.URL.Path)
+		for _, id := range g.rl.check(rs.rate, rec.Session, r.Method, r.URL.Path) {
+			if rec.RateRule == "" {
+				rec.RateRule = id
+			}
+			apply(id, rs.rateByID[id])
+			if blockedBy == id {
+				blockStatus = http.StatusTooManyRequests
+			}
+		}
 	}()
-	rec.RateRule = rateHit
 
 	var it *types.Interruption
 	if !rec.FailOpen {
 		wafStart := time.Now()
 		var err error
-		it, err = g.inspect(r, body, &rec)
+		var aegisIDs []string
+		it, aegisIDs, err = g.inspect(rs.waf, r, body, &rec)
 		rec.WAFMicros = time.Since(wafStart).Microseconds()
 		if err != nil {
 			it = nil
 			rec.FailOpen, rec.FailReason = true, err.Error()
+		} else {
+			for _, id := range aegisIDs {
+				if cfg, ok := rs.sec[id]; ok {
+					apply(id, cfg)
+					if blockedBy == id && blockStatus == 0 {
+						blockStatus = http.StatusForbidden
+					}
+				}
+			}
 		}
 	}
 
 	sw := &statusWriter{ResponseWriter: w}
+	aegisBlocked := blockedBy != ""
+	served := false
 	switch {
-	case rateHit != "" && g.enforce:
+	case aegisBlocked:
 		rec.Blocked = true
 		sw.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		sw.WriteHeader(http.StatusTooManyRequests)
-		fmt.Fprintf(sw, "Rate limit exceeded (AEGIS %s, ref %s)\n", rateHit, rec.ID)
+		sw.WriteHeader(blockStatus)
+		fmt.Fprintf(sw, "Request blocked by AEGIS rule %s (ref %s)\n", blockedBy, rec.ID)
 	case it != nil && g.enforce:
 		status := it.Status
 		if status == 0 {
@@ -412,11 +420,17 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sw.WriteHeader(status)
 		fmt.Fprintf(sw, "Request blocked by AEGIS (ref %s)\n", rec.ID)
 	default:
+		served = true
 		g.proxy.ServeHTTP(sw, r)
 	}
 
 	rec.Status = sw.status
 	rec.TotalMicros = time.Since(start).Microseconds()
+	slice := g.slices[0]
+	if rec.Canary {
+		slice = g.slices[1]
+	}
+	slice.add(aegisBlocked, rec.Status, served, rec.TotalMicros)
 	select {
 	case g.logs <- rec:
 	default:
@@ -448,13 +462,32 @@ func writeLogs(path string, in <-chan Record) {
 	}
 }
 
+// legacyRateRules loads the older static rate-rule file (compile_rate output)
+// as enforce-mode rate rules.
+func legacyRateRules(path string) ([]ManifestRule, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var rules []ManifestRule
+	if err := json.Unmarshal(b, &rules); err != nil {
+		return nil, err
+	}
+	for i := range rules {
+		rules[i].Type, rules[i].Mode = "rate", "enforce"
+	}
+	return rules, nil
+}
+
 func main() {
 	listen := flag.String("listen", "127.0.0.1:8080", "address to listen on")
+	admin := flag.String("admin", "127.0.0.1:8081", "loopback admin API address (stats, mode, rollback); empty disables")
 	backend := flag.String("backend", "http://127.0.0.1:3000", "protected app URL")
 	logPath := flag.String("log", "logs/gateway/requests.jsonl", "request log (JSONL, appended)")
-	mode := flag.String("mode", "enforce", "enforce = block on CRS verdict; detect = log verdict, never block")
-	rules := flag.String("rules", "", "optional extra rules file (loaded after CRS)")
-	rateRulesPath := flag.String("raterules", "", "optional JSON file of AEGIS rate-limit rules")
+	mode := flag.String("mode", "enforce", "enforce = block on verdict; detect = log verdict, never block")
+	rules := flag.String("rules", "", "optional static SecRule file included after CRS (deny-style, always enforced)")
+	rateRulesPath := flag.String("raterules", "", "optional static JSON of rate rules (all enforce)")
+	manifest := flag.String("manifest", "rules/active/manifest.json", "hot-reloadable AEGIS rule manifest (created empty if missing)")
 	flag.Parse()
 
 	if *mode != "enforce" && *mode != "detect" {
@@ -465,13 +498,49 @@ func main() {
 		log.Fatalf("bad -backend: %v", err)
 	}
 
-	extra := ""
-	if *rules != "" {
-		extra = "Include " + filepath.ToSlash(*rules)
+	g := &gateway{
+		logs: make(chan Record, 8192), enforce: *mode == "enforce",
+		rl: newRateLimiter(), manifestPath: *manifest,
+		cnt: map[string]*ruleCounters{}, slices: [2]*sliceStats{newSlice(), newSlice()},
 	}
-	waf, err := newWAF(extra)
-	if err != nil {
-		log.Fatalf("load WAF: %v", err)
+	if *rules != "" {
+		g.staticInclude = "Include " + filepath.ToSlash(*rules)
+	}
+
+	// Manifest: create empty if missing, merge any legacy static rate rules.
+	if err := os.MkdirAll(filepath.Dir(*manifest), 0o755); err != nil {
+		log.Fatalf("manifest dir: %v", err)
+	}
+	if _, err := os.Stat(*manifest); os.IsNotExist(err) {
+		if err := writeManifest(*manifest, Manifest{Version: 1}); err != nil {
+			log.Fatalf("create manifest: %v", err)
+		}
+	}
+	if *rateRulesPath != "" {
+		legacy, err := legacyRateRules(*rateRulesPath)
+		if err != nil {
+			log.Fatalf("load rate rules: %v", err)
+		}
+		m, err := readManifest(*manifest)
+		if err != nil {
+			log.Fatalf("read manifest: %v", err)
+		}
+		have := map[string]bool{}
+		for _, r := range m.Rules {
+			have[r.ID] = true
+		}
+		for _, r := range legacy {
+			if !have[r.ID] {
+				m.Rules = append(m.Rules, r)
+			}
+		}
+		m.Version++
+		if err := writeManifest(*manifest, m); err != nil {
+			log.Fatalf("write manifest: %v", err)
+		}
+	}
+	if err := g.reload(); err != nil {
+		log.Fatalf("initial rule load: %v", err)
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(target)
@@ -479,26 +548,27 @@ func main() {
 		log.Printf("backend error: %v", err)
 		w.WriteHeader(http.StatusBadGateway)
 	}
-
-	var rl *rateLimiter
-	if *rateRulesPath != "" {
-		rrules, err := loadRateRules(*rateRulesPath)
-		if err != nil {
-			log.Fatalf("load rate rules: %v", err)
-		}
-		rl = &rateLimiter{rules: rrules, hits: make(map[string][]time.Time)}
-		log.Printf("loaded %d rate-limit rule(s) from %s", len(rrules), *rateRulesPath)
-	}
-
-	g := &gateway{waf: waf, proxy: proxy, logs: make(chan Record, 8192),
-		enforce: *mode == "enforce", rl: rl}
+	g.proxy = proxy
 	go writeLogs(*logPath, g.logs)
+	go g.watchManifest(500 * time.Millisecond)
+	go func() {
+		for range time.Tick(time.Minute) {
+			g.rl.prune(time.Hour)
+		}
+	}()
+
+	if *admin != "" {
+		go func() {
+			log.Printf("admin API on %s (loopback only)", *admin)
+			log.Print(http.ListenAndServe(*admin, g.adminMux()))
+		}()
+	}
 
 	srv := &http.Server{
 		Addr:              *listen,
 		Handler:           g,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	log.Printf("AEGIS gateway: %s -> %s  mode=%s  log=%s", *listen, *backend, *mode, *logPath)
+	log.Printf("AEGIS gateway: %s -> %s  mode=%s  manifest=%s  log=%s", *listen, *backend, *mode, *manifest, *logPath)
 	log.Fatal(srv.ListenAndServe())
 }

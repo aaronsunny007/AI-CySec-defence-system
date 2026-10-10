@@ -31,7 +31,7 @@ sys.path.insert(0, str(ROOT / "ir"))
 sys.path.insert(0, str(ROOT / "observer"))
 import compile as irc        # noqa: E402
 from actors import reconstruct  # noqa: E402
-from campaigns import is_attack_actor  # noqa: E402
+from detector import is_attack_actor  # noqa: E402
 
 
 def _matches(req, spec: dict) -> bool:
@@ -67,11 +67,10 @@ def evaluate(stream_path: Path, spec: dict) -> dict:
     for a in actors.values():
         bc = blocked_count(a.requests, spec)
         if is_attack_actor(a):
-            # Only score actors of the class this rule targets, by their UA tag.
-            ua = a.requests[0].raw.get("user_agent", "").lower()
-            tag = {"credential_stuffing": "openbullet", "user_enumeration": "aegis-enum",
-                   "idor_bola": "autorize", "scan": "nuclei"}.get(attack_class)
-            if tag and tag in ua:
+            # Only score actors of the class this rule targets. The class comes
+            # from the range-only gt_label (attack:<campaign>), not the UA.
+            gt = a.requests[0].raw.get("gt_label") or ""
+            if gt == f"attack:{attack_class}":
                 attack_actors += 1
                 attack_blocked += bc > 0
         else:

@@ -33,3 +33,7 @@ eval/metrics.jsonl
 # campaign memory database (regenerable)
 memory/*.db
 logs/ab_*.txt
+
+# runtime rule-store state and derived data (regenerable)
+rules/active/
+data/route_shapes.json

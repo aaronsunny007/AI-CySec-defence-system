@@ -47,6 +47,9 @@ def main() -> int:
     p.add_argument("--only", nargs="+", choices=list(C.CAMPAIGNS))
     p.add_argument("--pace", type=float, default=0.2,
                    help="seconds between requests within a campaign")
+    p.add_argument("--ua", choices=["browser", "tool"], default="browser",
+                   help="browser = spoofed browser UA (default, the honest case); "
+                        "tool = announce the scanner (CRS blocks those on UA alone)")
     p.add_argument("--list", action="store_true")
     args = p.parse_args()
 
@@ -65,7 +68,7 @@ def main() -> int:
     with args.log.open("a", encoding="utf-8") as out:
         for name in names:
             actor = Actor(base=args.base, campaign=name, attack_class=name,
-                          user_agent=C.USER_AGENTS[name], out=out)
+                          user_agent=C.user_agent_for(name, args.ua), out=out)
             result = C.CAMPAIGNS[name](actor, args.pace)
             rows.append((name, actor, result))
             flag = "OBJECTIVE MET" if result["objective_met"] else "contained/failed"

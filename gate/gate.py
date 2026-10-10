@@ -84,8 +84,14 @@ def run_gate(ir: dict, campaign_requests: list[dict], benign_corpus: Path,
     rule_file.write_text(rule_text, encoding="utf-8")
     results.append(StageResult("compile", True, "IR valid, compiled to SecRule"))
 
-    # Stage 1: benign corpus replay -> FP budget.
-    b = _replay(rule_file, benign_corpus)
+    # Stage 1: benign corpus replay -> FP budget. A rule the ENGINE cannot load
+    # (e.g. a model-written regex using lookahead, which Go's RE2 rejects) is a
+    # rejected candidate, never a crash.
+    try:
+        b = _replay(rule_file, benign_corpus)
+    except RuntimeError as e:
+        results.append(StageResult("engine_load", False, f"engine rejected the rule: {e}"[:300]))
+        return False, results
     fp_ok = b["rate"] <= FP_BUDGET
     results.append(StageResult("benign_replay", fp_ok,
         f"FP {b['rate']*100:.4f}% ({b['matched']}/{b['total']}), budget {FP_BUDGET*100:.2f}%",

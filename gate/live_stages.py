@@ -1,0 +1,288 @@
+"""Gate stages 5 (shadow) and 6 (canary + auto-rollback), on the live gateway.
+
+Stages 1, 2, 4 run offline (gate.py); stage 3 is gate/live_validate.py. These
+two need live traffic and the hot-reloadable gateway.
+
+STAGE 5 -- shadow. The rule is loaded in mode `shadow`: it matches and counts
+but never blocks. Over a window of realistic traffic we check:
+  (a) suspected false positives: matches on actors the M1 observer does NOT
+      consider attackers. This needs no ground truth -- it is the same signal a
+      real deployment would have. Budget: the FP budget applied to that traffic
+      (with small windows that rounds to zero allowed).
+  (b) live-vs-offline agreement (signature rules): replay the very requests the
+      gateway logged through bin/replay.exe and compare the predicted match
+      count with the gateway's live count. A mismatch means the live engine is
+      not behaving like the one the gate validated against.
+
+STAGE 6 -- canary. Mode `canary(x%)`: the rule BLOCKS only actors whose stable
+bucket < x, everyone else stays in shadow. Control = the other actors. While it
+runs we monitor, and roll back (mode off, via the admin API) on any of:
+  - suspected-FP blocks: requests the rule blocked on actors M1 does not flag
+  - app 5xx rate in the canary slice regressing against control
+  - p99 latency in the canary slice regressing against control
+Rollback is the gateway's mode change, not a restart.
+
+Only a rule that passes both is promoted to `enforce`; promotion is refused in
+code for anything else (invariant 5).
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import tempfile
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+for p in ("ir", "gate", "observer", "eval", "range/attacks"):
+    sys.path.insert(0, str(ROOT / p))
+import compile as irc                              # noqa: E402
+import rulestore                                   # noqa: E402
+from actors import Actor, actor_key, reconstruct, to_request  # noqa: E402
+from detector import detect                       # noqa: E402
+from traffic import ReplayDriver, AttackDriver, ATTACK_UA_MARKERS  # noqa: E402
+
+REPLAY = ROOT / "bin" / "replay.exe"
+GATEWAY_LOG = ROOT / "logs" / "gateway" / "requests.jsonl"
+DECISIONS = ROOT / "logs" / "gate" / "decisions.jsonl"
+
+FP_BUDGET = 0.0001
+MIN_SAMPLES = 150          # per slice before a latency/5xx comparison is trusted
+SUSPECT_BLOCKS_TO_ROLL = 3
+SUSPECT_RATE_TO_ROLL = 0.001
+ERR5XX_DELTA = 0.02
+LAT_FACTOR, LAT_ABS_US = 3.0, 20_000
+
+
+@dataclass
+class LiveResult:
+    stage: str
+    passed: bool
+    detail: str
+    numbers: dict = field(default_factory=dict)
+
+
+def _is_attack(rec: dict) -> bool:
+    """Evaluation-only ground truth (range gt_label; UA fallback for old logs)."""
+    g = rec.get("gt_label")
+    if g:
+        return g.startswith("attack:")
+    ua = (rec.get("user_agent") or "").lower()
+    return any(m in ua for m in ATTACK_UA_MARKERS)
+
+
+def _log_size() -> int:
+    return GATEWAY_LOG.stat().st_size if GATEWAY_LOG.exists() else 0
+
+
+def _read_from(offset: int) -> list[dict]:
+    if not GATEWAY_LOG.exists():
+        return []
+    with GATEWAY_LOG.open("rb") as f:
+        f.seek(offset)
+        data = f.read().decode("utf-8", "replace")
+    out = []
+    for ln in data.splitlines():
+        try:
+            out.append(json.loads(ln))
+        except json.JSONDecodeError:
+            pass  # a partially flushed last line
+    return out
+
+
+def _flagged_actor_keys(records: list[dict]) -> set[str]:
+    """Actors the M1 observer judges to be running a campaign (behaviour only)."""
+    with tempfile.TemporaryDirectory() as td:
+        path = Path(td) / "w.jsonl"
+        path.write_text("\n".join(json.dumps(r) for r in records), encoding="utf-8")
+        actors = reconstruct(path)
+    return {k for k, a in actors.items() if len(a.requests) >= 3 and detect(a)}
+
+
+def _matched(rec: dict, rule_id: str, outcome: str | None = None) -> bool:
+    for m in rec.get("aegis_matches") or []:
+        rid, _mode, out = m.split("|")
+        if rid == rule_id and (outcome is None or out == outcome):
+            return True
+    return False
+
+
+def _predict_with_replay(ir: dict, records: list[dict]) -> int:
+    with tempfile.TemporaryDirectory() as td:
+        rule = Path(td) / "r.conf"
+        rule.write_text(irc.compile_rule(ir, deny=True), encoding="utf-8")
+        corpus = Path(td) / "c.jsonl"
+        with corpus.open("w", encoding="utf-8") as f:
+            for r in records:
+                f.write(json.dumps({"method": r.get("method"), "uri": r.get("uri"),
+                                    "body": r.get("body", ""), "host": r.get("host", ""),
+                                    "content_type": r.get("content_type", ""),
+                                    "user_agent": r.get("user_agent", "")}) + "\n")
+        out = subprocess.run([str(REPLAY), "-rule", str(rule), "-corpus", str(corpus)],
+                             capture_output=True, text=True)
+        if out.returncode != 0:
+            raise RuntimeError(out.stderr.strip())
+        return json.loads(out.stdout.strip().splitlines()[-1])["matched"]
+
+
+# --- stage 5 -----------------------------------------------------------------
+
+def shadow_stage(ir: dict, corpus: Path, attack_class: str, duration_s: float = 45.0,
+                 rps: float = 60.0) -> LiveResult:
+    rid = ir["id"]
+    off = _log_size()
+    rulestore.upsert(ir, mode="shadow")
+    rulestore.wait_version(rulestore.load()["version"])
+    rd = ReplayDriver(corpus, rps=rps).start()
+    ad = AttackDriver(attack_class, interval_s=10.0).start()
+    time.sleep(duration_s)
+    rd.stop()
+    ad.stop()
+    time.sleep(2.0)  # gateway flushes its log every 500 ms
+    window = _read_from(off)
+    st = rulestore.stats()["rules"].get(rid, {})
+    live = int(st.get("matches", 0))
+
+    flagged = _flagged_actor_keys(window)
+    nonflag = [r for r in window if actor_key(r) not in flagged]
+    suspect = [r for r in nonflag if _matched(r, rid)]
+    allowed = int(FP_BUDGET * len(nonflag))
+    fp_ok = len(suspect) <= allowed
+    logged_matches = sum(1 for r in window if _matched(r, rid))
+
+    numbers = {"window_requests": len(window), "live_matches": live,
+               "logged_matches": logged_matches, "nonflagged_requests": len(nonflag),
+               "suspected_fp_matches": len(suspect), "fp_allowed": allowed,
+               "flagged_actors": len(flagged),
+               "sample_suspect_uris": [r["uri"][:80] for r in suspect[:3]]}
+
+    agree_ok, agree_detail = True, "n/a (rate rule)"
+    if ir["mechanism"] != "rate_limit":
+        predicted = _predict_with_replay(ir, window)
+        tol = max(2, int(0.02 * max(predicted, logged_matches)))
+        agree_ok = abs(predicted - logged_matches) <= tol
+        numbers.update(replay_predicted=predicted, tolerance=tol)
+        agree_detail = f"live {logged_matches} vs replay-predicted {predicted} (tol {tol})"
+
+    passed = fp_ok and agree_ok
+    detail = (f"{len(window)} live requests; suspected FPs {len(suspect)}/{len(nonflag)} "
+              f"non-campaign requests (allowed {allowed}); {agree_detail}")
+    return LiveResult("shadow", passed, detail, numbers)
+
+
+# --- stage 6 -----------------------------------------------------------------
+
+def canary_stage(ir: dict, corpus: Path, attack_class: str, pct: int = 25,
+                 duration_s: float = 60.0, rps: float = 60.0) -> LiveResult:
+    rid = ir["id"]
+    off = _log_size()
+    rulestore.upsert(ir, mode="canary", canary_pct=pct)
+    rulestore.wait_version(rulestore.load()["version"])
+    s0 = rulestore.stats()["slices"]
+    t_start = time.time()
+    rd = ReplayDriver(corpus, rps=rps, seed=11).start()
+    ad = AttackDriver(attack_class, interval_s=10.0).start()
+
+    trigger, t_trig, rollback_s = None, None, None
+    while time.time() - t_start < duration_s:
+        time.sleep(2.0)
+        s = rulestore.stats()["slices"]
+        c, k = s["canary"], s["control"]
+        nc, nk = c["n"] - s0["canary"]["n"], k["n"] - s0["control"]["n"]
+
+        # (1) suspected-FP blocks, judged by M1 on what has been logged so far
+        window = _read_from(off)
+        blocked = [r for r in window if _matched(r, rid, "blocked")]
+        if blocked:
+            flagged = _flagged_actor_keys(window)
+            suspect = [r for r in blocked if actor_key(r) not in flagged]
+            nonflag_canary = sum(1 for r in window if r.get("canary") and actor_key(r) not in flagged)
+            rate = len(suspect) / nonflag_canary if nonflag_canary else 0.0
+            if len(suspect) >= SUSPECT_BLOCKS_TO_ROLL and rate > SUSPECT_RATE_TO_ROLL:
+                trigger = (f"suspected false positives: {len(suspect)} blocks on non-campaign "
+                           f"actors ({rate*100:.2f}% of their canary requests); e.g. "
+                           f"{suspect[0]['uri'][:70]!r}")
+        # (2) app 5xx regression
+        if not trigger and nc >= MIN_SAMPLES and nk >= MIN_SAMPLES:
+            ec = (c["status_5xx"] - s0["canary"]["status_5xx"]) / nc
+            ek = (k["status_5xx"] - s0["control"]["status_5xx"]) / nk
+            if ec - ek > ERR5XX_DELTA:
+                trigger = f"5xx regression: canary {ec*100:.1f}% vs control {ek*100:.1f}%"
+        # (3) latency regression
+        if not trigger and nc >= MIN_SAMPLES and nk >= MIN_SAMPLES:
+            if c["p99_us"] > LAT_FACTOR * k["p99_us"] + LAT_ABS_US:
+                trigger = f"p99 latency regression: canary {c['p99_us']}us vs control {k['p99_us']}us"
+        if trigger:
+            t_trig = time.time()
+            rulestore.rollback(rid)
+            rollback_s = time.time() - t_trig
+            break
+
+    rd.stop()
+    ad.stop()
+    time.sleep(2.0)
+    window = _read_from(off)
+    blocked_all = [r for r in window if _matched(r, rid, "blocked")]
+    # Ground truth (EVALUATION ONLY -- the stage itself never used it):
+    benign_blocked = [r for r in blocked_all if not _is_attack(r)]
+    attack_blocked = [r for r in blocked_all if _is_attack(r)]
+    numbers = {
+        "canary_pct": pct, "window_requests": len(window), "rule_blocks": len(blocked_all),
+        "benign_requests_blocked_GT": len(benign_blocked),
+        "attack_requests_blocked_GT": len(attack_blocked),
+        "rolled_back": trigger is not None,
+        "detect_after_s": round(t_trig - t_start, 1) if t_trig else None,
+        "rollback_call_s": round(rollback_s, 2) if rollback_s is not None else None,
+    }
+    if trigger:
+        return LiveResult("canary", False, f"ROLLED BACK after {numbers['detect_after_s']}s: {trigger}", numbers)
+    return LiveResult("canary", True,
+                      f"{duration_s:.0f}s at {pct}%: no regression; rule blocked "
+                      f"{len(attack_blocked)} attack / {len(benign_blocked)} benign requests (GT)", numbers)
+
+
+# --- pipeline + promotion -----------------------------------------------------
+
+def promote(ir: dict, stages: list[LiveResult]) -> bool:
+    """Refuse promotion unless BOTH live stages passed (invariant 5)."""
+    names = {s.stage for s in stages if s.passed}
+    if not {"shadow", "canary"} <= names:
+        return False
+    rulestore.set_mode(ir["id"], "enforce")
+    return True
+
+
+def log(ir: dict, stages: list[LiveResult], promoted: bool) -> None:
+    DECISIONS.parent.mkdir(parents=True, exist_ok=True)
+    with DECISIONS.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({
+            "id": ir["id"], "attack_class": ir["attack_class"], "phase": "live",
+            "verdict": "enforced" if promoted else "rejected_live",
+            "stages": [{"stage": s.stage, "passed": s.passed, "detail": s.detail,
+                        "numbers": s.numbers} for s in stages]}, ensure_ascii=False) + "\n")
+
+
+def live_pipeline(ir: dict, corpus: Path, attack_class: str, shadow_s: float = 45.0,
+                  canary_s: float = 60.0, pct: int = 25, skip_shadow: bool = False) -> dict:
+    stages: list[LiveResult] = []
+    if not skip_shadow:
+        sh = shadow_stage(ir, corpus, attack_class, shadow_s)
+        stages.append(sh)
+        if not sh.passed:
+            rulestore.set_mode(ir["id"], "off")
+            log(ir, stages, False)
+            return {"id": ir["id"], "promoted": False, "stages": stages}
+    cn = canary_stage(ir, corpus, attack_class, pct, canary_s)
+    stages.append(cn)
+    promoted = False
+    if cn.passed and not skip_shadow:
+        promoted = promote(ir, stages)
+    elif not cn.passed:
+        pass  # already rolled back to off by the stage
+    else:
+        rulestore.set_mode(ir["id"], "off")  # canary-only run (fault injection): do not promote
+    log(ir, stages, promoted)
+    return {"id": ir["id"], "promoted": promoted, "stages": stages}

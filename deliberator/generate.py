@@ -70,15 +70,20 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
                          desc=f"detect XSS, scoped to {ep}"))
 
     elif attack_class == "traversal":
-        c.append(_ir("traversal", 1, "input_constraint", "uri", "rx",
-                     r"(?i)(\.\./|\.\.%2f|%2e%2e|/etc/passwd|%00|%2500)",
-                     ["urlDecodeUni", "normalizePath"], desc="path traversal patterns in URI"))
-        c.append(_ir("traversal", 2, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(\.\./|\.\.%2f|%2e%2e|/etc/passwd)",
-                     ["urlDecodeUni"], desc="traversal patterns in args/body"))
+        # NOTE: no normalizePath transform. It RESOLVES ../ before the regex runs,
+        # so the very pattern we want to match is gone (found in the M4 arms race).
+        # The payload is in the PATH, so the target is the URI, not args/body.
+        # `.{2,}` followed by a slash also catches `....//` (a ../ filter bypass).
+        trav = r"(?i)(\.{2,}(/|%2f|%5c|\\)+|%2e%2e|%252e|/etc/passwd|%00|%2500)"
+        c.append(_ir("traversal", 1, "input_constraint", "uri", "rx", trav,
+                     ["urlDecodeUni"], desc="traversal sequences / null byte / /etc/passwd in URI"))
+        if ep:
+            c.append(_ir("traversal", 2, "input_constraint", "uri", "rx", trav,
+                         ["urlDecodeUni"], endpoint=ep.split("{")[0].rstrip("/") or None,
+                         desc="traversal patterns in URI, scoped to the targeted endpoint"))
         c.append(_ir("traversal", 3, "input_constraint", "uri", "rx",
-                     r"(\.\.(/|%2f|\\)){2,}",
-                     ["urlDecodeUni", "normalizePath"], desc="repeated ../ sequences"))
+                     r"(\.{2,}[/\\]+){2,}", ["urlDecodeUni"],
+                     desc="two or more consecutive ../ sequences in URI"))
 
     elif attack_class == "cmdi":
         c.append(_ir("cmdi", 1, "input_constraint", "args_and_body", "rx",

@@ -1,0 +1,87 @@
+{
+  "_comment": "Novel campaign for the LLM last-resort demo: server-side template injection probes. Local range only.",
+  "dossier": {
+    "techniques": [
+      "other"
+    ],
+    "attack_class": "other",
+    "endpoints": [
+      "/rest/products/search",
+      "/api/Feedbacks/"
+    ]
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%7B%7B7%2A7%7D%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7B7%2A7%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%3C%25%3D%207%2A7%20%25%3E",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%23%7B7%2A7%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%7B%7B7%2A%277%27%7D%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7B%7B%3C%25%5B%25%27%22%7D%7D%25%5C",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%2A%7B7%2A7%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%40%287%2A7%29",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "malicious": true,
+      "body": "{\"comment\": \"great {{7*7}}\", \"rating\": 4}"
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "malicious": true,
+      "body": "{\"comment\": \"great ${7*7}\", \"rating\": 4}"
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "malicious": true,
+      "body": "{\"comment\": \"great <%= 7*7 %>\", \"rating\": 4}"
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "malicious": true,
+      "body": "{\"comment\": \"great #{7*7}\", \"rating\": 4}"
+    }
+  ]
+}

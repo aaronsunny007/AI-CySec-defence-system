@@ -102,7 +102,15 @@ def path_traversal(a: Actor, pace: float) -> dict:
     _recon(a)
     met, evidence = False, ""
     for path in TRAVERSAL:
-        r = a.fire("GET", path, stage="exploit", technique="path-traversal")
+        # Only requests that actually use a traversal technique are malicious
+        # for this class. A plain GET of an exposed file (e.g. the intended
+        # /ftp/package.json.bak) is a different weakness (sensitive file
+        # exposure), not path traversal, and nothing in the request is
+        # traversal-shaped -- labelling it malicious would be a mislabel.
+        is_trav = any(tok in path.lower() for tok in ("..", "%2e", "%00", "%25"))
+        r = a.fire("GET", path, stage="exploit" if is_trav else "recon",
+                   technique="path-traversal" if is_trav else "file-access",
+                   malicious=is_trav)
         if r.status == 200 and ("root:" in r.body or "\"name\"" in r.body):
             met, evidence = True, f"read file via {path}"
         _pace(pace)
@@ -209,6 +217,18 @@ CAMPAIGNS = {
 
 # A readable user-agent per campaign so actor reconstruction (M1) has a signal,
 # and so the attack traffic is distinguishable from the benign corpus in logs.
+# A realistic browser UA. Attackers who matter spoof this; announcing yourself as
+# sqlmap makes CRS block even your harmless requests (rule 913100), which
+# inflates a WAF baseline. Default for all measurements.
+BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+
+
+def user_agent_for(campaign: str, mode: str = "browser") -> str:
+    """mode='browser' (spoofed, default) or 'tool' (announces the scanner)."""
+    return BROWSER_UA if mode == "browser" else USER_AGENTS[campaign]
+
+
 USER_AGENTS = {
     "sqli": "sqlmap/1.8#stable (http://sqlmap.org)",
     "xss": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 XSStrike",

@@ -33,6 +33,7 @@ for p in ("ir", "deliberator", "gate", "memory", "observer"):
     sys.path.insert(0, str(ROOT / p))
 import compile as irc          # noqa: E402
 import generate as deliberator # noqa: E402
+import llm as llm_mod          # noqa: E402
 import gate as gatemod         # noqa: E402
 from store import Memory, signature  # noqa: E402
 
@@ -70,8 +71,13 @@ def _quick_blocks(ir: dict, campaign_requests: list[dict], tmp: Path) -> bool:
 MAX_NEW_RULES_PER_HOUR = 10
 
 
+# LLM calls per hour (invariant 7). The model is the last resort (invariant 9).
+MAX_LLM_CALLS_PER_HOUR = 6
+
+
 def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
-             mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR) -> dict:
+             mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR,
+             llm=None, max_llm_per_hour: int = MAX_LLM_CALLS_PER_HOUR) -> dict:
     cls = (dossier.get("techniques") or [dossier.get("attack_class", "")])[0]
     campaign_id, sig = mem.record_campaign(dossier)
     t0 = time.perf_counter()
@@ -117,35 +123,93 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
             if ok and promoted is None:
                 promoted = ir
                 break
-        ttm = time.perf_counter() - t0
         if promoted:
+            ttm = time.perf_counter() - t0
             mem.promote_rule(promoted, sig)
             mem.record_outcome(campaign_id, "fresh", promoted["id"], ttm)
             return {"source": "fresh", "rule": promoted["id"], "ttm_s": ttm, "signature": sig}
+
+        # 4) LAST RESORT: templates produced nothing promotable -> ask the model.
+        # Its candidates are plain IR and go through the SAME gate; it gains no
+        # extra authority. Budgeted per hour, and every call's cost is recorded.
+        if llm is not None:
+            if mem.llm_calls_since(time.time() - 3600) >= max_llm_per_hour:
+                ttm = time.perf_counter() - t0
+                mem.record_outcome(campaign_id, "llm_budget_blocked", None, ttm)
+                return {"source": "llm_budget_blocked", "rule": None, "ttm_s": ttm,
+                        "signature": sig, "detail": f"LLM call cap {max_llm_per_hour}/h reached"}
+            prop = llm_mod.propose(dossier, campaign_requests, llm)
+            r = prop.response
+            mem.record_llm_call(campaign_id, r.model if r else "?", r.tokens_in if r else 0,
+                                r.tokens_out if r else 0, r.seconds if r else 0.0,
+                                len(prop.candidates), len(prop.rejected))
+            llm_info = {"tokens_in": r.tokens_in if r else 0, "tokens_out": r.tokens_out if r else 0,
+                        "llm_s": round(r.seconds, 1) if r else 0.0,
+                        "valid": len(prop.candidates), "dropped": prop.rejected,
+                        "gate": []}
+            for ir in prop.candidates:
+                if ir.get("mechanism") == "rate_limit":
+                    continue
+                ok, results = gatemod.run_gate(ir, campaign_requests, benign_corpus, tmp)
+                rej = next((x.stage for x in results if not x.passed), None)
+                mem.record_candidate(campaign_id, ir, "passed_offline" if ok else "rejected",
+                                     rej, [x.detail for x in results])
+                llm_info["gate"].append({"id": ir["id"], "ok": ok, "rejected_at": rej,
+                                         "detail": next((x.detail for x in results if not x.passed), "")})
+                if ok:
+                    ttm = time.perf_counter() - t0
+                    mem.promote_rule(ir, sig)
+                    mem.record_outcome(campaign_id, "llm", ir["id"], ttm)
+                    return {"source": "llm", "rule": ir["id"], "ttm_s": ttm,
+                            "signature": sig, "llm": llm_info}
+            ttm = time.perf_counter() - t0
+            mem.record_outcome(campaign_id, "none", None, ttm)
+            return {"source": "none", "rule": None, "ttm_s": ttm, "signature": sig, "llm": llm_info}
+
+        ttm = time.perf_counter() - t0
         mem.record_outcome(campaign_id, "none", None, ttm)
         return {"source": "none", "rule": None, "ttm_s": ttm, "signature": sig}
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--dossier", type=Path, required=True)
-    p.add_argument("--campaign", type=Path, required=True)
+    p.add_argument("--dossier", type=Path)
+    p.add_argument("--campaign", type=Path)
+    p.add_argument("--novel", type=Path,
+                   help="JSON file holding both {dossier, requests} (e.g. data/attack_corpus/novel_ssti.json)")
     p.add_argument("--benign", type=Path,
                    default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
     p.add_argument("--db", type=Path, default=ROOT / "memory" / "aegis.db")
     p.add_argument("--repeats", type=int, default=2, help="how many times to see this campaign")
+    p.add_argument("--llm", choices=["none", "ollama"], default="none",
+                   help="enable the last-resort LLM path (templates are always tried first)")
+    p.add_argument("--model", default="mistral:latest")
     args = p.parse_args()
 
-    dossier = json.loads(args.dossier.read_text(encoding="utf-8"))
-    campaign = [json.loads(l) for l in args.campaign.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if args.novel:
+        d = json.loads(args.novel.read_text(encoding="utf-8"))
+        dossier, campaign = d["dossier"], d["requests"]
+    elif args.dossier and args.campaign:
+        dossier = json.loads(args.dossier.read_text(encoding="utf-8"))
+        campaign = [json.loads(l) for l in args.campaign.read_text(encoding="utf-8").splitlines() if l.strip()]
+    else:
+        p.error("give --novel, or both --dossier and --campaign")
     mem = Memory(args.db)
+    backend = llm_mod.OllamaBackend(args.model) if args.llm == "ollama" else None
 
     results = []
     for i in range(args.repeats):
-        r = mitigate(dossier, campaign, args.benign, mem)
+        r = mitigate(dossier, campaign, args.benign, mem, llm=backend)
         results.append(r)
         print(f"exposure {i+1}: source={r['source']:11s} rule={r['rule']}  "
               f"time-to-mitigate={r['ttm_s']*1000:.1f} ms")
+        info = r.get("llm")
+        if info:
+            print(f"   LLM: {info['tokens_in']} tokens in / {info['tokens_out']} out, {info['llm_s']}s; "
+                  f"{info['valid']} valid candidate(s), dropped: {info['dropped']}")
+            for g in info["gate"]:
+                print(f"   gate {g['id']}: {'PASS' if g['ok'] else 'REJECTED at ' + str(g['rejected_at'])}"
+                      + (f" -- {g['detail']}" if g['detail'] else ""))
 
     if len(results) >= 2 and results[0]["ttm_s"] > 0 and results[1]["ttm_s"] > 0:
         speedup = results[0]["ttm_s"] / results[1]["ttm_s"]

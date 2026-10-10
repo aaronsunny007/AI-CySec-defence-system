@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS rule_signatures (
 CREATE TABLE IF NOT EXISTS outcomes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     campaign_id INTEGER, source TEXT, rule_ir_id TEXT, ttm_s REAL, ts REAL);
+CREATE TABLE IF NOT EXISTS llm_calls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, campaign_id INTEGER, model TEXT,
+    tokens_in INTEGER, tokens_out INTEGER, seconds REAL, n_valid INTEGER, n_dropped INTEGER);
 CREATE INDEX IF NOT EXISTS idx_rulesig ON rule_signatures(signature);
 CREATE INDEX IF NOT EXISTS idx_rules_class ON rules(attack_class);
 """
@@ -134,6 +137,18 @@ class Memory:
             "SELECT COUNT(*) n FROM rules WHERE promoted_ts >= ?", (since_ts,)).fetchone()
         return row["n"]
 
+    def record_llm_call(self, campaign_id: int, model: str, tokens_in: int, tokens_out: int,
+                        seconds: float, n_valid: int, n_dropped: int) -> None:
+        self.con.execute(
+            "INSERT INTO llm_calls(ts,campaign_id,model,tokens_in,tokens_out,seconds,n_valid,n_dropped)"
+            " VALUES(?,?,?,?,?,?,?,?)",
+            (time.time(), campaign_id, model, tokens_in, tokens_out, seconds, n_valid, n_dropped))
+        self.con.commit()
+
+    def llm_calls_since(self, since_ts: float) -> int:
+        return self.con.execute("SELECT COUNT(*) n FROM llm_calls WHERE ts>=?",
+                                (since_ts,)).fetchone()["n"]
+
     def touch_rule(self, ir_id: str) -> None:
         self.con.execute(
             "UPDATE rules SET last_matched_ts=?, match_count=match_count+1 WHERE ir_id=?",
@@ -160,7 +175,14 @@ class Memory:
 
     def stats(self) -> dict:
         c = self.con.execute
+        total = c("SELECT COUNT(*) n FROM outcomes").fetchone()["n"]
+        llm = c("SELECT COUNT(*) n FROM outcomes WHERE source='llm'").fetchone()["n"]
+        llm_cost = c("SELECT COALESCE(SUM(tokens_in),0) ti, COALESCE(SUM(tokens_out),0) to_,"
+                     " COALESCE(SUM(seconds),0) sec, COUNT(*) calls FROM llm_calls").fetchone()
         return {
+            "llm_fraction_of_campaigns": round(llm / total, 3) if total else 0.0,
+            "llm_calls": llm_cost["calls"], "llm_tokens_in": llm_cost["ti"],
+            "llm_tokens_out": llm_cost["to_"], "llm_seconds": round(llm_cost["sec"], 1),
             "campaigns": c("SELECT COUNT(*) n FROM campaigns").fetchone()["n"],
             "candidates": c("SELECT COUNT(*) n FROM candidates").fetchone()["n"],
             "active_rules": c("SELECT COUNT(*) n FROM rules WHERE status='active'").fetchone()["n"],

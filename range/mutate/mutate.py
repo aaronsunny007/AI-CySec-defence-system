@@ -76,6 +76,53 @@ MUTATORS: dict[str, Callable[[str], str]] = {
 }
 
 
+# Path mutators: for payloads that live in the URL PATH (path traversal). The
+# query/body mutators above never touch the path, so before these existed a
+# traversal rule got zero mutants and passed the mutation stage as "n/a".
+def p_encode_slash(s: str) -> str:
+    return s.replace("/", "%2f")
+
+
+def p_double_encode_slash(s: str) -> str:
+    return s.replace("/", "%252f")
+
+
+def p_encode_dots(s: str) -> str:
+    return s.replace(".", "%2e")
+
+
+def p_double_encode_dots(s: str) -> str:
+    return s.replace(".", "%252e")
+
+
+def p_backslash(s: str) -> str:
+    return s.replace("../", "..\\")
+
+
+def p_extra_dots(s: str) -> str:
+    return s.replace("../", "....//")
+
+
+def p_mixed_case_encoding(s: str) -> str:
+    return s.replace("/", "%2F").replace(".", "%2E")
+
+
+PATH_MUTATORS: dict[str, Callable[[str], str]] = {
+    "path_encode_slash": p_encode_slash,
+    "path_double_encode_slash": p_double_encode_slash,
+    "path_encode_dots": p_encode_dots,
+    "path_double_encode_dots": p_double_encode_dots,
+    "path_backslash": p_backslash,
+    "path_extra_dots": p_extra_dots,
+    "path_mixed_case_encoding": p_mixed_case_encoding,
+}
+
+
+def _looks_like_traversal(path: str) -> bool:
+    low = urllib.parse.unquote(path).lower()
+    return "../" in low or "..\\" in low or "/etc/passwd" in low
+
+
 def _mutate_query(query: str, mut: Callable[[str], str]) -> str:
     """Mutate each parameter VALUE, keep keys and structure."""
     pairs = urllib.parse.parse_qsl(query, keep_blank_values=True)
@@ -111,6 +158,15 @@ def mutate_request(rec: dict) -> list[dict]:
         if nq == query and nb == body:
             continue  # nothing to mutate here
         out.append({**rec, "uri": _rejoin(path, nq), "body": nb, "mutation": name})
+
+    # Path mutations, only for requests whose payload is in the path. Mutate the
+    # decoded path once so a payload that arrived encoded is mutated consistently.
+    if _looks_like_traversal(path):
+        base = urllib.parse.unquote(path)
+        for name, mut in PATH_MUTATORS.items():
+            np_ = mut(base)
+            if np_ != base:
+                out.append({**rec, "uri": _rejoin(np_, query), "mutation": name})
     return out
 
 

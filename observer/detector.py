@@ -235,8 +235,22 @@ ATTACK_UA = ("sqlmap", "XSStrike", "Nuclei", "commix", "SSRFmap",
              "aegis-enum", "Autorize", "OpenBullet")
 
 
+def ground_truth(rec: dict) -> str | None:
+    """'attack:<campaign>', 'benign' or None, from the gateway's range-only
+    gt_label. EVALUATION ONLY -- nothing in detect() reads this. The attack
+    user-agent is NOT used any more: an attacker controls it, and CRS itself
+    matches on it (rule 913100), which confounded earlier measurements."""
+    g = rec.get("gt_label")
+    return g or None
+
+
 def is_attack_actor(actor: Actor) -> bool:
-    ua = actor.requests[0].raw.get("user_agent", "") if actor.requests else ""
+    if not actor.requests:
+        return False
+    g = ground_truth(actor.requests[0].raw)
+    if g is not None:
+        return g.startswith("attack:")
+    ua = actor.requests[0].raw.get("user_agent", "")  # legacy logs without gt_label
     return any(m.lower() in ua.lower() for m in ATTACK_UA)
 
 
@@ -296,7 +310,7 @@ def _evaluate(actors, dossiers, min_requests) -> None:
               f"p90 {ttds[min(int(len(ttds)*0.9), len(ttds)-1)]:.1f}s  "
               f"within 30s: {within30:.0f}%")
     # per-technique recall on attack actors (by the campaign the UA implies)
-    print("missed attack actors:", [a.requests[0].raw.get("user_agent","")[:30] for a in fn] or "none")
+    print("missed attack actors:", [(a.requests[0].raw.get("gt_label") or a.requests[0].raw.get("user_agent",""))[:30] for a in fn] or "none")
     if fp:
         print("false-flagged benign (investigate):")
         for a in fp[:8]:

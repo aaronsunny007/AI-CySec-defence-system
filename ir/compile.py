@@ -40,7 +40,7 @@ TRANSFORM = {
     "cmdLine": "cmdLine", "normalizePath": "normalizePath", "length": "length",
 }
 ATTACK_CLASS = {"sqli", "xss", "traversal", "cmdi", "ssrf",
-                "credential_stuffing", "user_enumeration", "idor_bola", "scan"}
+                "credential_stuffing", "user_enumeration", "idor_bola", "scan", "other"}
 MECHANISM = {"signature", "input_constraint", "rate_limit"}
 METHODS = {"GET", "POST", "PUT", "DELETE", "PATCH"}
 
@@ -49,6 +49,24 @@ _ID_RE = re.compile(r"^aegis-[a-z0-9_]+-[0-9]+$")
 
 class IRError(ValueError):
     """Raised when IR is invalid. A rejected candidate, never a crash."""
+
+
+def _safe_text(s, what: str, max_len: int) -> None:
+    """Text that will be embedded inside a double-quoted SecRule argument.
+    The model is untrusted, so this is the injection boundary: no control
+    characters (a newline could start a second directive), no double quote
+    (breaks out of the argument), and no odd trailing backslash (escapes the
+    closing quote)."""
+    s = str(s)
+    if len(s) > max_len:
+        raise IRError(f"{what} too long")
+    if any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in s):
+        raise IRError(f"{what} contains a control character")
+    if '"' in s:
+        raise IRError(f"{what} may not contain a double quote")
+    trailing = len(s) - len(s.rstrip("\\"))
+    if trailing % 2 == 1:
+        raise IRError(f"{what} ends with an unescaped backslash")
 
 
 def _require(cond: bool, msg: str) -> None:
@@ -71,7 +89,7 @@ def validate(ir: dict) -> None:
     if "endpoint_prefix" in sc:
         _require(isinstance(sc["endpoint_prefix"], str) and len(sc["endpoint_prefix"]) <= 200,
                  "bad endpoint_prefix")
-        _require('"' not in sc["endpoint_prefix"], "endpoint_prefix may not contain quotes")
+        _safe_text(sc["endpoint_prefix"], "endpoint_prefix", 200)
     for meth in sc.get("methods", []):
         _require(meth in METHODS, f"bad method: {meth}")
 
@@ -103,8 +121,8 @@ def validate(ir: dict) -> None:
     if m["operator"] in ("gt", "ge"):
         _require(str(val).lstrip("-").isdigit(), "gt/ge value must be numeric")
 
-    # No quotes in the value that could break out of the SecRule operator arg.
-    _require('"' not in str(val), "match.value may not contain a double quote")
+    # Injection boundary for the model-written value (see _safe_text).
+    _safe_text(val, "match.value", 500)
 
 
 def compile_rate(ir: dict) -> dict:
@@ -140,8 +158,15 @@ def _esc(s: str) -> str:
     return str(s)
 
 
-def compile_rule(ir: dict) -> str:
-    """Compile validated IR to a Coraza SecRule string. Call validate() first."""
+def compile_rule(ir: dict, deny: bool = True) -> str:
+    """Compile validated IR to a Coraza SecRule string.
+
+    deny=True  : the rule itself denies (403). Used by the gate's replay tool,
+                 which tests one rule in isolation.
+    deny=False : the rule only matches and logs (`pass`). Used for the gateway
+                 manifest, where the GATEWAY decides per rule mode
+                 (off/shadow/canary/enforce) whether a match blocks.
+    Either way the rule carries tag aegis-rule:<id> so a match is attributable."""
     validate(ir)
     if ir["mechanism"] == "rate_limit":
         raise IRError("rate_limit compilation is deferred to M2b; "
@@ -156,10 +181,14 @@ def compile_rule(ir: dict) -> str:
     op_arg = op if m["operator"] in ("detectSQLi", "detectXSS") else f'{op} {val}'
     transforms = m.get("transformations") or ["none"]
     t_actions = ",".join(f"t:{TRANSFORM[t]}" for t in transforms)
-    msg = (ir.get("description") or f"AEGIS {ir['attack_class']} mitigation").replace("'", "")[:200]
+    # msg is built only from validated fields; the free-text `description` (which
+    # a model may write) is kept in the manifest/memory but never put in the rule.
+    msg = f"AEGIS {ir['attack_class']} rule {ir['id']}"
 
-    base_actions = (f"id:{rid},phase:2,deny,status:403,log,"
-                    f"msg:'{msg}',tag:'aegis',tag:'aegis/{ir['attack_class']}',{t_actions}")
+    disposition = "deny,status:403" if deny else "pass"
+    base_actions = (f"id:{rid},phase:2,{disposition},log,"
+                    f"msg:'{msg}',tag:'aegis',tag:'aegis/{ir['attack_class']}',"
+                    f"tag:'aegis-rule:{ir['id']}',{t_actions}")
 
     sc = ir.get("scope", {})
     chain_conditions = []
