@@ -1,0 +1,51 @@
+# AEGIS range - Docker alternative (see docs/DECISIONS.md; native Windows range is primary)
+#
+#   client --> waf (nginx + ModSecurity v3 + OWASP CRS) :8080 --> juiceshop :3000
+#
+# Juice Shop is deliberately NOT published to the host: the only way in is
+# through the WAF, so every request is inspected and logged.
+#
+# The waf image is the M0 stand-in for the enforcement plane. In M2 it is
+# replaced by our own Go + Coraza gateway (fail-open, per-rule modes).
+
+services:
+  juiceshop:
+    image: bkimminich/juice-shop:v20.2.0
+    restart: unless-stopped
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  waf:
+    image: owasp/modsecurity-crs:nginx
+    restart: unless-stopped
+    depends_on:
+      juiceshop:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      BACKEND: http://juiceshop:3000
+      PORT: "8080"
+      # CRS at default settings = baseline (2) in the build spec.
+      PARANOIA: "1"
+      BLOCKING_PARANOIA: "1"
+      ANOMALY_INBOUND: "5"
+      ANOMALY_OUTBOUND: "4"
+      # Audit EVERY transaction, not just suspicious ones. We need the benign
+      # requests too, or we can never measure a false-positive rate.
+      MODSEC_AUDIT_ENGINE: "On"
+      MODSEC_AUDIT_LOG: /var/log/modsecurity/audit.jsonl
+      MODSEC_AUDIT_LOG_FORMAT: JSON
+      MODSEC_AUDIT_LOG_TYPE: Serial
+      # A=header B=req headers I=req body (no files) J=file info
+      # F=resp headers H=matched rules Z=end. Response bodies (E) omitted to
+      # keep a 100k-request corpus to a sane size.
+      MODSEC_AUDIT_LOG_PARTS: ABIJFHZ
+      MODSEC_REQ_BODY_ACCESS: "on"
+    volumes:
+      - ./logs/modsec:/var/log/modsecurity

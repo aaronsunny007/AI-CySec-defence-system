@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AEGIS Rule IR",
+  "description": "Typed intermediate representation for an autonomously proposed mitigation. The deliberator (and later the LLM) emits ONLY this; ir/compile.py validates it and compiles it to a Coraza SecRule. Enforcement syntax is never produced by the model.",
+  "type": "object",
+  "required": ["id", "attack_class", "mechanism", "action", "match"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^aegis-[a-z0-9_]+-[0-9]+$",
+            "description": "aegis-<campaign>-<n>; compiled to a numeric Coraza id in 100000-199999"},
+    "description": {"type": "string", "maxLength": 300},
+    "attack_class": {"enum": ["sqli", "xss", "traversal", "cmdi", "ssrf",
+                              "credential_stuffing", "user_enumeration", "idor_bola", "scan"]},
+    "mechanism": {"enum": ["signature", "input_constraint", "rate_limit"],
+                  "description": "signature = detect a payload; input_constraint = reject malformed/oversized input; rate_limit = cap request rate (compiled later)"},
+    "action": {"enum": ["block"]},
+    "ttl_s": {"type": "integer", "minimum": 60, "maximum": 2592000,
+              "description": "rule self-expires after this; enforced by the rule store, not the engine"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "endpoint_prefix": {"type": "string", "maxLength": 200,
+                            "description": "only apply on URIs starting with this (narrows blast radius)"},
+        "methods": {"type": "array", "items": {"enum": ["GET", "POST", "PUT", "DELETE", "PATCH"]}}
+      }
+    },
+    "match": {
+      "type": "object",
+      "required": ["target", "operator", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "target": {"enum": ["args", "body", "uri", "path", "args_names",
+                            "request_line", "all_args", "args_and_body"]},
+        "operator": {"enum": ["rx", "contains", "streq", "detectSQLi", "detectXSS",
+                              "gt", "ge"]},
+        "value": {"type": ["string", "number"], "maxLength": 500},
+        "transformations": {
+          "type": "array",
+          "items": {"enum": ["none", "lowercase", "urlDecodeUni", "removeComments",
+                            "compressWhitespace", "removeWhitespace", "htmlEntityDecode",
+                            "cmdLine", "normalizePath", "length"]}
+        }
+      }
+    },
+    "rate": {
+      "type": "object",
+      "required": ["count", "window_s"],
+      "additionalProperties": false,
+      "properties": {
+        "count": {"type": "integer", "minimum": 1},
+        "window_s": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}
