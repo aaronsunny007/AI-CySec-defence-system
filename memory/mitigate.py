@@ -87,7 +87,7 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
 
     # 1) exact repeat
     exact = mem.rule_for_signature(sig)
-    if exact:
+    if exact and exact["id"] not in exclude:
         mem.touch_rule(exact["id"])
         ttm = time.perf_counter() - t0
         mem.record_outcome(campaign_id, "reused", exact["id"], ttm)

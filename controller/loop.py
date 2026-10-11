@@ -57,6 +57,7 @@ INJECTION = {"sqli", "xss", "traversal", "cmdi", "ssrf"}
 RATE = {"credential_stuffing", "user_enumeration", "idor_bola"}
 # 'scan' is detected but has no mitigation template; it is reported, not acted on.
 
+BYPASS_MIN = 3              # unblocked evidence requests that make an enforcing rule 'bypassed'
 COOLDOWN_S = 600.0          # a campaign signature that yielded no rule is not retried for this long
 MIN_BENIGN_ACTORS = 20      # the rate gate refuses to judge on less benign evidence
 
@@ -147,6 +148,7 @@ class Controller:
         self.flagged: set[str] = set()
         self.handled: set[tuple[str, str]] = set()
         self.failed_live: set[str] = set()
+        self.retried: set[str] = set()
         self.handled_times: collections.deque = collections.deque()
         self.newest_ts = 0.0
         LS.GATEWAY_LOG = cfg.log          # the live stages read the same log the controller tails
@@ -310,11 +312,15 @@ class Controller:
                                 self.cfg.canary_s, self.cfg.canary_pct, drive=False,
                                 context=self.context_records(), require_samples=True)
 
+    @staticmethod
+    def _mode_of(rule_id: str) -> str | None:
+        e = next((r for r in rulestore.load()["rules"] if r["id"] == rule_id), None)
+        return e.get("mode") if e else None
+
     def deploy(self, ir: dict) -> bool:
         """Get a gate-passed rule into enforcement via the live stages (or note that it
         is already enforcing). Any failure leaves the rule OFF."""
-        entry = next((r for r in rulestore.load()["rules"] if r["id"] == ir["id"]), None)
-        if entry and entry.get("mode") == "enforce":
+        if self._mode_of(ir["id"]) == "enforce":
             self.emit("already_enforcing", rule=ir["id"])
             return True
         self.emit("live_start", rule=ir["id"], shadow_s=self.cfg.shadow_s,
@@ -326,8 +332,8 @@ class Controller:
                 rulestore.set_mode(ir["id"], "off")
             except Exception:
                 pass
-            self.failed_live.add(ir["id"])
-            self.mem.set_rule_status(ir["id"], "rejected_live")
+            # A crash or a vanished rule (e.g. HTTP 404 from the admin API) is an operational
+            # error, NOT a gate verdict: switch the rule off but do not blacklist it.
             self.emit("live_error", rule=ir["id"], error=repr(e))
             if isinstance(e, (KeyboardInterrupt, SystemExit)):
                 raise
@@ -338,6 +344,17 @@ class Controller:
         if res["promoted"]:
             self.emit("enforced", rule=ir["id"])
             return True
+        # A canary that rolled back on a latency/5xx comparison (not on suspected false
+        # positives) is retried ONCE: the comparison is between two different groups of
+        # actors and was seen to false-alarm on clustered traffic (docs/E2E-RESULTS.md).
+        # The retry must pass a clean canary on its own; suspected-FP rollbacks are final.
+        last = res["stages"][-1] if res["stages"] else None
+        noisy = (last is not None and last.stage == "canary" and "ROLLED BACK" in last.detail
+                 and ("5xx" in last.detail or "latency" in last.detail))
+        if noisy and ir["id"] not in self.retried:
+            self.retried.add(ir["id"])
+            self.emit("retry_after_noisy_rollback", rule=ir["id"], detail=last.detail)
+            return self.deploy(ir)
         self.failed_live.add(ir["id"])
         self.mem.set_rule_status(ir["id"], "rejected_live")
         self.emit("rejected_live", rule=ir["id"])
@@ -365,7 +382,18 @@ class Controller:
         # A repeat of a campaign whose rule is already known costs a lookup, and an
         # attacker rotating identities must not be able to exhaust the budget for real work.
         known = self.mem.rule_for_signature(sig)
-        if not (known and known["id"] not in self.failed_live):
+        exclude = set(self.failed_live)
+        if (known and known["id"] not in exclude and tech in INJECTION
+                and self._mode_of(known["id"]) == "enforce"):
+            # The rule that should stop this campaign is enforcing, yet the campaign's
+            # evidence still reached the app: the rule does not cover this variant.
+            leaked = [r for r in ev if not r.raw.get("blocked")]
+            if len(leaked) >= BYPASS_MIN:
+                self.emit("rule_bypassed", rule=known["id"], technique=tech,
+                          leaked=len(leaked), of=len(ev))
+                exclude.add(known["id"])
+                known = None
+        if not (known and known["id"] not in exclude):
             now = time.time()
             while self.handled_times and now - self.handled_times[0] > 3600:
                 self.handled_times.popleft()
@@ -380,7 +408,7 @@ class Controller:
             res = self.mitigate_fn(dossier, reqs, self.cfg.benign_corpus, self.mem,
                                    max_new_per_hour=self.cfg.max_new_rules_per_hour,
                                    llm=self.cfg.llm, llm_rounds=self.cfg.llm_rounds,
-                                   exclude=frozenset(self.failed_live))
+                                   exclude=frozenset(exclude))
         self.emit("mitigation", technique=tech, source=res["source"], rule=res.get("rule"),
                   ttm_s=round(res["ttm_s"], 4), signature=res.get("signature"))
         if not res.get("rule"):

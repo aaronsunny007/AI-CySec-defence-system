@@ -49,11 +49,16 @@ class Agent(unittest.TestCase):
         self.assertGreaterEqual(rep.adaptations["rotate"], 2)
         self.assertGreater(rep.identities, 1)
 
-    def test_stops_when_objective_met(self):
-        rep = self.run_agent("credential_stuffing", [401, 401, 200], budget=50)
+    def test_sqli_stops_when_objective_met(self):
+        rep = self.run_agent("sqli", [401, 401, 200], budget=50)
         self.assertTrue(rep.objective_met)
-        self.assertEqual(rep.requests_to_objective, 3)
-        self.assertEqual(rep.requests, 3)
+        self.assertEqual((rep.requests_to_objective, rep.requests), (3, 3))
+
+    def test_stuffing_harvests_every_valid_pair_in_one_pass(self):
+        rep = self.run_agent("credential_stuffing", [200, 401, 200] + [401] * 500, budget=1000)
+        self.assertEqual(len(rep.valid_found), 2)
+        self.assertEqual(rep.requests_to_objective, 1)
+        self.assertLess(rep.requests, 1000)          # exhausted the list instead of looping forever
 
 
 if __name__ == "__main__":

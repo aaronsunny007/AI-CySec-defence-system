@@ -221,6 +221,76 @@ class FailSafe(Base):
         self.assertIn("budget_skip", self.names())
 
 
+class OperationalErrorsAreNotVerdicts(Base):
+    def test_live_error_does_not_blacklist_the_rule(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake(boom=True))
+        self.feed(benign_users() + stuffing("atk-1"))
+        c.step()
+        self.assertEqual(c.failed_live, set())
+        sig = next(e for e in self.events() if e["event"] == "mitigation")["signature"]
+        self.assertIsNotNone(self.mem.rule_for_signature(sig))     # still reusable later
+
+    def test_noisy_canary_rollback_is_retried_once_then_final(self):
+        calls = []
+
+        def live(ir):
+            calls.append(ir["id"])
+            st = [loop.LS.LiveResult("shadow", True, "ok"),
+                  loop.LS.LiveResult("canary", False, "ROLLED BACK after 20s: 5xx regression: canary 9% vs control 4% (z=3.0)")]
+            return {"id": ir["id"], "promoted": False, "stages": st}
+        c = loop.Controller(self.cfg, self.mem, live=live)
+        self.feed(benign_users() + stuffing("atk-1"))
+        c.step()
+        rid = calls[0]
+        self.assertEqual(calls, [rid, rid])                      # exactly one retry
+        self.assertIn("retry_after_noisy_rollback", self.names())
+        self.assertIn(rid, c.failed_live)
+
+    def test_suspected_false_positive_rollback_is_final(self):
+        calls = []
+
+        def live(ir):
+            calls.append(ir["id"])
+            st = [loop.LS.LiveResult("canary", False, "ROLLED BACK after 9s: suspected false positives: 4 blocks")]
+            return {"id": ir["id"], "promoted": False, "stages": st}
+        c = loop.Controller(self.cfg, self.mem, live=live)
+        self.feed(benign_users() + stuffing("atk-1"))
+        c.step()
+        self.assertEqual(len(calls), 1)
+
+
+class BypassDetection(Base):
+    def test_enforcing_rule_that_does_not_stop_the_evidence_triggers_resynthesis(self):
+        seen = {}
+
+        def fake_mitigate(dossier, reqs, corpus, mem, **kw):
+            seen["exclude"] = kw["exclude"]
+            return {"source": "none", "rule": None, "ttm_s": 0.0, "signature": "x"}
+        c = loop.Controller(self.cfg, self.mem, live=Fake(), mitigate_fn=fake_mitigate)
+        # a known, enforcing cmdi rule for this campaign signature
+        ir = loop.deliberator.candidates_for("cmdi", {"endpoints": ["/rest/products/search"]})[0]
+        sig = loop.signature("cmdi", ["/rest/products/search"])
+        self.mem.promote_rule(ir, sig)
+        loop.rulestore.load.return_value = {"version": 2, "rules": [{"id": ir["id"], "mode": "enforce"}]}
+        atk = [dict(rec(i, "atk-9", "GET", "/rest/products/search?q=apple%3B+cat+%2Fetc%2Fpasswd"), blocked=False)
+               for i in range(4)]
+        self.feed(benign_users() + atk)
+        c.step()
+        self.assertIn("rule_bypassed", self.names())
+        self.assertIn(ir["id"], seen["exclude"])
+
+    def test_blocked_evidence_is_not_a_bypass(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        ir = loop.deliberator.candidates_for("cmdi", {"endpoints": ["/rest/products/search"]})[0]
+        self.mem.promote_rule(ir, loop.signature("cmdi", ["/rest/products/search"]))
+        loop.rulestore.load.return_value = {"version": 2, "rules": [{"id": ir["id"], "mode": "enforce"}]}
+        atk = [dict(rec(i, "atk-9", "GET", "/rest/products/search?q=apple%3B+cat+%2Fetc%2Fpasswd", status=403),
+                    blocked=True) for i in range(4)]
+        self.feed(benign_users() + atk)
+        c.step()
+        self.assertNotIn("rule_bypassed", self.names())
+
+
 class Boundaries(unittest.TestCase):
     def test_controller_never_reads_ground_truth(self):
         src = (ROOT / "controller" / "loop.py").read_text(encoding="utf-8")
