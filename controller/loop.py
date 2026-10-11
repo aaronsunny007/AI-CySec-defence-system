@@ -398,11 +398,23 @@ class Controller:
                           trace=traceback.format_exc()[-600:])
         return n
 
+    def _switch_off_unfinished(self) -> None:
+        """A rule left in shadow/canary (controller stopped or crashed mid-stage) has not
+        finished the gate: switch it off rather than leave it half-tested."""
+        try:
+            for r in rulestore.load()["rules"]:
+                if r.get("mode") in ("shadow", "canary"):
+                    rulestore.set_mode(r["id"], "off")
+                    self.emit("switched_off_unfinished", rule=r["id"], was=r.get("mode"))
+        except Exception as e:
+            self.emit("error", where="switch_off_unfinished", error=repr(e))
+
     def run(self, stop_file: Path | None = None, max_seconds: float | None = None) -> None:
         t0 = time.time()
         self.emit("controller_start", log=str(self.cfg.log), shadow_s=self.cfg.shadow_s,
                   canary_s=self.cfg.canary_s, window_s=self.cfg.window_s,
                   ext_benign_actors=len(self.ext_benign))
+        self._switch_off_unfinished()
         try:
             while True:
                 if stop_file and stop_file.exists():
@@ -416,6 +428,7 @@ class Controller:
                               trace=traceback.format_exc()[-600:])
                 time.sleep(self.cfg.tick_s)
         finally:
+            self._switch_off_unfinished()
             self.emit("controller_stop", memory=self.mem.stats())
 
 
