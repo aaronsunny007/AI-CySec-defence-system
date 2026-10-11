@@ -35,7 +35,12 @@ CRS_THRESHOLD = 5
 
 # --- payload signatures (behavioural, independent of CRS) ----------------------
 SIGS = {
-    "sqli": re.compile(r"('|%27)\s*(or|and)\s|union\s+select|--|\bselect\b.+\bfrom\b|sqlite_master|1=1", re.I),
+    # Comment markers and tautologies count only in injection context (after a
+    # quote or paren). A bare `--` or `1=1` matched ordinary text ("late -- but
+    # worth it", "1=1 perfect apples") AND socket.io session ids (which contain
+    # `--`): 0.0755% of the 443k benign requests before this change.
+    "sqli": re.compile(r"('|%27)\s*\)*\s*(or|and)\s|union\s+select|('|%27|\))\s*(--|#)|"
+                       r"\bselect\b.+\bfrom\b|sqlite_master", re.I),
     "xss": re.compile(r"<script|onerror\s*=|onload\s*=|<svg|<iframe|javascript:", re.I),
     "traversal": re.compile(r"\.\./|\.\.%2f|%2e%2e|/etc/passwd|\.\.\\|%00|%2500", re.I),
     "cmdi": re.compile(r";\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(|`.*`|&&\s*(ping|cat)", re.I),

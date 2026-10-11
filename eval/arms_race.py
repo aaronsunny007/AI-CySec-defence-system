@@ -33,7 +33,12 @@ CLASS_OF = {"sqli": "sqli", "xss": "xss", "path_traversal": "traversal",
 
 def load_campaign(attack_log: Path, campaign_name: str) -> tuple[dict, list[dict]]:
     rows = [json.loads(l) for l in attack_log.read_text(encoding="utf-8").splitlines() if l.strip()]
-    mal = [r for r in rows if r["attack_class"] == campaign_name and r.get("malicious")]
+    # The attack log is cumulative (every run appends), so use ONE run only: the
+    # most recent actor of this campaign. Mixing runs would drag in rows labelled
+    # under older versions of the campaign (e.g. before a mislabel was fixed).
+    of_class = [r for r in rows if r["attack_class"] == campaign_name]
+    last_actor = of_class[-1]["actor"] if of_class else None
+    mal = [r for r in of_class if r["actor"] == last_actor and r.get("malicious")]
     cls = CLASS_OF.get(campaign_name, campaign_name)
     endpoints = sorted({("/".join("{id}" if p.isdigit() else p
                                   for p in r["uri"].split("?")[0].split("/")))

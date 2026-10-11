@@ -96,6 +96,7 @@ func main() {
 	corpus := flag.String("corpus", "", "JSONL request corpus (required)")
 	limit := flag.Int("limit", 0, "max records (0 = all)")
 	nsamples := flag.Int("samples", 5, "matched samples to include")
+	maxIdx := flag.Int("indices", 0, "also output the 0-based record numbers of up to N matched records (0 = off)")
 	flag.Parse()
 	if *ruleFile == "" || *corpus == "" {
 		fmt.Fprintln(os.Stderr, "need -rule and -corpus")
@@ -117,6 +118,7 @@ func main() {
 
 	total, matched := 0, 0
 	var samples []string
+	matchedIdx := []int{}
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 1024*1024), 8*1024*1024)
 	for sc.Scan() {
@@ -134,6 +136,9 @@ func main() {
 			if len(samples) < *nsamples {
 				samples = append(samples, r.Method+" "+r.URI)
 			}
+			if len(matchedIdx) < *maxIdx {
+				matchedIdx = append(matchedIdx, total-1)
+			}
 		}
 		if *limit > 0 && total >= *limit {
 			break
@@ -144,8 +149,12 @@ func main() {
 	if total > 0 {
 		rate = float64(matched) / float64(total)
 	}
-	out, _ := json.Marshal(map[string]any{
+	res := map[string]any{
 		"total": total, "matched": matched, "rate": rate, "samples": samples,
-	})
+	}
+	if *maxIdx > 0 {
+		res["matched_idx"] = matchedIdx
+	}
+	out, _ := json.Marshal(res)
 	fmt.Println(string(out))
 }

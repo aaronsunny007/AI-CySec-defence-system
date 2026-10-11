@@ -140,6 +140,61 @@ class HostileModelOutput(unittest.TestCase):
         self.assertEqual(p.rejected[0][0], "backend_error")
 
 
+class RepairFeedbackIsTrafficFree(unittest.TestCase):
+    """Invariant 4 for the repair loop: feedback carries numbers, stage names and
+    fixed-vocabulary token classes -- never request text."""
+
+    @unittest.skipUnless((ROOT / "bin" / "replay.exe").exists(), "bin/replay.exe not built")
+    def test_no_sentinel_text_in_feedback_or_prompt(self):
+        import tempfile
+        sys.path.insert(0, str(ROOT / "deliberator"))
+        import repair
+        camp = [{"method": "GET", "malicious": True,
+                 "uri": "/rest/products/search?q=ZZATTACKSENTINELZZ%7B%7B7*7%7D%7D"},
+                {"method": "POST", "malicious": True, "uri": "/api/Feedbacks/",
+                 "body": json.dumps({"comment": "ZZATTACKSENTINELZZ ${7*7}"})}]
+        with tempfile.TemporaryDirectory() as td:
+            benign = Path(td) / "benign.jsonl"
+            benign.write_text(chr(10).join(json.dumps(
+                {"method": "GET", "uri": f"/rest/products/search?q=ZZBENIGNSENTINELZZ{i}+10-5",
+                 "body": "", "content_type": ""}) for i in range(30)), encoding="utf-8")
+
+            def cand(value, target="args"):
+                return {"id": "aegis-rep-1", "attack_class": "other", "mechanism": "input_constraint",
+                        "action": "block", "match": {"target": target, "operator": "rx", "value": value,
+                                                     "transformations": ["urlDecodeUni"]}}
+            fb1 = repair.feedback_for(cand("ZZNOMATCHZZQQ"), "attack_replay", camp, benign)
+            # matches every benign line via a short fragment; the full sentinel
+            # appears only in the traffic, never in the candidate the model wrote
+            fb2 = repair.feedback_for(cand("ZZBEN"), "benign_replay", camp, benign)
+            fb3 = repair.feedback_for(cand("x"), "engine_load", camp, benign)
+        self.assertEqual(fb1["campaign_requests_matched"], "0 of 2")
+        self.assertIn("missed_token_classes", fb1)
+        self.assertEqual(fb2["benign_traffic_matched"], "30 of 30")
+        self.assertIn("token_classes_in_matched_benign_requests", fb2)
+        text = json.dumps([fb1, fb2, fb3])
+        for sentinel in ("ZZATTACKSENTINELZZ", "ZZBENIGNSENTINELZZ", "7*7"):
+            self.assertNotIn(sentinel, text, f"{sentinel} leaked into feedback")
+        feats = llm.extract_features(DOSSIER, camp, ROUTES)
+        prompt = llm.build_prompt(feats, [fb1, fb2, fb3])
+        for sentinel in ("ZZATTACKSENTINELZZ", "ZZBENIGNSENTINELZZ"):
+            self.assertNotIn(sentinel, prompt)
+        # everything token-class-like must come from the fixed vocabulary
+        for name in list(fb1["missed_token_classes"]) + list(fb2["token_classes_in_matched_benign_requests"]):
+            self.assertIn(name, llm.VOCAB)
+
+    def test_feedback_enters_the_prompt_and_changes_the_candidate_ids(self):
+        fb = [{"candidate": {"value": "x"}, "failed_stage": "attack_replay",
+               "campaign_requests_matched": "0 of 12"}]
+        feats = llm.extract_features(DOSSIER, campaign(), ROUTES)
+        self.assertIn("PREVIOUS ATTEMPTS", llm.build_prompt(feats, fb))
+        self.assertNotIn("PREVIOUS ATTEMPTS", llm.build_prompt(feats, None))
+        b = llm.MockBackend(json.dumps({"candidates": [good_candidate()]}))
+        a = llm.propose(DOSSIER, campaign(), b, routes=ROUTES).candidates[0]["id"]
+        c = llm.propose(DOSSIER, campaign(), b, routes=ROUTES, feedback=fb).candidates[0]["id"]
+        self.assertNotEqual(a, c)
+
+
 class CompilerBoundary(unittest.TestCase):
     BASE = {"id": "aegis-t-1", "attack_class": "sqli", "mechanism": "signature", "action": "block",
             "match": {"target": "args", "operator": "rx", "value": "x", "transformations": ["none"]}}

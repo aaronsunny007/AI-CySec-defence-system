@@ -54,6 +54,7 @@ VOCAB: dict[str, re.Pattern] = {k: re.compile(v, re.I) for k, v in {
     "command_substitution": r"(\$\(|`)",
     "internal_host_url": r"(127\.0\.0\.1|localhost|169\.254\.169\.254|\[::1\])",
     "url_scheme": r"\b(https?|file|gopher|ftp|ldap|jndi)\s*:",
+    "nosql_operator": r"\$(ne|gt|lt|gte|lte|regex|where|or|and|in|nin|exists)\b",
     "template_double_brace": r"\{\{.*?\}\}",
     "template_dollar_brace": r"\$\{.*?\}",
     "template_percent_tag": r"<%.*?%>",
@@ -150,13 +151,28 @@ SYSTEM = (
 )
 
 
-def build_prompt(features: dict) -> str:
+def build_prompt(features: dict, feedback: list[dict] | None = None) -> str:
     targets = sorted(irc.TARGET)
     ops = [o for o in sorted(irc.OPERATOR) if o not in ("gt", "ge", "streq")]
     transforms = sorted(irc.TRANSFORM)
+    fb = ""
+    if feedback:
+        # Built by deliberator/repair.py: candidate fields the model itself wrote,
+        # stage names, numbers and fixed-vocabulary token-class names ONLY.
+        fb = (
+            "\n\nPREVIOUS ATTEMPTS were tested and rejected. For each, the verdict below is "
+            "machine-computed; the numbers and token-class names are the only facts you "
+            "get about the traffic:\n" + json.dumps(feedback[-6:], indent=2, sort_keys=True)
+            + "\n\nRevise: propose NEW candidates that fix these failures. Do not repeat a "
+            "failed candidate. If a rule matched too little of the campaign, target the "
+            "missed token classes at the stated location (path/query/body) and pick a "
+            "target that covers it. If a rule matched legitimate traffic, make it narrower "
+            "so it cannot match the listed benign token classes on their own."
+        )
     return (
         "Campaign summary (all fields are machine-computed counts and labels):\n"
         + json.dumps(features, indent=2, sort_keys=True)
+        + fb
         + "\n\nPropose 3 to 5 candidate rules spanning different specificity (one broad, "
         "one scoped to an endpoint, one stricter). Each candidate is an object with:\n"
         f'  attack_class: one of {sorted(irc.ATTACK_CLASS)}\n'
@@ -263,14 +279,15 @@ class Proposal:
     features: dict = field(default_factory=dict)
 
 
-def propose(dossier: dict, requests: list[dict], backend, routes=None) -> Proposal:
+def propose(dossier: dict, requests: list[dict], backend, routes=None,
+            feedback: list[dict] | None = None) -> Proposal:
     """Ask the model for candidates. Everything it returns is validated by the
     IR compiler; anything invalid is dropped and recorded, never repaired."""
     known = _routes(routes)
     feats = extract_features(dossier, requests, known)
     out = Proposal(features=feats)
     try:
-        resp = backend.complete(SYSTEM, build_prompt(feats), _schema())
+        resp = backend.complete(SYSTEM, build_prompt(feats, feedback), _schema())
     except (urllib.error.URLError, OSError, TimeoutError) as e:
         out.rejected.append(("backend_error", str(e)[:120]))
         return out
@@ -284,7 +301,7 @@ def propose(dossier: dict, requests: list[dict], backend, routes=None) -> Propos
         out.rejected.append(("unparseable_output", f"{type(e).__name__}: {str(e)[:80]}"))
         return out
 
-    tag = hashlib.sha256(json.dumps(feats, sort_keys=True).encode()).hexdigest()[:6]
+    tag = hashlib.sha256(json.dumps([feats, feedback or []], sort_keys=True).encode()).hexdigest()[:6]
     for i, c in enumerate(raw[:MAX_CANDIDATES], 1):
         if not isinstance(c, dict):
             out.rejected.append(("not_an_object", ""))

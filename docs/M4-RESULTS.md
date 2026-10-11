@@ -1,10 +1,3 @@
-> **Update 2026-10-11:** the path-traversal failure reported below has been fixed
-> (template no longer uses `normalizePath`, targets the URI, and the mutation engine
-> now mutates paths; promoted offline at 100% of the campaign and of 84 mutants, 0
-> false positives). The arms-race table below is the original run and has **not**
-> been re-run with the fix. The induced self-DoS result is unaffected (it replays
-> the benign corpus and does not depend on user-agents).
-
 # M4 — Adaptive adversary + induced self-DoS (first results)
 
 The highest-research-value milestone. Two experiments.
@@ -45,24 +38,35 @@ mitigate each, starting from empty memory.
 
 | Move | AEGIS response | Time-to-mitigate |
 |---|---|---|
-| 1. SQLi | fresh (generate + gate) | 18,972 ms |
-| 2. XSS | fresh | 10,224 ms |
-| 3. path traversal | **none** (template failed the gate) | — |
-| 4. SQLi variant (union-only) | generalised (reuse rule) | 40 ms |
-| 5. SQLi repeat | reused (memory) | **1.7 ms** |
+| 1. SQLi | fresh (generate + gate) -> `aegis-sqli-3` | 52,469 ms |
+| 2. XSS | fresh -> `aegis-xss-2` | 35,072 ms |
+| 3. path traversal | fresh -> `aegis-traversal-1` | 19,353 ms |
+| 4. SQLi variant (union-only, different endpoint set) | generalised (reuse rule) | 142 ms |
+| 5. SQLi repeat | reused (memory) | **3.2 ms** |
 
-- **Coverage: 4/5 moves mitigated.**
-- **Repeats/variants met ~700x faster** than first exposure (14.6 s -> 21 ms):
-  memory keeps up as the adversary adapts.
-- Move 5 (exact repeat) -> reused in 1.7 ms; move 4 (variant) -> generalised in
-  40 ms. The signature->rule mapping lets one rule defend many campaigns.
+**Re-run 2026-10-11** after the path-traversal fix, using ONE clean run per campaign
+(the attack log is cumulative, and an earlier version of this script mixed in rows
+labelled under an older, mislabelled campaign). The first run of this experiment
+reported 4/5 and ~700x; the table above supersedes it.
 
-## Honest findings (report the bad ones too)
-- **Path traversal was NOT mitigated.** The template's `normalizePath` transform
-  resolves `../` before the regex sees it, and the logged campaign mixes true
-  traversal with `.bak` sensitive-file access -- one rule doesn't cover both.
-  A known template-refinement item, logged rather than hidden. Coverage is 4/5,
-  not 5/5, and we say so.
+- **Coverage: 5/5 moves mitigated** (was 4/5 before the traversal fix).
+- **Repeats/variants met ~490x faster** than first exposures (35.6 s -> 73 ms).
+- Fresh-path times are 2-3x slower than the first run of this experiment (19 s ->
+  35-52 s) because the machine was also downloading a 4.7 GB model; treat absolute
+  times as noisy and the ratio as the finding. One run, one machine.
+- The signature->rule mapping lets one rule defend many campaigns.
+
+## Honest findings
+- **Path traversal** was not mitigated in the first run: the template used
+  `normalizePath` (which resolves `../` before the regex runs) and inspected args
+  instead of the URI, and the logged campaign also contained a plain file read that
+  is not traversal at all. Fixed (URI target, no `normalizePath`, path mutations in
+  the mutation engine, mislabel corrected): promoted at 100% of the campaign and 100%
+  of 84 mutants with 0 false positives.
+- **Not yet tested:** an adversary that adapts to the defence (changes technique after
+  being blocked). This arms race replays recorded campaigns in a fixed order; it shows
+  memory keeping pace, not an adaptive attacker. The slow-and-low evasion measured in
+  M1 is the first concrete adaptation to try.
 - Induced self-DoS is bounded by the FP budget *per rule*; an attacker who finds
   a genuinely malicious payload sitting inside that 0.0083% edge could affect
   those specific benign requests. The budget is a cap, not zero.

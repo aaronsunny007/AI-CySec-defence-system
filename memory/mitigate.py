@@ -34,6 +34,7 @@ for p in ("ir", "deliberator", "gate", "memory", "observer"):
 import compile as irc          # noqa: E402
 import generate as deliberator # noqa: E402
 import llm as llm_mod          # noqa: E402
+import repair as repair_mod    # noqa: E402
 import gate as gatemod         # noqa: E402
 from store import Memory, signature  # noqa: E402
 
@@ -77,7 +78,8 @@ MAX_LLM_CALLS_PER_HOUR = 6
 
 def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
              mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR,
-             llm=None, max_llm_per_hour: int = MAX_LLM_CALLS_PER_HOUR) -> dict:
+             llm=None, max_llm_per_hour: int = MAX_LLM_CALLS_PER_HOUR,
+             llm_rounds: int = 1) -> dict:
     cls = (dossier.get("techniques") or [dossier.get("attack_class", "")])[0]
     campaign_id, sig = mem.record_campaign(dossier)
     t0 = time.perf_counter()
@@ -133,35 +135,58 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
         # Its candidates are plain IR and go through the SAME gate; it gains no
         # extra authority. Budgeted per hour, and every call's cost is recorded.
         if llm is not None:
-            if mem.llm_calls_since(time.time() - 3600) >= max_llm_per_hour:
-                ttm = time.perf_counter() - t0
-                mem.record_outcome(campaign_id, "llm_budget_blocked", None, ttm)
-                return {"source": "llm_budget_blocked", "rule": None, "ttm_s": ttm,
-                        "signature": sig, "detail": f"LLM call cap {max_llm_per_hour}/h reached"}
-            prop = llm_mod.propose(dossier, campaign_requests, llm)
-            r = prop.response
-            mem.record_llm_call(campaign_id, r.model if r else "?", r.tokens_in if r else 0,
-                                r.tokens_out if r else 0, r.seconds if r else 0.0,
-                                len(prop.candidates), len(prop.rejected))
-            llm_info = {"tokens_in": r.tokens_in if r else 0, "tokens_out": r.tokens_out if r else 0,
-                        "llm_s": round(r.seconds, 1) if r else 0.0,
-                        "valid": len(prop.candidates), "dropped": prop.rejected,
-                        "gate": []}
-            for ir in prop.candidates:
-                if ir.get("mechanism") == "rate_limit":
-                    continue
-                ok, results = gatemod.run_gate(ir, campaign_requests, benign_corpus, tmp)
-                rej = next((x.stage for x in results if not x.passed), None)
-                mem.record_candidate(campaign_id, ir, "passed_offline" if ok else "rejected",
-                                     rej, [x.detail for x in results])
-                llm_info["gate"].append({"id": ir["id"], "ok": ok, "rejected_at": rej,
-                                         "detail": next((x.detail for x in results if not x.passed), "")})
-                if ok:
+            llm_info = {"rounds": [], "tokens_in": 0, "tokens_out": 0, "llm_s": 0.0,
+                        "valid": 0, "dropped": [], "gate": []}
+            feedback: list[dict] = []
+            for rnd in range(max(1, llm_rounds)):
+                # Every round is one model call, so each counts against the budget.
+                if mem.llm_calls_since(time.time() - 3600) >= max_llm_per_hour:
                     ttm = time.perf_counter() - t0
-                    mem.promote_rule(ir, sig)
-                    mem.record_outcome(campaign_id, "llm", ir["id"], ttm)
-                    return {"source": "llm", "rule": ir["id"], "ttm_s": ttm,
-                            "signature": sig, "llm": llm_info}
+                    mem.record_outcome(campaign_id, "llm_budget_blocked", None, ttm)
+                    return {"source": "llm_budget_blocked", "rule": None, "ttm_s": ttm,
+                            "signature": sig, "llm": llm_info,
+                            "detail": f"LLM call cap {max_llm_per_hour}/h reached"}
+                prop = llm_mod.propose(dossier, campaign_requests, llm,
+                                       feedback=feedback or None)
+                r = prop.response
+                mem.record_llm_call(campaign_id, r.model if r else "?", r.tokens_in if r else 0,
+                                    r.tokens_out if r else 0, r.seconds if r else 0.0,
+                                    len(prop.candidates), len(prop.rejected))
+                rinfo = {"round": rnd + 1, "tokens_in": r.tokens_in if r else 0,
+                         "tokens_out": r.tokens_out if r else 0,
+                         "llm_s": round(r.seconds, 1) if r else 0.0,
+                         "valid": len(prop.candidates), "dropped": prop.rejected, "gate": []}
+                llm_info["rounds"].append(rinfo)
+                llm_info["tokens_in"] += rinfo["tokens_in"]
+                llm_info["tokens_out"] += rinfo["tokens_out"]
+                llm_info["llm_s"] = round(llm_info["llm_s"] + rinfo["llm_s"], 1)
+                llm_info["valid"] += rinfo["valid"]
+                llm_info["dropped"] += prop.rejected
+                for ir in prop.candidates:
+                    if ir.get("mechanism") == "rate_limit":
+                        continue
+                    ok, results = gatemod.run_gate(ir, campaign_requests, benign_corpus, tmp)
+                    rej = next((x.stage for x in results if not x.passed), None)
+                    mem.record_candidate(campaign_id, ir, "passed_offline" if ok else "rejected",
+                                         rej, [x.detail for x in results])
+                    g = {"id": ir["id"], "ok": ok, "rejected_at": rej, "round": rnd + 1,
+                         "detail": next((x.detail for x in results if not x.passed), "")}
+                    rinfo["gate"].append(g)
+                    llm_info["gate"].append(g)
+                    if ok:
+                        ttm = time.perf_counter() - t0
+                        mem.promote_rule(ir, sig)
+                        mem.record_outcome(campaign_id, "llm", ir["id"], ttm)
+                        llm_info["promoted_in_round"] = rnd + 1
+                        return {"source": "llm", "rule": ir["id"], "ttm_s": ttm,
+                                "signature": sig, "llm": llm_info}
+                    # Structured, traffic-text-free feedback for the next round.
+                    if rnd + 1 < llm_rounds and rej:
+                        try:
+                            feedback.append(repair_mod.feedback_for(ir, rej, campaign_requests,
+                                                                    benign_corpus))
+                        except Exception:  # feedback is best-effort, never fatal
+                            pass
             ttm = time.perf_counter() - t0
             mem.record_outcome(campaign_id, "none", None, ttm)
             return {"source": "none", "rule": None, "ttm_s": ttm, "signature": sig, "llm": llm_info}
@@ -184,6 +209,8 @@ def main() -> int:
     p.add_argument("--llm", choices=["none", "ollama"], default="none",
                    help="enable the last-resort LLM path (templates are always tried first)")
     p.add_argument("--model", default="mistral:latest")
+    p.add_argument("--llm-rounds", type=int, default=1,
+                   help="1 = one shot; N>1 adds N-1 repair rounds fed with structured gate feedback")
     args = p.parse_args()
 
     if args.novel:
@@ -199,7 +226,7 @@ def main() -> int:
 
     results = []
     for i in range(args.repeats):
-        r = mitigate(dossier, campaign, args.benign, mem, llm=backend)
+        r = mitigate(dossier, campaign, args.benign, mem, llm=backend, llm_rounds=args.llm_rounds)
         results.append(r)
         print(f"exposure {i+1}: source={r['source']:11s} rule={r['rule']}  "
               f"time-to-mitigate={r['ttm_s']*1000:.1f} ms")
