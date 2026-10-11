@@ -58,7 +58,9 @@ before then may be unable to start; that is normal, not an error.
 
 ## 3. Queue (do the first `[ ]` item that is not blocked; update its status here)
 
-### [ ] A. The autonomous loop, end to end  (HIGHEST PRIORITY — the core promise is unproven)
+### [x] A. The autonomous loop, end to end  — DONE 2026-10-12 (see docs/E2E-RESULTS.md)
+Built interactively, not by a scheduled run. Original brief kept below for reference.
+Follow-ups left: re-run the e2e once with the new controller fixes (noisy-canary retry, no blacklisting of operational errors) to confirm them live; try signing ON in that same boot.
 Today the detector, deliberator, gate, hot reload and memory all work, but each is driven by a
 separate experiment script. Nothing wires them into one process that runs with no human.
 Build `controller/loop.py` (plus tests) that, while the gateway runs in `enforce` mode:
@@ -79,7 +81,7 @@ speed of a **second** exposure (memory). Use classes CRS does not stop: credenti
 (rate rule) and command injection (CRS blocked only 8/12 of ours). Also one SQLi run for the
 spec's literal acceptance case. Write `docs/E2E-RESULTS.md` with the honest numbers and caveats.
 
-### [ ] B. Adaptive adversary against the closed loop  (M4)  — needs A
+### [~] B. Adaptive adversary against the closed loop  (M4)  — agent + experiment built 2026-10-12; results in docs/M4-RESULTS.md when written
 A red agent (`range/attacks/adaptive.py`) that observes whether each request was blocked and
 changes technique: re-pace (slow-and-low), rotate the visitor identifier, apply the existing
 `range/mutate/mutate.py` mutators. Local range only, bounded request budget. Run it against
@@ -89,7 +91,7 @@ make, and the maximum fraction of legitimate traffic blocked (induced self-DoS u
 adaptive attacker). Extend `docs/M4-RESULTS.md`. Slow-and-low evasion measured in
 `docs/M1-RESULTS.md` is the first adaptation to try.
 
-### [ ] C. Harden the rule store
+### [~] C. Harden the rule store — implemented + unit-tested 2026-10-12 (docs/HARDENING.md); NOT yet exercised in a live range boot
 HMAC-sign the manifest (key from an environment variable or a file outside git; never
 committed) and require a bearer token on the admin API's mutating endpoints; the gateway must
 refuse an unsigned or wrongly signed manifest and keep its previous rules. Go tests plus a
@@ -110,3 +112,4 @@ installed) and report next to the existing 0/16 result in `docs/M3-RESULTS.md`.
 ## 5. Run log (append one entry per run that did anything; newest last)
 - 2026-10-11: queue created. State: all of M0-M3 and the first M4 results are measured and on
   branch `llm-ablation-diagnostics`; the autonomous loop (item A) is not built.
+- 2026-10-12 (interactive session, not a scheduled run): the scheduled run that fired at 05:22 stalled for ~17 h with no progress (probably an unanswerable permission prompt) and was stopped. Items A, C and most of B done interactively on branch `autoresume`; see commits.
