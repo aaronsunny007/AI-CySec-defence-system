@@ -131,6 +131,8 @@ type gateway struct {
 
 	rs            atomic.Pointer[ruleSet]
 	manifestPath  string
+	manifestKey   []byte // HMAC key for the signed manifest; nil = unsigned mode
+	adminToken    []byte // bearer token for mutating admin endpoints; nil = none required
 	staticInclude string
 	reloadMu      sync.Mutex
 
@@ -501,6 +503,7 @@ func main() {
 	g := &gateway{
 		logs: make(chan Record, 8192), enforce: *mode == "enforce",
 		rl: newRateLimiter(), manifestPath: *manifest,
+		manifestKey: secretFrom("AEGIS_MANIFEST_KEY"), adminToken: secretFrom("AEGIS_ADMIN_TOKEN"),
 		cnt: map[string]*ruleCounters{}, slices: [2]*sliceStats{newSlice(), newSlice()},
 	}
 	if *rules != "" {
@@ -512,7 +515,7 @@ func main() {
 		log.Fatalf("manifest dir: %v", err)
 	}
 	if _, err := os.Stat(*manifest); os.IsNotExist(err) {
-		if err := writeManifest(*manifest, Manifest{Version: 1}); err != nil {
+		if err := writeManifest(*manifest, Manifest{Version: 1}, g.manifestKey); err != nil {
 			log.Fatalf("create manifest: %v", err)
 		}
 	}
@@ -521,7 +524,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("load rate rules: %v", err)
 		}
-		m, err := readManifest(*manifest)
+		m, err := readManifest(*manifest, g.manifestKey)
 		if err != nil {
 			log.Fatalf("read manifest: %v", err)
 		}
@@ -535,10 +538,12 @@ func main() {
 			}
 		}
 		m.Version++
-		if err := writeManifest(*manifest, m); err != nil {
+		if err := writeManifest(*manifest, m, g.manifestKey); err != nil {
 			log.Fatalf("write manifest: %v", err)
 		}
 	}
+	log.Printf("rule store: signed manifest %v, admin token %v",
+		len(g.manifestKey) > 0, len(g.adminToken) > 0)
 	if err := g.reload(); err != nil {
 		log.Fatalf("initial rule load: %v", err)
 	}

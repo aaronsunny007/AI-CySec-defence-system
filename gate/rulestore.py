@@ -12,6 +12,8 @@ that ir/compile.py has validated.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import sys
@@ -29,16 +31,44 @@ DEFAULT_MANIFEST = ROOT / "rules" / "active" / "manifest.json"
 ADMIN = "http://127.0.0.1:8081"
 
 
+def secret(name: str) -> bytes | None:
+    """A secret from env var NAME, or from the file named by NAME_FILE (kept outside git).
+    Never printed or logged."""
+    v = os.environ.get(name, "").strip()
+    if v:
+        return v.encode()
+    f = os.environ.get(name + "_FILE")
+    if f and Path(f).exists():
+        return Path(f).read_text(encoding="utf-8").strip().encode()
+    return None
+
+
+def sign(key: bytes, payload: str) -> str:
+    return hmac.new(key, payload.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
 def load(path: Path = DEFAULT_MANIFEST) -> dict:
     if not path.exists():
         return {"version": 1, "rules": []}
-    return json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
+    key = secret("AEGIS_MANIFEST_KEY")
+    if isinstance(data, dict) and "payload" in data and "sig" in data:   # signed envelope
+        if key and not hmac.compare_digest(sign(key, data["payload"]), str(data["sig"]).lower()):
+            raise ValueError("manifest signature does not verify")
+        return json.loads(data["payload"])
+    if key:
+        raise ValueError("manifest is not signed but AEGIS_MANIFEST_KEY is set")
+    return data
 
 
 def save(m: dict, path: Path = DEFAULT_MANIFEST) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(m, indent=2), encoding="utf-8")
+    key = secret("AEGIS_MANIFEST_KEY")
+    text = json.dumps(m, indent=2)
+    if key:       # the gateway refuses anything else in this mode
+        text = json.dumps({"payload": text, "sig": sign(key, text)}, indent=2)
+    tmp.write_text(text, encoding="utf-8")
     # os.replace is atomic (a reader sees old or new, never partial) but on
     # Windows it fails with PermissionError while another process -- here the
     # gateway's watcher -- has the destination open. Retry briefly.
@@ -85,6 +115,9 @@ def clear(path: Path = DEFAULT_MANIFEST) -> None:
 def _call(method: str, route: str, params: dict | None = None, timeout: float = 20.0):
     url = ADMIN + route + (("?" + urllib.parse.urlencode(params)) if params else "")
     req = urllib.request.Request(url, method=method, data=b"" if method == "POST" else None)
+    token = secret("AEGIS_ADMIN_TOKEN")
+    if token and method == "POST":
+        req.add_header("Authorization", "Bearer " + token.decode())
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read().decode()
 
