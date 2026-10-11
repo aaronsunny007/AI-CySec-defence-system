@@ -173,6 +173,11 @@ def evidence(actor: Actor, technique: str) -> list[Request]:
     rx = SIGS.get(technique)
     if rx is None:
         return []
+    if technique == "traversal":
+        # Traversal rules inspect the URI; a '/etc/passwd' inside a POST body (e.g. a
+        # command-injection payload) is not something a URI rule can be asked to block.
+        return [r for r in actor.requests
+                if rx.search(urllib.parse.unquote_plus(r.path + "?" + r.query))]
     return [r for r in actor.requests if rx.search(_decoded(r)) or rx.search(r.path)]
 
 

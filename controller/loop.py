@@ -211,7 +211,14 @@ class Controller:
             by_tech: dict[str, list] = {}
             for f in findings:
                 by_tech.setdefault(f.technique, []).append(f)
-            for tech, fs in by_tech.items():
+
+            def weight(tech: str) -> int:
+                if tech in INJECTION:
+                    return len(evidence(a, tech))
+                ev = RATE_EVIDENCE.get(tech)
+                return sum(1 for r in a.requests if ev(r)) if ev else 0
+            # the technique with the most evidence is the actor's main campaign: handle it first
+            for tech, fs in sorted(by_tech.items(), key=lambda kv: -weight(kv[0])):
                 if (k, tech) not in self.handled:
                     self.handled.add((k, tech))
                     new.append((k, tech, fs))

@@ -86,15 +86,20 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
                      desc="two or more consecutive ../ sequences in URI"))
 
     elif attack_class == "cmdi":
+        # NOTE: no cmdLine transform. ModSecurity's cmdLine DELETES quotes/backslashes and
+        # turns ';' into a space, so a regex that looks for ';' can never match after it
+        # (found by the first live end-to-end run: all three templates blocked 0% of
+        # '; cat /etc/passwd'). Match the raw decoded text instead.
         c.append(_ir("cmdi", 1, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(;\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(|`)",
-                     ["urlDecodeUni", "cmdLine"], desc="shell metacharacters + commands"))
+                     r"(?i)((;|&&|\|\|?)(?:\s|/\*.*?\*/)*(cat|id|whoami|ls|ping|sleep|uname|wget|curl|nc|bash|sh)\b|\$\(|`[^`]+`)",
+                     ["urlDecodeUni", "urlDecodeUni"],
+                     desc="shell metacharacter followed by a command, $( ), backticks (comment/double-encoding tolerant)"))
         c.append(_ir("cmdi", 2, "input_constraint", "args_and_body", "rx",
                      r"(?i)(&&|\|\||;|\$\(|`).*(cat|id|whoami|ls|ping|sleep)",
-                     ["urlDecodeUni", "cmdLine"], desc="command chaining then command"))
+                     ["urlDecodeUni", "urlDecodeUni"], desc="command chaining then command (broad)"))
         c.append(_ir("cmdi", 3, "input_constraint", "args_and_body", "rx",
-                     r"[;&|`$]{1,}\s*(cat|id|whoami|ping|sleep)\b",
-                     ["urlDecodeUni", "cmdLine"], desc="metachar directly before command"))
+                     r"[;&|`$]{1,}(?:\s|/\*.*?\*/)*(cat|id|whoami|ping|sleep)\b",
+                     ["urlDecodeUni", "urlDecodeUni"], desc="metachar directly before command"))
 
     elif attack_class == "ssrf":
         c.append(_ir("ssrf", 1, "input_constraint", "args_and_body", "rx",
