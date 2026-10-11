@@ -57,6 +57,8 @@ def run_one(model: str, rounds: int, campaign: str, benign: Path) -> dict:
            "promoted_in_round": info.get("promoted_in_round"),
            "candidates_gated": len(info.get("gate", [])), "rejected_at": stages,
            "dropped_invalid": len(info.get("dropped", [])),
+           # why candidates were dropped before reaching the gate (reason codes only)
+           "dropped_reasons": sorted({d[0] for d in info.get("dropped", [])}),
            "llm_calls": len(info.get("rounds", [])), "tokens_in": info.get("tokens_in", 0),
            "tokens_out": info.get("tokens_out", 0), "llm_s": info.get("llm_s", 0),
            "wall_s": round(time.time() - t0, 1), "completed": True}
