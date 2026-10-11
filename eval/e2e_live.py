@@ -146,6 +146,10 @@ def analyse(phases: list[dict], recs: list[dict], events: list[dict], run_start:
     for r in recs:
         r["_t"] = _ts(r["ts"])
     out: dict = {"phases": [], "controller": {}, "benign": {}}
+    ts_sorted = sorted(r["_t"] for r in recs)
+    # a machine suspend mid-run silently invalidates wall-clock measurements: detect it
+    out["log_gaps_over_60s"] = [{"at": round(a), "gap_s": round(b - a)}
+                                for a, b in zip(ts_sorted, ts_sorted[1:]) if b - a > 60][:5]
     for ph in phases:
         gt = f"attack:{ph['campaign']}"
         atk = [r for r in recs if r.get("gt_label") == gt and ph["t_start"] <= r["_t"] <= ph["t_end"] + 5]
