@@ -353,14 +353,6 @@ class Controller:
         if cls is None or actor is None:
             self.emit("no_template", technique=tech)
             return
-        now = time.time()
-        while self.handled_times and now - self.handled_times[0] > 3600:
-            self.handled_times.popleft()
-        if len(self.handled_times) >= self.cfg.max_campaigns_per_hour:
-            self.emit("budget_skip", reason="campaigns/hour cap", cap=self.cfg.max_campaigns_per_hour)
-            return
-        self.handled_times.append(now)
-
         dossier, reqs, ev = self._dossier(actor, tech, findings)
         if not ev:
             self.emit("no_evidence", technique=tech)
@@ -369,6 +361,19 @@ class Controller:
         if time.time() - self.cooldown.get(sig, 0.0) < COOLDOWN_S:
             self.emit("cooldown_skip", technique=tech, signature=sig)
             return
+        # Budget (invariant 7): only campaigns that need NEW work (synthesis + gate) count.
+        # A repeat of a campaign whose rule is already known costs a lookup, and an
+        # attacker rotating identities must not be able to exhaust the budget for real work.
+        known = self.mem.rule_for_signature(sig)
+        if not (known and known["id"] not in self.failed_live):
+            now = time.time()
+            while self.handled_times and now - self.handled_times[0] > 3600:
+                self.handled_times.popleft()
+            if len(self.handled_times) >= self.cfg.max_campaigns_per_hour:
+                self.emit("budget_skip", reason="campaigns/hour cap",
+                          cap=self.cfg.max_campaigns_per_hour)
+                return
+            self.handled_times.append(now)
         if tech in RATE:
             res = self._mitigate_rate(dossier, cls, actor)
         else:
