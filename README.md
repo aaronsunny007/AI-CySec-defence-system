@@ -22,7 +22,7 @@ application it defends.
 | M1 campaign detection | heuristics, **re-measured**: 16/16 detected and correctly attributed; slow-and-low pacing evades it | [docs/M1-RESULTS.md](docs/M1-RESULTS.md) |
 | M2 rule synthesis + 6-stage gate | done | [docs/M2-RESULTS.md](docs/M2-RESULTS.md), [docs/M2-LIVE-STAGES.md](docs/M2-LIVE-STAGES.md) |
 | M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
-| M3 LLM last-resort path | real-model run on Mistral 7B: **no promotable rule** (the gate absorbed every candidate); repair loop built; model/repair ablation in progress | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
+| M3 LLM last-resort path | **0/16** ablation cells promoted a rule (Mistral 7B and Qwen2.5-Coder 7B, one-shot and repair loop, 4 novel campaigns); the gate absorbed all 124 candidates | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
 | M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; arms race 5/5 (replay of recorded campaigns, not yet an adaptive attacker) | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
 | M5 write-up | **draft v0.1** (numbers all trace to the results files) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 

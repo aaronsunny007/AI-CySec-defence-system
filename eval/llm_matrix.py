@@ -59,6 +59,10 @@ def run_one(model: str, rounds: int, campaign: str, benign: Path) -> dict:
            "dropped_invalid": len(info.get("dropped", [])),
            # why candidates were dropped before reaching the gate (reason codes only)
            "dropped_reasons": sorted({d[0] for d in info.get("dropped", [])}),
+           "rounds_detail": [{"round": x["round"], "valid": x["valid"],
+                              "dropped": [d[0] for d in x["dropped"]],
+                              "tokens_in": x["tokens_in"], "tokens_out": x["tokens_out"],
+                              "llm_s": x["llm_s"]} for x in info.get("rounds", [])],
            "llm_calls": len(info.get("rounds", [])), "tokens_in": info.get("tokens_in", 0),
            "tokens_out": info.get("tokens_out", 0), "llm_s": info.get("llm_s", 0),
            "wall_s": round(time.time() - t0, 1), "completed": True}

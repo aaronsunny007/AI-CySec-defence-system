@@ -102,3 +102,70 @@ Per call ~677 tokens in, 520-600 out, **75-86 s** on this laptop; 2 calls = 160.
 Structured gate feedback and a repair round (stage + numbers only, no traffic text);
 a Qwen2.5-Coder 7B ablation; a larger/API-model ablation for the local-vs-frontier
 comparison; a larger set of novel campaigns.
+
+---
+
+## LLM ablation: model x repair loop x 4 novel campaigns (2026-10-11)
+
+`eval/llm_matrix.py`. Two local 7B-class models, each one-shot and with a 3-round
+repair loop, on four campaigns the templates cannot cover: server-side template
+injection, NoSQL operators, XXE, and JNDI/Log4Shell-style lookups. A **fresh memory
+database per run**, so nothing learned on one campaign can leak into another.
+"Promoted" means the full offline gate passed a candidate. **One sample per cell**
+(temperature 0.1, but the models are not deterministic).
+
+| Model | Mode | SSTI | NoSQL | XXE | JNDI | Promoted | Candidates gated | Model time |
+|---|---|---|---|---|---|---|---|---|
+| Mistral 7B (general) | one-shot | no | no | no | no | **0/4** | 18 | 481 s |
+| Mistral 7B (general) | repair x3 | no | no | no | no | **0/4** | 47 | 1,149 s |
+| Qwen2.5-Coder 7B | one-shot | no | no | no | no | **0/4** | 14 | 331 s |
+| Qwen2.5-Coder 7B | repair x3 | no | no | no | no | **0/4** | 45 | 878 s |
+
+**0 of 16 cells promoted a rule.** Across all 124 candidates that reached the gate:
+
+| Where the candidate failed | Count | Share | Meaning |
+|---|---|---|---|
+| attack replay (blocks the campaign) | 92 | 74% | passed the benign budget but **matched too little**: safe and ineffective |
+| benign replay (FP budget) | 26 | 21% | **matched legitimate traffic** |
+| engine load | 4 | 3% | regex the engine rejected |
+| mutation | 2 | 2% | blocked the whole campaign at acceptable FP but **memorised the payload** |
+
+The gate is sequential, so the 92 attack-replay failures are candidates that were
+already safe; the benign-replay failures never reached the effectiveness check. The
+two mutation failures (Qwen, JNDI, repair) are the closest any candidate came: they
+blocked 100% of the campaign at an acceptable false-positive rate and were stopped
+only because they did not generalise to re-encoded variants (stage 4).
+
+### What the repair loop did
+Feedback went back to the model as stage name, counts and fixed-vocabulary
+token-class names only (verified by test: no traffic text reaches it). It did not
+produce a promotable rule for either model. In the hand-inspected round, the model
+**re-proposed the same failed regex** rather than acting on the feedback. Repair
+roughly tripled model time and tokens for no change in outcome.
+
+### Honest caveats
+- **Four campaigns, one sample per cell, two models of the same size class.** This
+  cannot show that "LLMs cannot do this"; it shows these two 7B models, given this
+  input, did not.
+- The model sees only a **fixed-vocabulary feature summary** (e.g. `template_double_brace: 4`),
+  never raw payloads (invariant 4). That may starve it: it must write a regex for
+  syntax it was never shown. Part of the failure may be the representation, not the
+  model.
+- **A larger or API model was not tested.** A 14B model would run almost entirely on
+  CPU on this laptop (~3-5 minutes per call).
+- **An unexplained anomaly:** the first run of the Mistral repair cell on SSTI dropped
+  12 of 15 candidates as invalid; it did not reproduce on re-run (3 of 14 dropped,
+  including 2 in the no-feedback first round), and no code changed in between. That
+  row was replaced by the re-run. Invalid-rule frequency varies run to run.
+- Absolute times are noisy (the first Mistral rows ran while a 4.7 GB model was
+  downloading).
+
+### Interpretation and what to try next
+The safety property held on every one of 124 candidates: nothing unsafe was promoted.
+The capability question is open and, for these models, answered "no". The cheapest
+next experiments, in order: (1) **stop asking the model to write regexes**: let it
+choose which fixed-vocabulary token classes to block, where, and on which endpoint,
+and compile the pattern from a vetted library, which removes the wrong-regex failure
+by construction; (2) give the model more of the campaign's *syntax* in a
+sanitised, vocabulary-bounded form; (3) only then test a larger or API model, which
+is the ablation the PRD planned for the local-vs-frontier comparison.

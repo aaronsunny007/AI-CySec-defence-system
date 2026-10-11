@@ -21,8 +21,11 @@ candidates, and cut the legitimate traffic an adversary could force the defender
 from 0.62% (an ungated "block any apostrophe" rule) to 0.008%. A live shadow and canary
 stage with automatic rollback rejected an overfit rule in shadow and rolled back a
 fault-injected one in 0.02 s, though only after it had blocked 4 legitimate requests. A
-last-resort local-LLM path produced no promotable rule in our trials; the gate absorbed
-every candidate, including one that would have blocked 17% of benign traffic. We also
+last-resort local-LLM path produced no promotable rule in any of 16 trials (two 7B
+models, one-shot and with a feedback repair loop, four novel campaigns); the gate
+absorbed all 124 candidates, including one that would have blocked 17% of benign traffic
+and two that blocked a whole campaign but were stopped by the mutation stage for
+memorising the payload. We also
 report five measurement errors we made and corrected, one of which (attack tools that
 announce themselves) inflated a WAF baseline by a factor of two.
 
@@ -161,11 +164,32 @@ we wrote to represent an overfitting responder, not a competing system. Rate lim
 per-actor, so one actor cannot push another over a limit.
 
 ### 5.9 Last-resort LLM (`docs/M3-RESULTS.md`)
-Local Mistral 7B (Q4_K_M) on a novel SSTI campaign, three calls: 15 candidates, **0
-promoted**. Failures were wrong tool for the class, under-coverage (best candidate 6/12 of
-the campaign) and over-matching (one candidate matched **17.16%** of benign traffic). Calls
-cost ~75-86 s and ~1.2k tokens each. *[Model-size and repair-loop ablation: pending; see
-`docs/M3-RESULTS.md` when complete.]*
+The model sees only a fixed-vocabulary feature summary and emits only Rule IR (section 3).
+We ran Mistral 7B (general) and Qwen2.5-Coder 7B (code-specialised), each one-shot and with a
+3-round repair loop that returns the gate's verdict as stage names, numbers and
+token-class names (never traffic text), on four campaigns the templates do not cover:
+SSTI, NoSQL operators, XXE, JNDI. Fresh memory per run; one sample per cell.
+
+| Model | one-shot | repair x3 |
+|---|---|---|
+| Mistral 7B | 0 / 4 promoted | 0 / 4 promoted |
+| Qwen2.5-Coder 7B | 0 / 4 promoted | 0 / 4 promoted |
+
+**0 of 16 cells promoted a rule.** Of the 124 candidates that reached the gate, 92 (74%)
+were safe but ineffective (passed the benign budget, matched too little of the campaign), 26
+(21%) matched legitimate traffic (one candidate: **17.16%** of it), 4 failed to load in the
+engine, and 2 blocked an entire campaign at an acceptable false-positive rate but failed the
+mutation stage because they memorised the payload. In a hand-inspected round the model
+re-proposed its own failed regex rather than using the feedback; repair roughly tripled
+model time and tokens for no change in outcome. Calls cost ~75-125 s and ~1k-1.5k tokens
+each on a laptop GPU.
+
+*Reading this correctly.* The safety property held for every candidate; the capability
+question is answered "no" only for these two same-size models given this input. Four
+campaigns, one sample each, and a deliberately starved input (the model never sees
+payloads) mean this does not show that LLMs cannot synthesise such rules. A larger or API
+model was not tested; the next experiments we would run are letting the model choose from a
+vetted library of token-class patterns instead of writing regexes, then a larger model.
 
 ## 6. Methodology errors we made, and what they taught
 These are reported because each would have flattered the system, or hidden a weakness,
@@ -202,7 +226,8 @@ adaptive attacker; an attacker adapting to AEGIS's rules is untested.
 
 ## 8. Future work
 Adaptive adversary (pacing under thresholds, identifier rotation); held-out attack
-variants; a repair loop and larger/code-specialised models for the LLM path; DVWA for
+variants; for the LLM path, a vetted-pattern-library interface (the model chooses token
+classes, we compile the regex) and then larger/API models; DVWA for
 cross-application generalisation; signed manifests; a campaign stream to measure the
 fraction of campaigns reaching the LLM.
 
