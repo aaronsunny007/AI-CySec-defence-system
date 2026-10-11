@@ -18,13 +18,13 @@ application it defends.
 
 | Milestone | State | Results |
 |---|---|---|
-| M0 range + baseline | done; **baseline being re-measured** (the first one was confounded, see the banner in the file) | [docs/BASELINE.md](docs/BASELINE.md) |
-| M1 campaign detection | heuristics done; **re-measurement with corrected ground truth pending** | [docs/M1-RESULTS.md](docs/M1-RESULTS.md) |
+| M0 range + baseline | done; **re-measured** after a user-agent confound was found and fixed (CRS alone: 2/8 campaigns contained, attacker still succeeds in 3/8, 4.0% benign FP) | [docs/BASELINE.md](docs/BASELINE.md) |
+| M1 campaign detection | heuristics, **re-measured**: 16/16 detected and correctly attributed; slow-and-low pacing evades it | [docs/M1-RESULTS.md](docs/M1-RESULTS.md) |
 | M2 rule synthesis + 6-stage gate | done | [docs/M2-RESULTS.md](docs/M2-RESULTS.md), [docs/M2-LIVE-STAGES.md](docs/M2-LIVE-STAGES.md) |
 | M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
-| M3 LLM last-resort path | implemented and adversarially tested (16 tests); **not yet run against the real model** | `deliberator/llm.py`, `tests/` |
-| M4 adaptive adversary, induced self-DoS | first results | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
-| M5 write-up | not started (the results files are the raw material) | |
+| M3 LLM last-resort path | real-model run on Mistral 7B: **no promotable rule** (the gate absorbed every candidate); repair loop built; model/repair ablation in progress | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
+| M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; arms race 5/5 (replay of recorded campaigns, not yet an adaptive attacker) | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
+| M5 write-up | **draft v0.1** (numbers all trace to the results files) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 
 Read the "Caveats" section of each results file before quoting a number. Early
 measurements that were later found to be flawed are corrected in place and the
