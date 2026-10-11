@@ -1,0 +1,128 @@
+# End-to-end autonomous loop — results
+
+Date: 2026-10-12. Branch `autoresume`. Raw data: `docs/data/e2e_summary.json`,
+`docs/data/e2e_events.jsonl` (the controller's own event log). Script: `eval/e2e_live.py`.
+
+## What was tested
+
+One range boot (Juice Shop behind the Go/Coraza gateway in **enforce** mode, OWASP CRS on).
+Benign traffic ran the whole time: 3 Playwright journey workers (real browsers) plus 40 req/s of
+replayed corpus requests spread over 200 synthetic users. The controller (`controller/loop.py`)
+ran as a **separate process** that only tails the gateway log. For each class a persistent
+attacker (a fresh identity every few seconds, spoofed browser User-Agent) started, and nothing
+else was done by anyone: no human action, no script poking the controller.
+
+The controller did the whole loop itself: detect (observer) → mitigate (memory reuse, then
+templates) → offline gate (benign replay of all 443,507 requests, campaign replay, 54-mutant
+test) or, for rate rules, a rate gate against non-campaign actors → hot-load in **shadow**
+(20 s) → **canary** at 25 % (30 s, auto-rollback armed) → **enforce**. Promotion is refused
+unless both live stages pass. Window lengths (20 s / 30 s) are my choice for experiment speed;
+a production deployment would use longer ones, which would lengthen every "time to enforce"
+below by roughly the same amount.
+
+Classes: **command injection** and **credential stuffing** (the two CRS does not stop), plus
+**SQLi** as the spec's literal acceptance case. Then each class was repeated with the rule store
+**wiped** ("cold repeat") to test what memory buys.
+
+Ground truth (the gateway's range-only `gt_label`) is used only to score; the controller never
+reads it (a unit test asserts this).
+
+## Headline
+
+| | command injection | credential stuffing | SQLi |
+|---|---|---|---|
+| campaign onset → detected | 8.1 s | 23.8 s | 8.7 s |
+| onset → **rule enforcing, no human** | **82.6 s** | **80.4 s** | **130.2 s** |
+| synthesis + offline gate | 18.1 s | 0.07 s (rate gate) | 63.8 s |
+| attacker requests logged before enforcement | 31 (16 blocked by CRS) | 24 (0 blocked) | 48 (38 blocked by CRS) |
+| attacker requests logged after enforcement | 25: 19 by the AEGIS rule, 4 by CRS, 2 reached the app | 24: 10 limited by the AEGIS rule, 14 reached the app | 22: 18 by the AEGIS rule, 4 reached the app |
+| attacker objective | n/a (no OS-command sink in Juice Shop) | valid credentials found in 2 attacker runs before enforcement, **1 after** | not met in any run |
+
+"Reached the app" counts **every** request carrying the attacker's label, including the
+innocuous recon requests each campaign starts with (`GET /`, product pages), so it overstates
+how many *payloads* got through.
+
+**Benign side, whole run (44,093 benign requests, 460 Playwright journeys):**
+
+* blocked by an AEGIS rule: **0** (the spec's must-be-zero number held).
+* blocked by CRS: 3,385 (7.7 %); 22 of 460 journeys broken, all by CRS (AEGIS blocked no benign
+  request, so none can be AEGIS's). This is the CRS baseline problem already in `BASELINE.md`,
+  not something AEGIS added or fixed.
+* 93 journeys failed in total: 22 by the defence (CRS), 41 app errors, 30 script errors.
+
+**Spec acceptance, as literally worded** ("live SQLi campaign, no human: detects, generates
+candidates, gate validates one, it blocks the campaign *and* the mutation set, breaks zero
+benign requests, end to end"): met in this run. Honest context: CRS already blocked most SQLi
+(38 of 48 pre-enforcement requests), so the new rule's value on SQLi is the variants CRS
+misses, not the headline attack. The value is clearest on command injection and stuffing.
+
+## Second exposure (memory)
+
+With the rule store wiped but memory kept, the same campaign came back from a new identity:
+
+| | command injection | credential stuffing | SQLi |
+|---|---|---|---|
+| synthesis + offline gate, first exposure | 18.1 s | 0.07 s | 63.8 s |
+| same step, second exposure (memory) | 0.010 s (**reused**) | 0.013 s (reused) | 0.003 s (reused) |
+| onset → enforcing, first exposure | 82.6 s | 80.4 s | 130.2 s |
+| onset → enforcing, cold repeat | 69.9 s | 134.5 s | 231.7 s |
+
+**The ≥10× repeat speed-up holds for the synthesis step (hundreds to tens of thousands of ×)
+but NOT for end-to-end time to enforcement.** A reused rule still goes through shadow and canary
+(~57 s here), because I did not give memory a path around the live stages (the rule had passed
+them before, but the world may have changed, and invariant 5 says no fast paths). Cold-repeat
+times were *worse* for stuffing and SQLi because of head-of-line blocking, see below. The one
+repeat where a rule was still enforcing (the normal case without a wipe) is the strong result:
+every later attacker identity of an already-handled campaign was recognised in 3–30 ms
+(`already_enforcing`, 26 times) and its requests were blocked from the first one.
+
+## What went wrong (and what I did about it)
+
+1. **First live run exposed a real bug in my own templates.** All three command-injection
+   templates blocked 0 % of `; cat /etc/passwd`: ModSecurity's `cmdLine` transform *deletes* the
+   `;` before the regex runs. It was invisible in earlier offline experiments because command
+   injection had never been pushed through the gate on real captured evidence. Fixed (match raw
+   decoded text, tolerate `/**/` and double encoding); gate: 100 % of campaign, 100 % of 54
+   mutants, 0.0007 % FP on the 443k corpus. The traversal templates needed double URL-decoding
+   for the same reason.
+2. **Canary 5xx comparison false-alarmed on noise.** The original rule (canary 5xx rate > control
+   + 2 points) fired on 11.4 % vs 9.1 % at ~150 requests per slice. I added a significance
+   requirement (z ≥ 3). That is not enough on its own: in the final run it still rolled back the
+   credential-stuffing rule once (9.1 % vs 4.6 %, z = 3.0) — the two slices contain different
+   actors, traffic is clustered, and the check is repeated every 2 s. A rate rule that only
+   limits the attacker cannot plausibly cause app 5xx, so I judge this a false alarm, in the safe
+   direction, but it left the stuffing rule **off at the end of the run**. Since then the
+   controller retries a latency/5xx rollback **once** (a suspected-false-positive rollback stays
+   final). This retry is new and **not yet re-run live**.
+3. **Operational error treated as a gate verdict.** My experiment harness wiped the rule store
+   while a pipeline was in flight; the admin API answered 404 and the controller blacklisted the
+   rule, so a later command-injection repeat found no usable rule. A crash or a vanished rule is
+   now logged and the rule switched off, but not blacklisted (unit-tested; not re-run live).
+4. **Campaign budget exhausted by the attacker.** In an earlier run every new attacker identity
+   counted against the 30 campaigns/hour budget, so an attacker rotating identities starved real
+   work (SQLi was never handled). The budget now counts only campaigns that need new synthesis.
+5. **A laptop suspend invalidated one full run** (65-minute gap with no requests in the gateway
+   log). The harness now reports gaps; the run reported here has none.
+
+## Controller behaviour and limits
+
+* Detections: 158; 66 on real attacker identities. **92 false triggers, all `idor_bola`, all on
+  my synthetic replay users** (random corpus requests assigned to 200 pseudo-users, so each one
+  "walks" many product ids — not a realistic user). **0 of the Playwright journey actors were
+  flagged.** None of the 92 produced a rule: the rate gate rejected all 26 candidates because
+  the "attacker" would not have been limited. 104 repeat triggers were absorbed by the cooldown.
+  So the observer is not shown to be wrong on realistic users here, but the live false-trigger
+  rate on real traffic is only as good as the 460 journeys.
+* **One live pipeline at a time**, ~57 s each. Campaigns queue behind it (detection-to-action
+  delays of 76 s and 172 s in the cold repeats). Parallel pipelines would need several canary
+  slices; not built.
+* 0 % of campaigns reached an LLM (not enabled in this run; templates + memory sufficed for
+  these three classes).
+* `scan` is detected but has no mitigation template; the controller reports and ignores it.
+* The attacker was one scripted campaign repeated, not an adaptive adversary (see M4 notes in
+  `M4-RESULTS.md` for the adaptive-agent experiment, run separately).
+* Rate limit **throttles**, it does not prevent: in the first exposure the attacker still found
+  valid credentials in 1 run after enforcement.
+* Single run per cell; no confidence intervals. Times depend on the stage windows chosen.
+* Not exercised here: signed manifest/admin token (`HARDENING.md`), the LLM path, slow-and-low
+  or identity-rotation evasion, a second target app.
