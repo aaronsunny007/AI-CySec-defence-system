@@ -54,6 +54,7 @@ MIN_SAMPLES = 150          # per slice before a latency/5xx comparison is truste
 SUSPECT_BLOCKS_TO_ROLL = 3
 SUSPECT_RATE_TO_ROLL = 0.001
 ERR5XX_DELTA = 0.02
+ERR5XX_Z = 3.0             # ...AND the difference must be statistically real (one-sided z)
 LAT_FACTOR, LAT_ABS_US = 3.0, 20_000
 
 
@@ -234,8 +235,15 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
         if not trigger and nc >= MIN_SAMPLES and nk >= MIN_SAMPLES:
             ec = (c["status_5xx"] - s0["canary"]["status_5xx"]) / nc
             ek = (k["status_5xx"] - s0["control"]["status_5xx"]) / nk
-            if ec - ek > ERR5XX_DELTA:
-                trigger = f"5xx regression: canary {ec*100:.1f}% vs control {ek*100:.1f}%"
+            # The delta alone fired on pure noise at the sample sizes this stage accepts
+            # (11.4% vs 9.1% with ~150 requests per slice: standard error ~3.5 points).
+            pool = (c["status_5xx"] - s0["canary"]["status_5xx"]
+                    + k["status_5xx"] - s0["control"]["status_5xx"]) / (nc + nk)
+            se = (pool * (1 - pool) * (1 / nc + 1 / nk)) ** 0.5
+            z = (ec - ek) / se if se > 0 else (float("inf") if ec > ek else 0.0)
+            if ec - ek > ERR5XX_DELTA and z >= ERR5XX_Z:
+                trigger = (f"5xx regression: canary {ec*100:.1f}% vs control {ek*100:.1f}% "
+                           f"(z={z:.1f})")
         # (3) latency regression
         if not trigger and nc >= MIN_SAMPLES and nk >= MIN_SAMPLES:
             if c["p99_us"] > LAT_FACTOR * k["p99_us"] + LAT_ABS_US:

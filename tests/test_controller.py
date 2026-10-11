@@ -170,6 +170,16 @@ class RateCampaignFlow(Base):
         self.assertTrue(ok)
 
 
+class Cooldown(Base):
+    def test_failed_search_is_not_repeated_immediately(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        self.feed(benign_users(n=5) + stuffing("atk-1"))      # too little benign evidence -> no rule
+        c.step()
+        self.feed(stuffing("atk-2", start=100))
+        c.step()
+        self.assertIn("cooldown_skip", self.names())
+
+
 class FailSafe(Base):
     def test_failed_live_stage_leaves_rule_off_and_is_not_reused(self):
         fake = Fake(promoted=False)

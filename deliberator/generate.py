@@ -76,13 +76,13 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # `.{2,}` followed by a slash also catches `....//` (a ../ filter bypass).
         trav = r"(?i)(\.{2,}(/|%2f|%5c|\\)+|%2e%2e|%252e|/etc/passwd|%00|%2500)"
         c.append(_ir("traversal", 1, "input_constraint", "uri", "rx", trav,
-                     ["urlDecodeUni"], desc="traversal sequences / null byte / /etc/passwd in URI"))
+                     ["urlDecodeUni", "urlDecodeUni"], desc="traversal sequences / null byte / /etc/passwd in URI"))
         if ep:
             c.append(_ir("traversal", 2, "input_constraint", "uri", "rx", trav,
-                         ["urlDecodeUni"], endpoint=ep.split("{")[0].rstrip("/") or None,
+                         ["urlDecodeUni", "urlDecodeUni"], endpoint=ep.split("{")[0].rstrip("/") or None,
                          desc="traversal patterns in URI, scoped to the targeted endpoint"))
         c.append(_ir("traversal", 3, "input_constraint", "uri", "rx",
-                     r"(\.{2,}[/\\]+){2,}", ["urlDecodeUni"],
+                     r"(\.{2,}[/\\]+){2,}", ["urlDecodeUni", "urlDecodeUni"],
                      desc="two or more consecutive ../ sequences in URI"))
 
     elif attack_class == "cmdi":

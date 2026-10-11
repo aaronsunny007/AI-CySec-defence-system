@@ -57,6 +57,7 @@ INJECTION = {"sqli", "xss", "traversal", "cmdi", "ssrf"}
 RATE = {"credential_stuffing", "user_enumeration", "idor_bola"}
 # 'scan' is detected but has no mitigation template; it is reported, not acted on.
 
+COOLDOWN_S = 600.0          # a campaign signature that yielded no rule is not retried for this long
 MIN_BENIGN_ACTORS = 20      # the rate gate refuses to judge on less benign evidence
 
 
@@ -148,6 +149,8 @@ class Controller:
         self.failed_live: set[str] = set()
         self.handled_times: collections.deque = collections.deque()
         self.newest_ts = 0.0
+        LS.GATEWAY_LOG = cfg.log          # the live stages read the same log the controller tails
+        self.cooldown: dict[str, float] = {}
         self.live = live or self._live_pipeline
         self.mitigate_fn = mitigate_fn or mit.mitigate
         self.ext_benign: list[Actor] = self._load_ext_benign()
@@ -362,6 +365,10 @@ class Controller:
         if not ev:
             self.emit("no_evidence", technique=tech)
             return
+        sig = signature(cls, dossier["endpoints"])
+        if time.time() - self.cooldown.get(sig, 0.0) < COOLDOWN_S:
+            self.emit("cooldown_skip", technique=tech, signature=sig)
+            return
         if tech in RATE:
             res = self._mitigate_rate(dossier, cls, actor)
         else:
@@ -372,6 +379,7 @@ class Controller:
         self.emit("mitigation", technique=tech, source=res["source"], rule=res.get("rule"),
                   ttm_s=round(res["ttm_s"], 4), signature=res.get("signature"))
         if not res.get("rule"):
+            self.cooldown[sig] = time.time()    # don't re-run an expensive failed search
             return
         ir = self.mem.rule_ir(res["rule"])
         if ir is None:
