@@ -149,6 +149,16 @@ class Memory:
         return self.con.execute("SELECT COUNT(*) n FROM llm_calls WHERE ts>=?",
                                 (since_ts,)).fetchone()["n"]
 
+    def rule_ir(self, ir_id: str) -> dict | None:
+        row = self.con.execute("SELECT ir FROM rules WHERE ir_id=?", (ir_id,)).fetchone()
+        return json.loads(row["ir"]) if row else None
+
+    def set_rule_status(self, ir_id: str, status: str) -> None:
+        """e.g. 'rejected_live' when a rule that passed the offline gate fails shadow or
+        canary: it must not be handed back by reuse/generalisation."""
+        self.con.execute("UPDATE rules SET status=? WHERE ir_id=?", (status, ir_id))
+        self.con.commit()
+
     def touch_rule(self, ir_id: str) -> None:
         self.con.execute(
             "UPDATE rules SET last_matched_ts=?, match_count=match_count+1 WHERE ir_id=?",

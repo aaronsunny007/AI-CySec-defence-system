@@ -79,7 +79,8 @@ MAX_LLM_CALLS_PER_HOUR = 6
 def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
              mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR,
              llm=None, max_llm_per_hour: int = MAX_LLM_CALLS_PER_HOUR,
-             llm_rounds: int = 1) -> dict:
+             llm_rounds: int = 1, exclude: frozenset | set = frozenset()) -> dict:
+    """`exclude`: rule ids that already failed the LIVE stages; never offered again."""
     cls = (dossier.get("techniques") or [dossier.get("attack_class", "")])[0]
     campaign_id, sig = mem.record_campaign(dossier)
     t0 = time.perf_counter()
@@ -96,6 +97,8 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
         tmp = Path(td)
         # 2) variant generalisation
         for ir in mem.rules_for_class(cls):
+            if ir["id"] in exclude:
+                continue
             if _quick_blocks(ir, campaign_requests, tmp):
                 mem.promote_rule(ir, sig)  # now also indexed under this signature
                 mem.touch_rule(ir["id"])
@@ -116,6 +119,8 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
         candidates = deliberator.candidates_for(cls, dossier)
         promoted = None
         for ir in candidates:
+            if ir["id"] in exclude:
+                continue
             if ir.get("mechanism") == "rate_limit":
                 continue  # rate candidates validated by the rate gate, not here
             ok, results = gatemod.run_gate(ir, campaign_requests, benign_corpus, tmp)

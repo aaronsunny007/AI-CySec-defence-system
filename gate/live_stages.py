@@ -130,23 +130,30 @@ def _predict_with_replay(ir: dict, records: list[dict]) -> int:
 
 # --- stage 5 -----------------------------------------------------------------
 
-def shadow_stage(ir: dict, corpus: Path, attack_class: str, duration_s: float = 45.0,
-                 rps: float = 60.0) -> LiveResult:
+def shadow_stage(ir: dict, corpus: Path | None, attack_class: str, duration_s: float = 45.0,
+                 rps: float = 60.0, drive: bool = True,
+                 context: list[dict] | None = None) -> LiveResult:
+    """drive=True (experiments): this stage generates its own benign + attack traffic.
+    drive=False (the autonomous controller): observe only the traffic that is really
+    flowing. `context` = earlier log records, used ONLY so an actor whose campaign
+    began before the window can still be recognised as an attacker by the observer."""
     rid = ir["id"]
     off = _log_size()
     rulestore.upsert(ir, mode="shadow")
     rulestore.wait_version(rulestore.load()["version"])
-    rd = ReplayDriver(corpus, rps=rps).start()
-    ad = AttackDriver(attack_class, interval_s=10.0).start()
+    rd = ReplayDriver(corpus, rps=rps).start() if drive else None
+    ad = AttackDriver(attack_class, interval_s=10.0).start() if drive else None
     time.sleep(duration_s)
-    rd.stop()
-    ad.stop()
+    if rd:
+        rd.stop()
+    if ad:
+        ad.stop()
     time.sleep(2.0)  # gateway flushes its log every 500 ms
     window = _read_from(off)
     st = rulestore.stats()["rules"].get(rid, {})
     live = int(st.get("matches", 0))
 
-    flagged = _flagged_actor_keys(window)
+    flagged = _flagged_actor_keys((context or []) + window)
     nonflag = [r for r in window if actor_key(r) not in flagged]
     suspect = [r for r in nonflag if _matched(r, rid)]
     allowed = int(FP_BUDGET * len(nonflag))
@@ -175,19 +182,37 @@ def shadow_stage(ir: dict, corpus: Path, attack_class: str, duration_s: float = 
 
 # --- stage 6 -----------------------------------------------------------------
 
-def canary_stage(ir: dict, corpus: Path, attack_class: str, pct: int = 25,
-                 duration_s: float = 60.0, rps: float = 60.0) -> LiveResult:
+def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25,
+                 duration_s: float = 60.0, rps: float = 60.0, drive: bool = True,
+                 context: list[dict] | None = None, require_samples: bool = False,
+                 max_extend: float = 3.0) -> LiveResult:
+    """require_samples: a canary that saw too little traffic in either slice cannot
+    detect a latency/5xx regression, so it must not pass by default. The window is
+    extended (up to max_extend x duration_s); if it is still too thin the stage FAILS
+    and the rule is switched off."""
     rid = ir["id"]
     off = _log_size()
     rulestore.upsert(ir, mode="canary", canary_pct=pct)
     rulestore.wait_version(rulestore.load()["version"])
     s0 = rulestore.stats()["slices"]
     t_start = time.time()
-    rd = ReplayDriver(corpus, rps=rps, seed=11).start()
-    ad = AttackDriver(attack_class, interval_s=10.0).start()
+    rd = ReplayDriver(corpus, rps=rps, seed=11).start() if drive else None
+    ad = AttackDriver(attack_class, interval_s=10.0).start() if drive else None
 
     trigger, t_trig, rollback_s = None, None, None
-    while time.time() - t_start < duration_s:
+    thin = False
+    while True:
+        elapsed = time.time() - t_start
+        if elapsed >= duration_s:
+            if not require_samples:
+                break
+            s_ = rulestore.stats()["slices"]
+            if (s_["canary"]["n"] - s0["canary"]["n"] >= MIN_SAMPLES
+                    and s_["control"]["n"] - s0["control"]["n"] >= MIN_SAMPLES):
+                break
+            if elapsed >= duration_s * max_extend:
+                thin = True
+                break
         time.sleep(2.0)
         s = rulestore.stats()["slices"]
         c, k = s["canary"], s["control"]
@@ -197,7 +222,7 @@ def canary_stage(ir: dict, corpus: Path, attack_class: str, pct: int = 25,
         window = _read_from(off)
         blocked = [r for r in window if _matched(r, rid, "blocked")]
         if blocked:
-            flagged = _flagged_actor_keys(window)
+            flagged = _flagged_actor_keys((context or []) + window)
             suspect = [r for r in blocked if actor_key(r) not in flagged]
             nonflag_canary = sum(1 for r in window if r.get("canary") and actor_key(r) not in flagged)
             rate = len(suspect) / nonflag_canary if nonflag_canary else 0.0
@@ -221,8 +246,10 @@ def canary_stage(ir: dict, corpus: Path, attack_class: str, pct: int = 25,
             rollback_s = time.time() - t_trig
             break
 
-    rd.stop()
-    ad.stop()
+    if rd:
+        rd.stop()
+    if ad:
+        ad.stop()
     time.sleep(2.0)
     window = _read_from(off)
     blocked_all = [r for r in window if _matched(r, rid, "blocked")]
@@ -237,6 +264,12 @@ def canary_stage(ir: dict, corpus: Path, attack_class: str, pct: int = 25,
         "detect_after_s": round(t_trig - t_start, 1) if t_trig else None,
         "rollback_call_s": round(rollback_s, 2) if rollback_s is not None else None,
     }
+    if thin:
+        rulestore.set_mode(rid, "off")
+        numbers["insufficient_traffic"] = True
+        return LiveResult("canary", False,
+                          f"canary saw < {MIN_SAMPLES} requests in a slice after {max_extend:.0f}x "
+                          f"the window: cannot verify absence of regression, rule switched off", numbers)
     if trigger:
         return LiveResult("canary", False, f"ROLLED BACK after {numbers['detect_after_s']}s: {trigger}", numbers)
     return LiveResult("canary", True,
@@ -265,17 +298,20 @@ def log(ir: dict, stages: list[LiveResult], promoted: bool) -> None:
                         "numbers": s.numbers} for s in stages]}, ensure_ascii=False) + "\n")
 
 
-def live_pipeline(ir: dict, corpus: Path, attack_class: str, shadow_s: float = 45.0,
-                  canary_s: float = 60.0, pct: int = 25, skip_shadow: bool = False) -> dict:
+def live_pipeline(ir: dict, corpus: Path | None, attack_class: str, shadow_s: float = 45.0,
+                  canary_s: float = 60.0, pct: int = 25, skip_shadow: bool = False,
+                  drive: bool = True, context: list[dict] | None = None,
+                  require_samples: bool = False) -> dict:
     stages: list[LiveResult] = []
     if not skip_shadow:
-        sh = shadow_stage(ir, corpus, attack_class, shadow_s)
+        sh = shadow_stage(ir, corpus, attack_class, shadow_s, drive=drive, context=context)
         stages.append(sh)
         if not sh.passed:
             rulestore.set_mode(ir["id"], "off")
             log(ir, stages, False)
             return {"id": ir["id"], "promoted": False, "stages": stages}
-    cn = canary_stage(ir, corpus, attack_class, pct, canary_s)
+    cn = canary_stage(ir, corpus, attack_class, pct, canary_s, drive=drive, context=context,
+                      require_samples=require_samples)
     stages.append(cn)
     promoted = False
     if cn.passed and not skip_shadow:

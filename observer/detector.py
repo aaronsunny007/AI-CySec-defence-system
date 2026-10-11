@@ -166,6 +166,16 @@ def detect(actor: Actor) -> list[Finding]:
     return out
 
 
+def evidence(actor: Actor, technique: str) -> list[Request]:
+    """The requests that made the detector fire for an injection family: the ones
+    matching that family's signature. These (not the actor's recon traffic) are the
+    'malicious requests' a candidate rule must block."""
+    rx = SIGS.get(technique)
+    if rx is None:
+        return []
+    return [r for r in actor.requests if rx.search(_decoded(r)) or rx.search(r.path)]
+
+
 def _email_of(r: Request) -> str | None:
     try:
         if r.body:
