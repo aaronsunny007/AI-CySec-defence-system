@@ -13,12 +13,22 @@ Spec: `CLAUDE.md`. Decisions: `docs/DECISIONS.md`. Honest status: `README.md` an
 - The date is after 2026-10-18.
 - `git status --short` is non-empty (a person or another session is mid-edit), or the
   newest commit is less than 30 minutes old (a person is probably working with Claude).
-- Another heavy job is running: check
-  `Get-CimInstance Win32_Process | ? { $_.Name -like 'python*' -or $_.Name -like 'ollama*' -or $_.Name -like 'gateway*' }`.
-  The owner runs an unrelated project (`llm-eval-redteam`) that may use Ollama; never
-  touch it, and do not start Ollama-heavy work while it is running.
+- Another AEGIS job is already running: a process whose command line contains
+  `AI-CySec-defence-system` (check with
+  `Get-CimInstance Win32_Process | ? { $_.CommandLine -like '*AI-CySec-defence-system*' -and $_.ProcessId -ne $PID }`),
+  or `gateway.exe` / the Juice Shop (`build/app`) is running, or ports 3000/8080/8081 are in use.
 - This file's queue has no item marked `[ ]` that is not blocked.
-- Ports 3000 or 8080 are in use by something you did not start.
+
+**Do NOT skip just because `ollama.exe` or some Python process exists.** `ollama.exe` is the
+always-on Ollama service, and the owner runs an unrelated project (`llm-eval-redteam`) whose
+Python processes may be running at any time. Those are not AEGIS jobs: never touch or stop
+them. They only matter for item D (LLM work): do item D only if
+`curl http://127.0.0.1:11434/api/ps` shows no loaded model AND no `llm-redteam` process is
+running; otherwise leave D for a later run and skip it for now (items A-C do not need Ollama).
+Timing numbers can be noisier while the unrelated project runs: say so in the results.
+
+Usage-limit note: the owner's usage window resets at **05:20 local time**. Runs that fire
+before then may be unable to start; that is normal, not an error.
 
 ## 2. Hard rules (never break these, even if a task seems to require it)
 1. **Own range only.** Traffic goes to `localhost:8080`/`:3000` of the project range and
