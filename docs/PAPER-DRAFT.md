@@ -1,6 +1,6 @@
 # AEGIS: Gating Autonomous Web-Application Defence on Measured Harm
 
-*Draft v0.1 — 2026-10-11. Every number below is taken from a results file in this
+*Draft v0.2 — 2026-10-12 (v0.1 was 2026-10-11; v0.2 adds the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check). Every number below is taken from a results file in this
 repository (linked in section 9) and was produced by a script in `eval/`. Citations
 use the numbering of the PRD bibliography and **must be verified against the originals
 before submission** (PRD section 0).*
@@ -154,7 +154,7 @@ previous rules kept enforcing.
 Across five shifting moves from empty memory, all five were mitigated; first exposures
 took 19-52 s (dominated by the 443k-request replay), a SQLi variant was generalised in
 142 ms and an exact repeat reused in 3.2 ms (~490x faster). This replays recorded
-campaigns in a fixed order; it is *not* an adaptive attacker.
+campaigns in a fixed order; it is *not* an adaptive attacker (see 5.11 for one).
 
 ### 5.8 Induced self-DoS (`docs/M4-RESULTS.md`)
 Adversarial payloads were blended into the strings real users send. The most legitimate
@@ -191,6 +191,39 @@ payloads) mean this does not show that LLMs cannot synthesise such rules. A larg
 model was not tested; the next experiments we would run are letting the model choose from a
 vetted library of token-class patterns instead of writing regexes, then a larger model.
 
+### 5.10 The whole loop, with nobody in it (`docs/E2E-RESULTS.md`)
+A separate controller process tails the gateway log and, with no human action, detects a
+campaign, synthesises or recalls a rule, passes it through the gate (offline stages, then 20 s
+shadow and 30 s canary at 25% with rollback armed) and enforces it. One range boot, real browser
+journeys plus replayed corpus traffic throughout, a persistent attacker that takes a fresh
+identity every few seconds.
+
+| class | detected | rule enforcing | AEGIS-blocked benign |
+|---|---|---|---|
+| command injection (CRS stops 8/12) | 8 s | **83 s** | 0 |
+| credential stuffing (CRS stops 0) | 24 s | **80 s** | 0 |
+| SQLi (spec acceptance case) | 9 s | **130 s** | 0 |
+
+Memory made the synthesis step 1,000x-20,000x faster on a repeat (18.1 s to 0.010 s; 63.8 s to
+0.003 s) but **did not make end-to-end enforcement faster**: a reused rule still passes shadow
+and canary (~57 s), and one live pipeline runs at a time, so campaigns queue. Of 158 detections
+92 were false triggers, all on our synthetic replay users and none on 460 real browser
+journeys; none produced a rule. The first live run found the command-injection templates blocked
+0% (section 6, item 7).
+
+### 5.11 An adaptive attacker (`docs/M4-RESULTS.md`)
+A red agent that sees only HTTP status codes re-encodes payloads, rotates identity, slows down
+and learns the rate-limit quota. Signature rules held: requests reaching the app fell from 92% to
+16% (SQLi) and from 79% to 7% (command injection) while the agent used 79 and 40 identities. **A
+per-identity rate limit did not stop credential stuffing**: the agent still harvested all three
+valid logins (8 identities, 22 requests limited, 65% more time). Per-account counting
+(`key: account`, escalated to when the controller sees a second identity run the same
+campaign) is the countermeasure built in response; see `docs/M4-RESULTS.md` for its measured
+effect and its cost (a victim account can be locked out). The same run found `aegis-sqli-3`
+blocking one real user's password (section 6, item 8); after the fix, a 158,542-request benign
+run plus 554 deliberate replays of the harmed requests produced 0 AEGIS blocks, while the
+attacker still saw 100 of 150 requests blocked by the rule and 20 by CRS.
+
 ## 6. Methodology errors we made, and what they taught
 These are reported because each would have flattered the system, or hidden a weakness,
 had it gone uncaught.
@@ -212,30 +245,53 @@ had it gone uncaught.
    manifest swaps; a model-written value with a newline could have started a second
    directive (closed in the compiler, tested adversarially).
 
+7. **A template that could never match, invisible until it ran live (2026-10-12).** All three
+   command-injection templates blocked 0% of `; cat /etc/passwd`: ModSecurity's `cmdLine`
+   transform deletes `;` before the regex runs. Offline experiments never gated command
+   injection on captured evidence. The first end-to-end run found it; the gate rejected all
+   three (correct) and nothing was enforced until the templates were fixed.
+8. **A percentage false-positive budget cannot say "never this user".** `aegis-sqli-3` met the
+   0.01% budget (0.0045%, 20 of 443,507) and still blocked, 14 times in a 576k-request live run,
+   one real user's password `7ggq|;]3,p'#` (a quote followed by `#`). All 20 corpus matches were
+   that one user. Fixed in the rule (0 of 443,507 afterwards) and by a new gate stage that
+   replays a file of known-harmful-to-block benign requests with zero tolerance.
+9. **The live false-positive judge was blind to identity rotation.** It counted matches on
+   observer-unflagged actors as false positives; an attacker's two-request second identity is
+   never flagged, so a correct rule was rejected in shadow. Matches on actors with fewer than
+   three requests are now reported as *indeterminate* (and capped), not as false positives.
+10. **The canary's error-rate comparison false-alarmed.** Two groups of different actors,
+    clustered traffic, checked every two seconds: an unmodified rate rule was rolled back at
+    z=3.0 (9.1% vs 4.6% 5xx). It now needs significance and is retried once; suspected-FP
+    rollbacks stay final.
+11. **Operational errors were treated as verdicts, and an attacker could starve the budget.** A
+    404 from the admin API blacklisted a rule; every rotated attacker identity consumed the
+    campaigns-per-hour budget. Both fixed.
+12. **A laptop suspend produced a plausible-looking failed run** (65 minutes with no requests in
+    the gateway log). The harness now reports log gaps.
+
 ## 7. Threats to validity and limitations
 One application, eight attack classes we wrote, one laptop, single runs for most
 experiments; percentages over 8 campaigns move in 12.5-point steps. Actors are separated by
-a per-client cookie standing in for source IPs, so IP rotation is unhandled. The behavioural
+a per-client cookie standing in for source IPs, so IP rotation is unhandled (the adaptive attacker in 5.11 exploits exactly this). The behavioural
 detector's thresholds are hand-set and evadable by pacing. Shadow and canary use the
 behavioural detector as the false-positive oracle, so a wrongly flagged benign actor would
 hide its false positives. Canary traffic is replayed corpus requests, 60 req/s, windows of
-45-60 s. The admin API is unauthenticated (loopback) and the manifest is unsigned. The
-canary monitor handles one canary rule at a time. The benign corpus predates actor
-separation. Induced self-DoS was measured against rules we wrote, not against a live
-adaptive attacker; an attacker adapting to AEGIS's rules is untested.
+45-60 s. Signing the manifest and authenticating the admin API are implemented but off by default
+(docs/HARDENING.md) and were not part of the main measurements. The controller runs one live
+pipeline at a time (~57 s each), so campaigns queue. The benign corpus predates actor
+separation. The adaptive attacker (5.11) is one simple ladder, one seed, one run per cell.
 
 ## 8. Future work
-Adaptive adversary (pacing under thresholds, identifier rotation); held-out attack
+A stronger adaptive adversary (probing rule boundaries; pacing under thresholds from the start); actor linkage beyond a cookie (IP/ASN/TLS fingerprint on a real deployment); held-out attack
 variants; for the LLM path, a vetted-pattern-library interface (the model chooses token
-classes, we compile the regex) and then larger/API models; DVWA for
-cross-application generalisation; signed manifests; a campaign stream to measure the
+classes, we compile the regex) and then larger/API models; DVWA (needs PHP/MySQL downloads) in addition to the BookNook second app (5.12); a campaign stream to measure the
 fraction of campaigns reaching the LLM.
 
 ## 9. Reproducibility
 Repository: https://github.com/aaronsunny007/AI-CySec-defence-system (MIT). Everything runs
 natively on Windows, no Docker/WSL. Commands are in `README.md`; results in
 `docs/BASELINE.md`, `M1-RESULTS.md`, `M2-RESULTS.md`, `M2-LIVE-STAGES.md`, `M3-RESULTS.md`,
-`M4-RESULTS.md`; decisions in `docs/DECISIONS.md`. The benign corpus (~260 MB) is regenerated
-by `range/benign/generate.py`. Tests: `python -m unittest discover -s tests` (18) and
+`M4-RESULTS.md`, `E2E-RESULTS.md`, `HARDENING.md`, `CITATION-CHECK.md`; decisions in `docs/DECISIONS.md`. The benign corpus (~260 MB) is regenerated
+by `range/benign/generate.py`. Tests: `python -m unittest discover -s tests` (68) and
 `go test ./...` in `gateway/`. Versions: Go 1.27.2, Coraza 3.8.1, CRS 4.25, Juice Shop
 20.2.0, Ollama 0.40.2, Mistral 7B Q4_K_M.
