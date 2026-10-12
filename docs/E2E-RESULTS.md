@@ -155,7 +155,7 @@ are blocked while the rule is being tested.)
   users, none on a real journey**; none produced a rule. 19 `already_enforcing` repeats absorbed
   in milliseconds.
 * **Cold repeat (rule store wiped, memory kept):** command injection 63.2 s and SQLi 64.1 s,
-  reused in 1.8 / 1.9 ms: about 15-25 % faster than the first exposure here, the saving being
+  reused in 1.8 / 1.9 ms: 10-22 % faster than the first exposure here (63.2 vs 70.2 s; 64.1 vs 82.6 s), the saving being
   the offline gate. **Credential stuffing was NOT enforced in this phase.** Cause: the
   controller saw a second identity run the stuffing campaign, escalated to an account-keyed
   rate rule, the gate rejected both account-keyed candidates (7/103 and 1/103 *other* accounts
