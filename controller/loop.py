@@ -45,7 +45,7 @@ import live_stages as LS                                # noqa: E402
 import mitigate as mit                                  # noqa: E402
 import rulestore                                        # noqa: E402
 from actors import Actor, actor_key, reconstruct, to_request  # noqa: E402
-from detector import build_dossier, detect, evidence    # noqa: E402
+from detector import build_dossier, detect, evidence, is_login_attempt  # noqa: E402
 from ratelimit import blocked_count                     # noqa: E402
 from store import Memory, signature                     # noqa: E402
 
@@ -82,12 +82,12 @@ def account_of(body: str) -> str:
 def _enum_req(r) -> bool:
     return (r.path.startswith(("/rest/user/security-question", "/rest/user/reset-password",
                                 "/rest/user/whoami"))
-            or (r.method == "POST" and r.path == "/rest/user/login"))
+            or is_login_attempt(r))
 
 
 # which of an actor's requests a RATE class is about (used for the dossier endpoints)
 RATE_EVIDENCE: dict[str, Callable] = {
-    "credential_stuffing": lambda r: r.method == "POST" and r.path == "/rest/user/login",
+    "credential_stuffing": is_login_attempt,
     "user_enumeration": _enum_req,
     "idor_bola": lambda r: any(p.isdigit() for p in r.path.split("/")),
 }

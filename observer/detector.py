@@ -100,6 +100,20 @@ def _decoded(r: Request) -> str:
     return urllib.parse.unquote_plus(r.query + " " + r.body)
 
 
+def is_login_attempt(r: Request) -> bool:
+    """A credential attempt on ANY endpoint: a POST whose JSON body carries a password and an
+    identifier. (Hard-coding Juice Shop's /rest/user/login made the detector blind on any
+    other app; found by running it against a second target.)"""
+    if r.method != "POST" or not r.body or len(r.body) > 4096 or "password" not in r.body.lower():
+        return False
+    try:
+        d = json.loads(r.body)
+    except (json.JSONDecodeError, ValueError):
+        return False
+    return (isinstance(d, dict) and isinstance(d.get("password"), str)
+            and any(isinstance(d.get(k), str) for k in ("email", "username", "user")))
+
+
 def detect(actor: Actor) -> list[Finding]:
     """Run all behavioural detectors over one actor's time-sorted requests."""
     out: list[Finding] = []
@@ -123,7 +137,7 @@ def detect(actor: Actor) -> list[Finding]:
                                f"{len(hits)} requests matching {fam} signature"))
 
     # --- credential stuffing: many logins in a window ---
-    logins = [r for r in reqs if r.method == "POST" and r.path == "/rest/user/login"]
+    logins = [r for r in reqs if is_login_attempt(r)]
     out += _rate_rule(logins, T["stuffing_min"], "credential_stuffing",
                       lambda rs: f"{len(rs)} login attempts within {T['window_s']:.0f}s")
 
@@ -131,7 +145,7 @@ def detect(actor: Actor) -> list[Finding]:
     enum_eps = ("/rest/user/security-question", "/rest/user/reset-password",
                 "/rest/user/whoami")
     enum = [r for r in reqs if any(r.path.startswith(e) for e in enum_eps)
-            or (r.method == "POST" and r.path == "/rest/user/login")]
+            or is_login_attempt(r)]
     emails = _distinct_window(enum, lambda r: _email_of(r))
     if emails and len(emails[0]) >= T["enum_min"]:
         first = emails[1]

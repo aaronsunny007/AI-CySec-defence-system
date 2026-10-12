@@ -61,7 +61,10 @@ def stop_recorded() -> None:
 
 class Range:
     def __init__(self, mode: str = "enforce", log: str = "logs/gateway/requests.jsonl",
-                 manifest: str = "rules/active/manifest.json", extra_args: list[str] | None = None):
+                 manifest: str = "rules/active/manifest.json", extra_args: list[str] | None = None,
+                 app: str = "juiceshop"):
+        """app='juiceshop' (default) or 'booknook' (range/app2/server.py, the second target)."""
+        self.app = app
         self.mode, self.log, self.manifest = mode, log, manifest
         self.extra = extra_args or []
         self.procs: list[subprocess.Popen] = []
@@ -74,9 +77,16 @@ class Range:
         logs = ROOT / "logs"
         logs.mkdir(exist_ok=True)
         flags = 0x08000000  # CREATE_NO_WINDOW
-        js = subprocess.Popen(
-            ["node", "build/app"], cwd=JUICE, creationflags=flags,
-            stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
+        if self.app == "booknook":
+            import sys
+            js = subprocess.Popen(
+                [sys.executable, str(ROOT / "range" / "app2" / "server.py"), "--port", "3000"],
+                cwd=ROOT, creationflags=flags,
+                stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
+        else:
+            js = subprocess.Popen(
+                ["node", "build/app"], cwd=JUICE, creationflags=flags,
+                stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
         self.procs.append(js)
         if not _wait("http://127.0.0.1:3000", 180):
             self.__exit__(None, None, None)
