@@ -46,5 +46,27 @@ class Judge(unittest.TestCase):
         self.assertEqual(len(LS.judge_matches(w, RID, set(), outcome="shadow")[0]), 4)
 
 
+class WindowStart(unittest.TestCase):
+    def test_records_that_arrived_before_the_rule_loaded_are_excluded(self):
+        import json
+        import tempfile
+        from datetime import datetime, timezone
+        with tempfile.TemporaryDirectory() as td:
+            log = Path(td) / "g.jsonl"
+
+            def line(ts):
+                return json.dumps({"ts": datetime.fromtimestamp(ts, timezone.utc).isoformat().replace("+00:00", "Z"),
+                                   "uri": "/x"}) + "
+"
+            log.write_text(line(100.0) + line(101.0) + line(102.0), encoding="utf-8")
+            old = LS.GATEWAY_LOG
+            LS.GATEWAY_LOG = log
+            try:
+                self.assertEqual(len(LS._read_from(0)), 3)
+                self.assertEqual(len(LS._read_from(0, since=101.0)), 2)     # the 100.0 request predates the rule
+            finally:
+                LS.GATEWAY_LOG = old
+
+
 if __name__ == "__main__":
     unittest.main()

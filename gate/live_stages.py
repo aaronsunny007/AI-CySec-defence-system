@@ -34,6 +34,7 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,7 +80,18 @@ def _log_size() -> int:
     return GATEWAY_LOG.stat().st_size if GATEWAY_LOG.exists() else 0
 
 
-def _read_from(offset: int) -> list[dict]:
+def _rec_t(rec: dict) -> float:
+    try:
+        return datetime.fromisoformat(rec["ts"].replace("Z", "+00:00")).timestamp()
+    except (KeyError, ValueError, AttributeError):
+        return 0.0
+
+
+def _read_from(offset: int, since: float = 0.0) -> list[dict]:
+    """Records appended after `offset`, optionally only those that ARRIVED at or after `since`.
+    The `since` filter matters: the gateway logs in batches and loads a new rule a moment after
+    the manifest is written, so requests logged after the offset can predate the rule. Under a
+    fast attacker those few requests made the live-vs-replay agreement check fail."""
     if not GATEWAY_LOG.exists():
         return []
     with GATEWAY_LOG.open("rb") as f:
@@ -91,6 +103,8 @@ def _read_from(offset: int) -> list[dict]:
             out.append(json.loads(ln))
         except json.JSONDecodeError:
             pass  # a partially flushed last line
+    if since:
+        out = [r for r in out if _rec_t(r) >= since]
     return out
 
 
@@ -168,9 +182,10 @@ def shadow_stage(ir: dict, corpus: Path | None, attack_class: str, duration_s: f
     flowing. `context` = earlier log records, used ONLY so an actor whose campaign
     began before the window can still be recognised as an attacker by the observer."""
     rid = ir["id"]
-    off = _log_size()
     rulestore.upsert(ir, mode="shadow")
     rulestore.wait_version(rulestore.load()["version"])
+    t_loaded = time.time()
+    off = _log_size()
     rd = ReplayDriver(corpus, rps=rps).start() if drive else None
     ad = AttackDriver(attack_class, interval_s=10.0).start() if drive else None
     time.sleep(duration_s)
@@ -179,7 +194,7 @@ def shadow_stage(ir: dict, corpus: Path | None, attack_class: str, duration_s: f
     if ad:
         ad.stop()
     time.sleep(2.0)  # gateway flushes its log every 500 ms
-    window = _read_from(off)
+    window = _read_from(off, t_loaded)
     st = rulestore.stats()["rules"].get(rid, {})
     live = int(st.get("matches", 0))
 
@@ -224,11 +239,11 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
     extended (up to max_extend x duration_s); if it is still too thin the stage FAILS
     and the rule is switched off."""
     rid = ir["id"]
-    off = _log_size()
     rulestore.upsert(ir, mode="canary", canary_pct=pct)
     rulestore.wait_version(rulestore.load()["version"])
     s0 = rulestore.stats()["slices"]
     t_start = time.time()
+    off = _log_size()
     rd = ReplayDriver(corpus, rps=rps, seed=11).start() if drive else None
     ad = AttackDriver(attack_class, interval_s=10.0).start() if drive else None
 
@@ -252,7 +267,7 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
         nc, nk = c["n"] - s0["canary"]["n"], k["n"] - s0["control"]["n"]
 
         # (1) suspected-FP blocks, judged by M1 on what has been logged so far
-        window = _read_from(off)
+        window = _read_from(off, t_start)
         blocked = [r for r in window if _matched(r, rid, "blocked")]
         if blocked:
             flagged = _flagged_actor_keys((context or []) + window)
@@ -291,7 +306,7 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
     if ad:
         ad.stop()
     time.sleep(2.0)
-    window = _read_from(off)
+    window = _read_from(off, t_start)
     blocked_all = [r for r in window if _matched(r, rid, "blocked")]
     # Ground truth (EVALUATION ONLY -- the stage itself never used it):
     benign_blocked = [r for r in blocked_all if not _is_attack(r)]
