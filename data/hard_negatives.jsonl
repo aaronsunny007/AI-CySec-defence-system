@@ -1,0 +1,2 @@
+{"method": "POST", "uri": "/rest/user/login", "body": "{\"email\":\"jean-lucpicard+shop10407@example.com\",\"password\":\"7ggq|;]3,p'#\"}", "content_type": "application/json", "why": "real user's strong password; blocked by aegis-sqli-3 (quote followed by #) in the 2026-10-12 adaptive run"}
+{"method": "POST", "uri": "/api/Users/", "body": "{\"email\":\"jean-lucpicard+shop10407@example.com\",\"password\":\"7ggq|;]3,p'#\",\"passwordRepeat\":\"7ggq|;]3,p'#\"}", "content_type": "application/json", "why": "same user's registration"}

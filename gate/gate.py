@@ -42,6 +42,10 @@ REPLAY = ROOT / "bin" / "replay.exe"
 FP_BUDGET = 0.0001          # 0.01%
 MUTATION_THRESHOLD = 0.80   # must block >= 80% of mutants
 DECISIONS_LOG = ROOT / "logs" / "gate" / "decisions.jsonl"
+# Benign requests that a rule has ALREADY been seen to block in a live run. The FP budget is a
+# rate (0.01%), and a rate cannot express "never this user": one real user's password was
+# locked out while the rule stayed inside the budget. Zero tolerance for these.
+HARD_NEGATIVES = ROOT / "data" / "hard_negatives.jsonl"
 
 
 @dataclass
@@ -98,6 +102,15 @@ def run_gate(ir: dict, campaign_requests: list[dict], benign_corpus: Path,
         {"fp_rate": b["rate"], "matched": b["matched"], "total": b["total"]}))
     if not fp_ok:
         return False, results
+
+    # Stage 1b: hard negatives -> a rule must not match ANY of them (no budget).
+    if HARD_NEGATIVES.exists() and HARD_NEGATIVES.stat().st_size:
+        h = _replay(rule_file, HARD_NEGATIVES)
+        results.append(StageResult("hard_negatives", h["matched"] == 0,
+            f"matches {h['matched']}/{h['total']} known-harmful-to-block benign requests (allowed 0)",
+            {"matched": h["matched"], "total": h["total"]}))
+        if h["matched"]:
+            return False, results
 
     # Stage 2: campaign/attack replay -> must block the observed malicious requests.
     mal = [r for r in campaign_requests if r.get("malicious", True)]

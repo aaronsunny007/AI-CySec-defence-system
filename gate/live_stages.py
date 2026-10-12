@@ -103,6 +103,35 @@ def _flagged_actor_keys(records: list[dict]) -> set[str]:
     return {k for k, a in actors.items() if len(a.requests) >= 3 and detect(a)}
 
 
+MIN_ACTOR_REQUESTS = 3     # fewer than this and the observer cannot judge an actor either way
+INDETERMINATE_MAX_FRAC = 0.5
+
+
+def judge_matches(records: list[dict], rule_id: str, flagged: set[str],
+                  context: list[dict] | None = None, outcome: str | None = None):
+    """Split a rule's matches into (suspected false positives, indeterminate).
+
+    suspect        match on an actor the observer does NOT flag although the observer has
+                   seen enough of it (>= MIN_ACTOR_REQUESTS requests) to have flagged it.
+    indeterminate  match on a non-flagged actor with too few requests to judge. An attacker
+                   that rotates identity produces exactly these (a live run rejected a good
+                   SQLi rule because the attacker's 2-request second identity was counted as a
+                   'false positive'). They are not counted as FPs, but they are capped: a rule
+                   that mostly matches unjudgeable actors is not shown to be safe.
+    """
+    size: dict[str, int] = {}
+    for r in (context or []) + records:
+        k = actor_key(r)
+        size[k] = size.get(k, 0) + 1
+    suspect, indet = [], []
+    for r in records:
+        k = actor_key(r)
+        if k in flagged or not _matched(r, rule_id, outcome):
+            continue
+        (suspect if size.get(k, 0) >= MIN_ACTOR_REQUESTS else indet).append(r)
+    return suspect, indet
+
+
 def _matched(rec: dict, rule_id: str, outcome: str | None = None) -> bool:
     for m in rec.get("aegis_matches") or []:
         rid, _mode, out = m.split("|")
@@ -156,14 +185,16 @@ def shadow_stage(ir: dict, corpus: Path | None, attack_class: str, duration_s: f
 
     flagged = _flagged_actor_keys((context or []) + window)
     nonflag = [r for r in window if actor_key(r) not in flagged]
-    suspect = [r for r in nonflag if _matched(r, rid)]
+    suspect, indet = judge_matches(window, rid, flagged, context)
     allowed = int(FP_BUDGET * len(nonflag))
-    fp_ok = len(suspect) <= allowed
     logged_matches = sum(1 for r in window if _matched(r, rid))
+    indet_ok = not (logged_matches >= 4 and len(indet) > INDETERMINATE_MAX_FRAC * logged_matches)
+    fp_ok = len(suspect) <= allowed and indet_ok
 
     numbers = {"window_requests": len(window), "live_matches": live,
                "logged_matches": logged_matches, "nonflagged_requests": len(nonflag),
                "suspected_fp_matches": len(suspect), "fp_allowed": allowed,
+               "indeterminate_matches": len(indet),
                "flagged_actors": len(flagged),
                "sample_suspect_uris": [r["uri"][:80] for r in suspect[:3]]}
 
@@ -177,6 +208,7 @@ def shadow_stage(ir: dict, corpus: Path | None, attack_class: str, duration_s: f
 
     passed = fp_ok and agree_ok
     detail = (f"{len(window)} live requests; suspected FPs {len(suspect)}/{len(nonflag)} "
+              f"(+{len(indet)} indeterminate, actors with <{MIN_ACTOR_REQUESTS} requests) "
               f"non-campaign requests (allowed {allowed}); {agree_detail}")
     return LiveResult("shadow", passed, detail, numbers)
 
@@ -224,7 +256,7 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
         blocked = [r for r in window if _matched(r, rid, "blocked")]
         if blocked:
             flagged = _flagged_actor_keys((context or []) + window)
-            suspect = [r for r in blocked if actor_key(r) not in flagged]
+            suspect, _indet = judge_matches(window, rid, flagged, context, "blocked")
             nonflag_canary = sum(1 for r in window if r.get("canary") and actor_key(r) not in flagged)
             rate = len(suspect) / nonflag_canary if nonflag_canary else 0.0
             if len(suspect) >= SUSPECT_BLOCKS_TO_ROLL and rate > SUSPECT_RATE_TO_ROLL:

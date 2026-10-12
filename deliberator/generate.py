@@ -52,8 +52,11 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # Comment-tolerance is in the regex (not a transform): removeComments
         # would delete the `--` we match for payloads like admin'--. The
         # (?:\s|/\*.*?\*/) class also absorbs the /**/ whitespace-evasion mutant.
+        # A bare quote followed by '#' is NOT matched: a real user's password
+        # (7ggq|;]3,p'#) contained it and was locked out of login in a live run
+        # (docs/M4-RESULTS.md). "' OR 1=1#" is still caught by the quote+or branch.
         c.append(_ir("sqli", 3, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(union(?:\s|/\*.*?\*/)+select|('|%27)(?:\s|/\*.*?\*/|\)|%29)*(--|#)|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and|union)\b|\bor\b(?:\s|/\*.*?\*/)+\d+(?:\s|/\*.*?\*/)*=(?:\s|/\*.*?\*/)*\d+)",
+                     r"(?i)(union(?:\s|/\*.*?\*/)+select|('|%27)(?:\s|/\*.*?\*/|\)|%29)*--|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and|union)\b|\bor\b(?:\s|/\*.*?\*/)+\d+(?:\s|/\*.*?\*/)*=(?:\s|/\*.*?\*/)*\d+)",
                      ["urlDecodeUni"],
                      desc="regex for quote+keyword/comment and union SQLi (comment-tolerant)"))
 
