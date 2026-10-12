@@ -44,7 +44,7 @@ how many *payloads* got through.
 
 **Benign side, whole run (44,093 benign requests, 460 Playwright journeys):**
 
-* blocked by an AEGIS rule: **0** (the spec's must-be-zero number held).
+* blocked by an AEGIS rule: **0** of 44,093 in this run. **Do not read that as "never":** the longer adaptive run (576k benign requests) showed `aegis-sqli-3` blocking one real user's password (`...'#`) 14 times; see `M4-RESULTS.md`.
 * blocked by CRS: 3,385 (7.7 %); 22 of 460 journeys broken, all by CRS (AEGIS blocked no benign
   request, so none can be AEGIS's). This is the CRS baseline problem already in `BASELINE.md`,
   not something AEGIS added or fixed.

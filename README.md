@@ -23,7 +23,9 @@ application it defends.
 | M2 rule synthesis + 6-stage gate | done | [docs/M2-RESULTS.md](docs/M2-RESULTS.md), [docs/M2-LIVE-STAGES.md](docs/M2-LIVE-STAGES.md) |
 | M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
 | M3 LLM last-resort path | **0/16** ablation cells promoted a rule (Mistral 7B and Qwen2.5-Coder 7B, one-shot and repair loop, 4 novel campaigns); the gate absorbed all 124 candidates | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
-| M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; arms race 5/5 (replay of recorded campaigns, not yet an adaptive attacker) | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
+| M2/M3 closed loop (the whole thing, no human) | **done**: `controller/loop.py` detected, gated, shadowed, canaried and enforced rules for command injection (82 s), credential stuffing (80 s) and SQLi (130 s) with 0 benign requests blocked in that run; memory makes the synthesis step ~1000x faster on a repeat but NOT end-to-end enforcement time (live stages dominate) | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
+| Rule-store hardening | HMAC-signed manifest + admin bearer token implemented and unit-tested; **not yet exercised in a live run** | [docs/HARDENING.md](docs/HARDENING.md) |
+| M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; arms race 5/5 (replay); adaptive red agent: signature rules held vs mutation + identity rotation, rate limit did NOT stop adaptive stuffing; one real user's password blocked by the SQLi rule | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
 | M5 write-up | **draft v0.1** (numbers all trace to the results files) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 
 Read the "Caveats" section of each results file before quoting a number. Early
