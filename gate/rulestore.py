@@ -105,9 +105,14 @@ def upsert(ir: dict, mode: str = "shadow", canary_pct: int = 0,
 
 
 def clear(path: Path = DEFAULT_MANIFEST) -> None:
-    m = load(path)
-    m["rules"], m["version"] = [], m.get("version", 1) + 1
-    save(m, path)
+    """Empty the rule set. Works even when the existing file cannot be verified (e.g. an
+    unsigned manifest left over from before signing was switched on): the version then comes
+    from the clock, so it still only goes up."""
+    try:
+        version = load(path).get("version", 1) + 1
+    except (ValueError, OSError):
+        version = int(time.time())
+    save({"version": version, "rules": []}, path)
 
 
 # --- admin API ---------------------------------------------------------------

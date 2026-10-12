@@ -82,6 +82,14 @@ class Signing(unittest.TestCase):
         self.assertIsNone(seen["GET"])
         self.assertEqual(seen["POST"], "Bearer tok")
 
+    def test_clear_works_over_a_leftover_unsigned_manifest(self):
+        self.p.write_text(json.dumps(M))                      # from before signing was switched on
+        with mock.patch.dict(os.environ, {"AEGIS_MANIFEST_KEY": KEY}):
+            rulestore.clear(self.p)
+            got = rulestore.load(self.p)
+        self.assertEqual(got["rules"], [])
+        self.assertGreater(got["version"], M["version"])
+
     def test_no_secret_is_ever_in_source_or_repo_defaults(self):
         src = (ROOT / "gate" / "rulestore.py").read_text(encoding="utf-8")
         self.assertNotIn(KEY, src)
