@@ -56,8 +56,8 @@ class WindowStart(unittest.TestCase):
 
             def line(ts):
                 return json.dumps({"ts": datetime.fromtimestamp(ts, timezone.utc).isoformat().replace("+00:00", "Z"),
-                                   "uri": "/x"}) + "
-"
+                                   "uri": "/x"}) + chr(10)
+
             log.write_text(line(100.0) + line(101.0) + line(102.0), encoding="utf-8")
             old = LS.GATEWAY_LOG
             LS.GATEWAY_LOG = log
