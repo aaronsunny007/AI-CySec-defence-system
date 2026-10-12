@@ -20,7 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-BASE = "http://localhost:8080"
+BASE = "http://127.0.0.1:8080"   # NOT "localhost": on Windows that costs ~2 s per new connection (IPv6 fallback)
 UAS = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
        "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 Version/17.4 Safari/605.1.15",
        "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36",
@@ -38,7 +38,7 @@ CREDS = [("admin@booknook.test", "admin123"), ("jim@booknook.test", "ncc-1701"),
 def req(method, path, vid, ua, body=None):
     data = json.dumps(body).encode() if body is not None else None
     r = urllib.request.Request(BASE + path, data=data, method=method, headers={
-        "User-Agent": ua, "Cookie": f"aegis_vid={vid}",
+        "User-Agent": ua, "Cookie": f"aegis_vid={vid}", "Host": "localhost:8080",
         **({"Content-Type": "application/json"} if data else {})})
     try:
         with urllib.request.urlopen(r, timeout=15) as resp:
@@ -47,7 +47,7 @@ def req(method, path, vid, ua, body=None):
     except urllib.error.HTTPError as e:
         e.read()
         return e.code
-    except OSError:
+    except Exception:       # a dropped connection / malformed reply is data, never a dead worker
         return 0
 
 

@@ -51,7 +51,7 @@ class Witness:
         n = 0
         while not self.stop.is_set():
             for r in self.recs:
-                req = urllib.request.Request("http://localhost:8080" + r["uri"], data=r["body"].encode(),
+                req = urllib.request.Request("http://127.0.0.1:8080" + r["uri"], data=r["body"].encode(),
                                              method=r["method"], headers={
                                                  "Content-Type": r["content_type"],
                                                  "Cookie": f"aegis_vid=benign-hardneg-{n % 10}",

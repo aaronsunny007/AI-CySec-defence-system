@@ -114,7 +114,7 @@ class ReplayDriver:
 
 class AttackDriver:
     """Fires one campaign class repeatedly, a fresh actor each time."""
-    def __init__(self, campaign: str, interval_s: float = 5.0, base: str = "http://localhost:8080",
+    def __init__(self, campaign: str, interval_s: float = 5.0, base: str = "http://127.0.0.1:8080",
                  log_path: Path | None = None):
         import campaigns as C
         from client import Actor

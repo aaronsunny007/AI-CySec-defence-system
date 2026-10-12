@@ -42,7 +42,7 @@ def gateway_up(base: str) -> bool:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--base", default="http://localhost:8080")
+    p.add_argument("--base", default="http://127.0.0.1:8080")
     p.add_argument("--log", type=Path, default=ROOT / "logs" / "attacks" / "requests.jsonl")
     p.add_argument("--only", nargs="+", choices=list(C.CAMPAIGNS))
     p.add_argument("--pace", type=float, default=0.2,

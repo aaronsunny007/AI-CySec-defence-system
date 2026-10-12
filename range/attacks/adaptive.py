@@ -72,7 +72,7 @@ class Report:
 
 class RedAgent:
     def __init__(self, goal: str, budget: int = 400, pace: float = 0.3, patience: int = 2,
-                 base: str = "http://localhost:8080", log: Path | None = None, seed: int = 1):
+                 base: str = "http://127.0.0.1:8080", log: Path | None = None, seed: int = 1):
         assert goal in LADDER, goal
         self.goal, self.budget, self.pace0, self.patience = goal, budget, pace, patience
         self.base, self.rng = base, random.Random(seed)

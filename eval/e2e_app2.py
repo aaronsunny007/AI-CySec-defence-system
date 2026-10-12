@@ -41,10 +41,13 @@ def capture(n: int) -> None:
     CORPUS.parent.mkdir(parents=True, exist_ok=True)
     CORPUS.unlink(missing_ok=True)
     rulestore.clear()
+    threading.excepthook = lambda a: print("benign worker died:", a.exc_type.__name__, a.exc_value, flush=True)
     with Range(mode="detect", log=str(CORPUS.relative_to(ROOT)), app="booknook"):
         ths, counter = B2.run(n, 0, 8, 7)
         for t in ths:
             t.join()
+        print(f"driver sent ~{counter[0]} requests", flush=True)
+        time.sleep(3)           # let the gateway flush its log before the range is torn down
     lines = sum(1 for _ in CORPUS.open(encoding="utf-8"))
     print(f"captured {lines} benign requests -> {CORPUS}", flush=True)
 

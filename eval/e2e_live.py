@@ -77,7 +77,7 @@ class Attacker:
     def _loop(self) -> None:
         sink = open(ROOT / "logs" / "attacks" / "e2e_attacks.jsonl", "a", encoding="utf-8")
         while not self.stop.is_set():
-            a = Actor(base="http://localhost:8080", campaign=self.campaign, attack_class=self.campaign,
+            a = Actor(base="http://127.0.0.1:8080", campaign=self.campaign, attack_class=self.campaign,
                       user_agent=C.user_agent_for(self.campaign), out=sink)
             t0 = time.time()
             try:

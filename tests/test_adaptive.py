@@ -34,7 +34,7 @@ class Agent(unittest.TestCase):
         self.assertEqual(rep.requests, 25)
 
     def test_only_the_local_range_by_default(self):
-        self.assertTrue(adaptive.RedAgent("sqli", budget=1, pace=0).base.startswith("http://localhost"))
+        self.assertTrue(adaptive.RedAgent("sqli", budget=1, pace=0).base.startswith(("http://localhost", "http://127.0.0.1")))
 
     def test_blocks_trigger_the_ladder_in_order(self):
         rep = self.run_agent("sqli", [403] * 12, budget=12)
