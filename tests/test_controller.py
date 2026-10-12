@@ -270,6 +270,7 @@ class BypassDetection(Base):
             seen["exclude"] = kw["exclude"]
             return {"source": "none", "rule": None, "ttm_s": 0.0, "signature": "x"}
         c = loop.Controller(self.cfg, self.mem, live=Fake(), mitigate_fn=fake_mitigate)
+        c.enforced_at = {}      # enforcement time unknown: all evidence counts
         # a known, enforcing cmdi rule for this campaign signature
         ir = loop.deliberator.candidates_for("cmdi", {"endpoints": ["/rest/products/search"]})[0]
         sig = loop.signature("cmdi", ["/rest/products/search"])
@@ -281,6 +282,19 @@ class BypassDetection(Base):
         c.step()
         self.assertIn("rule_bypassed", self.names())
         self.assertIn(ir["id"], seen["exclude"])
+
+    def test_unblocked_history_from_before_enforcement_is_not_a_bypass(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake(),
+                            mitigate_fn=lambda *a, **k: {"source": "none", "rule": None, "ttm_s": 0.0, "signature": "x"})
+        ir = loop.deliberator.candidates_for("cmdi", {"endpoints": ["/rest/products/search"]})[0]
+        self.mem.promote_rule(ir, loop.signature("cmdi", ["/rest/products/search"]))
+        loop.rulestore.load.return_value = {"version": 2, "rules": [{"id": ir["id"], "mode": "enforce"}]}
+        c.enforced_at[ir["id"]] = datetime(2099, 1, 1, tzinfo=timezone.utc).timestamp()   # enforced "after" the evidence
+        atk = [dict(rec(i, "atk-9", "GET", "/rest/products/search?q=apple%3B+cat+%2Fetc%2Fpasswd"), blocked=False)
+               for i in range(4)]
+        self.feed(benign_users() + atk)
+        c.step()
+        self.assertNotIn("rule_bypassed", self.names())
 
     def test_blocked_evidence_is_not_a_bypass(self):
         c = loop.Controller(self.cfg, self.mem, live=Fake())

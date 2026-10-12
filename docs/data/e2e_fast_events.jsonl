@@ -1,0 +1,1318 @@
+{"t": 1791794087.743, "event": "controller_start", "log": "C:\\Users\\denny\\Documents\\AI-CySec-defence-system\\logs\\gateway\\e2e.jsonl", "shadow_s": 20.0, "canary_s": 30.0, "window_s": 600.0, "ext_benign_actors": 162}
+{"t": 1791794161.426, "event": "campaign_detected", "actor": "h:a3e2b1ef1d9efc7e", "technique": "cmdi", "onset": 1791794161.03033, "ttd_s": 0.008795, "n_requests": 4}
+{"t": 1791794167.804, "event": "mitigation", "technique": "cmdi", "source": "fresh", "rule": "aegis-cmdi-1", "ttm_s": 6.3744, "signature": "e54eb5401dbed207"}
+{"t": 1791794167.804, "event": "live_start", "rule": "aegis-cmdi-1", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794225.319, "event": "live_stage", "rule": "aegis-cmdi-1", "stage": "shadow", "passed": true, "detail": "1258 live requests; suspected FPs 0/1210 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 34 vs replay-predicted 34 (tol 2)", "numbers": {"window_requests": 1258, "live_matches": 36, "logged_matches": 34, "nonflagged_requests": 1210, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 5, "sample_suspect_uris": [], "replay_predicted": 34, "tolerance": 2}}
+{"t": 1791794225.319, "event": "live_stage", "rule": "aegis-cmdi-1", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 10 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2383, "rule_blocks": 10, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 10, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794225.321, "event": "enforced", "rule": "aegis-cmdi-1"}
+{"t": 1791794225.321, "event": "campaign_detected", "actor": "h:a3e2b1ef1d9efc7e", "technique": "traversal", "onset": 1791794161.03033, "ttd_s": 0.008795, "n_requests": 4}
+{"t": 1791794234.779, "event": "mitigation", "technique": "traversal", "source": "fresh", "rule": "aegis-traversal-1", "ttm_s": 9.4461, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794234.78, "event": "live_start", "rule": "aegis-traversal-1", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794291.617, "event": "live_stage", "rule": "aegis-traversal-1", "stage": "shadow", "passed": true, "detail": "1298 live requests; suspected FPs 0/1256 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 3 vs replay-predicted 3 (tol 2)", "numbers": {"window_requests": 1298, "live_matches": 3, "logged_matches": 3, "nonflagged_requests": 1256, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 4, "sample_suspect_uris": [], "replay_predicted": 3, "tolerance": 2}}
+{"t": 1791794291.617, "event": "live_stage", "rule": "aegis-traversal-1", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 1 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2001, "rule_blocks": 1, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 1, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794291.617, "event": "enforced", "rule": "aegis-traversal-1"}
+{"t": 1791794293.024, "event": "campaign_detected", "actor": "h:0439fc46eee55fce", "technique": "cmdi", "onset": 1791794245.918816, "ttd_s": 0.005743, "n_requests": 14}
+{"t": 1791794293.035, "event": "mitigation", "technique": "cmdi", "source": "reused", "rule": "aegis-cmdi-1", "ttm_s": 0.0035, "signature": "e54eb5401dbed207"}
+{"t": 1791794293.035, "event": "already_enforcing", "rule": "aegis-cmdi-1"}
+{"t": 1791794293.037, "event": "campaign_detected", "actor": "h:0439fc46eee55fce", "technique": "traversal", "onset": 1791794245.918816, "ttd_s": 0.005743, "n_requests": 14}
+{"t": 1791794293.049, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794293.05, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794293.051, "event": "campaign_detected", "actor": "h:126fdf4a6aa2f86e", "technique": "idor_bola", "onset": 1791794124.065874, "ttd_s": 128.518477, "n_requests": 32}
+{"t": 1791794293.067, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794293.079, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794293.081, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0277, "signature": "e161fc1e71e55d8f"}
+{"t": 1791794293.082, "event": "campaign_detected", "actor": "h:1a4a898ee96b08a2", "technique": "cmdi", "onset": 1791794257.514438, "ttd_s": 0.009743, "n_requests": 14}
+{"t": 1791794293.093, "event": "mitigation", "technique": "cmdi", "source": "reused", "rule": "aegis-cmdi-1", "ttm_s": 0.0033, "signature": "e54eb5401dbed207"}
+{"t": 1791794293.095, "event": "already_enforcing", "rule": "aegis-cmdi-1"}
+{"t": 1791794293.095, "event": "campaign_detected", "actor": "h:1a4a898ee96b08a2", "technique": "traversal", "onset": 1791794257.514438, "ttd_s": 0.009743, "n_requests": 14}
+{"t": 1791794293.108, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0041, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794293.11, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794293.11, "event": "campaign_detected", "actor": "h:2a5381bb9907ef3b", "technique": "cmdi", "onset": 1791794166.77339, "ttd_s": 0.032527, "n_requests": 14}
+{"t": 1791794293.112, "event": "rule_bypassed", "rule": "aegis-cmdi-1", "technique": "cmdi", "leaked": 4, "of": 10}
+{"t": 1791794305.299, "event": "mitigation", "technique": "cmdi", "source": "none", "rule": null, "ttm_s": 12.1794, "signature": "e54eb5401dbed207"}
+{"t": 1791794305.299, "event": "campaign_detected", "actor": "h:2a5381bb9907ef3b", "technique": "traversal", "onset": 1791794166.77339, "ttd_s": 0.032527, "n_requests": 14}
+{"t": 1791794305.306, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0021, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794305.307, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794305.307, "event": "campaign_detected", "actor": "h:40656c172f57b069", "technique": "cmdi", "onset": 1791794201.161344, "ttd_s": 0.017887, "n_requests": 14}
+{"t": 1791794305.307, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794305.307, "event": "campaign_detected", "actor": "h:40656c172f57b069", "technique": "traversal", "onset": 1791794201.161344, "ttd_s": 0.017887, "n_requests": 14}
+{"t": 1791794305.316, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0021, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794305.317, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794305.317, "event": "campaign_detected", "actor": "h:5aacbe592e58e0d3", "technique": "credential_stuffing", "onset": 1791794266.118513, "ttd_s": 0.919073, "n_requests": 12}
+{"t": 1791794305.33, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 5 request(s) limited"]}
+{"t": 1791794305.335, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0131, "signature": "87ac366fab484cfb"}
+{"t": 1791794305.336, "event": "live_start", "rule": "aegis-credential_stuffing-1", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794362.287, "event": "live_stage", "rule": "aegis-credential_stuffing-1", "stage": "shadow", "passed": true, "detail": "1902 live requests; suspected FPs 0/1840 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); n/a (rate rule)", "numbers": {"window_requests": 1902, "live_matches": 20, "logged_matches": 20, "nonflagged_requests": 1840, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 30, "sample_suspect_uris": []}}
+{"t": 1791794362.287, "event": "live_stage", "rule": "aegis-credential_stuffing-1", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 5 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2715, "rule_blocks": 5, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 5, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794362.287, "event": "enforced", "rule": "aegis-credential_stuffing-1"}
+{"t": 1791794362.288, "event": "campaign_detected", "actor": "h:5aacbe592e58e0d3", "technique": "user_enumeration", "onset": 1791794266.118513, "ttd_s": 0.72224, "n_requests": 12}
+{"t": 1791794362.309, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794362.325, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794362.329, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0369, "signature": "6205c942f2fff687"}
+{"t": 1791794362.329, "event": "campaign_detected", "actor": "h:60e5f8f0da072a94", "technique": "cmdi", "onset": 1791794239.526372, "ttd_s": 0.005604, "n_requests": 14}
+{"t": 1791794362.33, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.33, "event": "campaign_detected", "actor": "h:60e5f8f0da072a94", "technique": "traversal", "onset": 1791794239.526372, "ttd_s": 0.005604, "n_requests": 14}
+{"t": 1791794362.339, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0031, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.34, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.341, "event": "campaign_detected", "actor": "h:63afea7294027043", "technique": "cmdi", "onset": 1791794195.431881, "ttd_s": 0.040555, "n_requests": 14}
+{"t": 1791794362.341, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.342, "event": "campaign_detected", "actor": "h:63afea7294027043", "technique": "traversal", "onset": 1791794195.431881, "ttd_s": 0.040555, "n_requests": 14}
+{"t": 1791794362.351, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0033, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.353, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.353, "event": "campaign_detected", "actor": "h:6a20c9891accbb3b", "technique": "cmdi", "onset": 1791794233.418898, "ttd_s": 0.015267, "n_requests": 14}
+{"t": 1791794362.353, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.354, "event": "campaign_detected", "actor": "h:6a20c9891accbb3b", "technique": "traversal", "onset": 1791794233.418898, "ttd_s": 0.015267, "n_requests": 14}
+{"t": 1791794362.364, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.366, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.366, "event": "campaign_detected", "actor": "h:7bc3768f1b0c2cf6", "technique": "cmdi", "onset": 1791794251.72053, "ttd_s": 0.005986, "n_requests": 14}
+{"t": 1791794362.366, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.366, "event": "campaign_detected", "actor": "h:7bc3768f1b0c2cf6", "technique": "traversal", "onset": 1791794251.72053, "ttd_s": 0.005986, "n_requests": 14}
+{"t": 1791794362.376, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0023, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.376, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.376, "event": "campaign_detected", "actor": "h:8016dba29dbe0ac2", "technique": "cmdi", "onset": 1791794214.35088, "ttd_s": 0.023479, "n_requests": 14}
+{"t": 1791794362.378, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.378, "event": "campaign_detected", "actor": "h:8016dba29dbe0ac2", "technique": "traversal", "onset": 1791794214.35088, "ttd_s": 0.023479, "n_requests": 14}
+{"t": 1791794362.386, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0029, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.387, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.387, "event": "campaign_detected", "actor": "h:8666ddb21c576d16", "technique": "cmdi", "onset": 1791794263.30715, "ttd_s": 0.004927, "n_requests": 14}
+{"t": 1791794362.387, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.387, "event": "campaign_detected", "actor": "h:8666ddb21c576d16", "technique": "traversal", "onset": 1791794263.30715, "ttd_s": 0.004927, "n_requests": 14}
+{"t": 1791794362.397, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0025, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.398, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.398, "event": "campaign_detected", "actor": "h:88c31c2f9f0c7d6b", "technique": "idor_bola", "onset": 1791794179.42127, "ttd_s": 86.193782, "n_requests": 37}
+{"t": 1791794362.399, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794362.399, "event": "campaign_detected", "actor": "h:89db1a1a4c57318d", "technique": "cmdi", "onset": 1791794220.502905, "ttd_s": 0.457597, "n_requests": 14}
+{"t": 1791794362.399, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.399, "event": "campaign_detected", "actor": "h:89db1a1a4c57318d", "technique": "traversal", "onset": 1791794220.502905, "ttd_s": 0.457597, "n_requests": 14}
+{"t": 1791794362.409, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0033, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.409, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.409, "event": "campaign_detected", "actor": "h:9e76757253dd32f6", "technique": "cmdi", "onset": 1791794189.698891, "ttd_s": 0.043879, "n_requests": 14}
+{"t": 1791794362.411, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.411, "event": "campaign_detected", "actor": "h:9e76757253dd32f6", "technique": "traversal", "onset": 1791794189.698891, "ttd_s": 0.043879, "n_requests": 14}
+{"t": 1791794362.419, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0028, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.421, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.422, "event": "campaign_detected", "actor": "h:babb00af61287ccc", "technique": "idor_bola", "onset": 1791794120.040583, "ttd_s": 166.253512, "n_requests": 33}
+{"t": 1791794362.435, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794362.445, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/454", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794362.45, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0246, "signature": "d4e3e99d070cbba4"}
+{"t": 1791794362.45, "event": "campaign_detected", "actor": "h:bc74ffe2d6fbaea0", "technique": "cmdi", "onset": 1791794207.842947, "ttd_s": 0.474425, "n_requests": 14}
+{"t": 1791794362.45, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.451, "event": "campaign_detected", "actor": "h:bc74ffe2d6fbaea0", "technique": "traversal", "onset": 1791794207.842947, "ttd_s": 0.474425, "n_requests": 14}
+{"t": 1791794362.462, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0026, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.463, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.463, "event": "campaign_detected", "actor": "h:c7bc5a9b56f97455", "technique": "cmdi", "onset": 1791794183.914948, "ttd_s": 0.034811, "n_requests": 14}
+{"t": 1791794362.463, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794362.464, "event": "campaign_detected", "actor": "h:c7bc5a9b56f97455", "technique": "traversal", "onset": 1791794183.914948, "ttd_s": 0.034811, "n_requests": 14}
+{"t": 1791794362.474, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0026, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794362.474, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794362.475, "event": "campaign_detected", "actor": "h:ce07727d4d13d3d1", "technique": "credential_stuffing", "onset": 1791794282.220999, "ttd_s": 3.999832, "n_requests": 12}
+{"t": 1791794362.475, "event": "identity_rotation_detected", "technique": "credential_stuffing", "identities": 2}
+{"t": 1791794362.493, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 2/76"]}
+{"t": 1791794362.506, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/76", "attacked accounts that would be limited: 1/7 (victim lock-out is the accepted cost)"]}
+{"t": 1791794362.51, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0309, "signature": "87ac366fab484cfb"}
+{"t": 1791794362.512, "event": "live_start", "rule": "aegis-credential_stuffing-4", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794417.95, "event": "live_stage", "rule": "aegis-credential_stuffing-4", "stage": "shadow", "passed": true, "detail": "1717 live requests; suspected FPs 0/1648 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); n/a (rate rule)", "numbers": {"window_requests": 1717, "live_matches": 8, "logged_matches": 8, "nonflagged_requests": 1648, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 32, "sample_suspect_uris": []}}
+{"t": 1791794417.95, "event": "live_stage", "rule": "aegis-credential_stuffing-4", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 5 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2220, "rule_blocks": 5, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 5, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794417.951, "event": "enforced", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794417.951, "event": "campaign_detected", "actor": "h:ce07727d4d13d3d1", "technique": "user_enumeration", "onset": 1791794282.220999, "ttd_s": 3.283009, "n_requests": 12}
+{"t": 1791794417.952, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794417.953, "event": "campaign_detected", "actor": "h:d73e4ccde4059ed3", "technique": "credential_stuffing", "onset": 1791794272.497647, "ttd_s": 1.745258, "n_requests": 12}
+{"t": 1791794417.961, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0057, "signature": "87ac366fab484cfb"}
+{"t": 1791794417.962, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794417.962, "event": "campaign_detected", "actor": "h:d73e4ccde4059ed3", "technique": "user_enumeration", "onset": 1791794272.497647, "ttd_s": 1.177598, "n_requests": 12}
+{"t": 1791794417.962, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794417.962, "event": "campaign_detected", "actor": "h:dcf8d3ff114d8552", "technique": "idor_bola", "onset": 1791794114.804354, "ttd_s": 136.766617, "n_requests": 35}
+{"t": 1791794417.963, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794417.963, "event": "campaign_detected", "actor": "h:dfe92b709ee9aed1", "technique": "cmdi", "onset": 1791794172.448374, "ttd_s": 0.028142, "n_requests": 14}
+{"t": 1791794417.963, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794417.963, "event": "campaign_detected", "actor": "h:dfe92b709ee9aed1", "technique": "traversal", "onset": 1791794172.448374, "ttd_s": 0.028142, "n_requests": 14}
+{"t": 1791794417.971, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0026, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794417.972, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794417.973, "event": "campaign_detected", "actor": "h:e382dead590bbab7", "technique": "cmdi", "onset": 1791794178.225943, "ttd_s": 0.039805, "n_requests": 14}
+{"t": 1791794417.973, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794417.973, "event": "campaign_detected", "actor": "h:e382dead590bbab7", "technique": "traversal", "onset": 1791794178.225943, "ttd_s": 0.039805, "n_requests": 14}
+{"t": 1791794417.982, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0024, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794417.983, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794417.984, "event": "campaign_detected", "actor": "h:e5b5ed045d717adf", "technique": "cmdi", "onset": 1791794227.582235, "ttd_s": 0.005132, "n_requests": 14}
+{"t": 1791794417.984, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794417.984, "event": "campaign_detected", "actor": "h:e5b5ed045d717adf", "technique": "traversal", "onset": 1791794227.582235, "ttd_s": 0.005132, "n_requests": 14}
+{"t": 1791794417.992, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794417.992, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794419.321, "event": "campaign_detected", "actor": "h:188c8c056a0e620d", "technique": "idor_bola", "onset": 1791794142.588794, "ttd_s": 187.483584, "n_requests": 58}
+{"t": 1791794419.321, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794419.322, "event": "campaign_detected", "actor": "h:2f252093e007bee9", "technique": "idor_bola", "onset": 1791794204.769144, "ttd_s": 163.71794, "n_requests": 48}
+{"t": 1791794419.322, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794419.322, "event": "campaign_detected", "actor": "h:39c906043f2837cd", "technique": "idor_bola", "onset": 1791794142.119735, "ttd_s": 236.596901, "n_requests": 72}
+{"t": 1791794419.322, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794419.323, "event": "campaign_detected", "actor": "h:4e195273cf79c12e", "technique": "credential_stuffing", "onset": 1791794325.346484, "ttd_s": 0.745296, "n_requests": 12}
+{"t": 1791794419.351, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0262, "signature": "87ac366fab484cfb"}
+{"t": 1791794419.352, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794419.352, "event": "campaign_detected", "actor": "h:4e195273cf79c12e", "technique": "user_enumeration", "onset": 1791794325.346484, "ttd_s": 0.592182, "n_requests": 12}
+{"t": 1791794419.352, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794419.352, "event": "campaign_detected", "actor": "h:4f9e4ff1dacafcec", "technique": "credential_stuffing", "onset": 1791794299.986016, "ttd_s": 0.756448, "n_requests": 12}
+{"t": 1791794419.355, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0047, "signature": "87ac366fab484cfb"}
+{"t": 1791794419.355, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794419.355, "event": "campaign_detected", "actor": "h:4f9e4ff1dacafcec", "technique": "user_enumeration", "onset": 1791794299.986016, "ttd_s": 0.612894, "n_requests": 12}
+{"t": 1791794419.355, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794419.355, "event": "campaign_detected", "actor": "h:5119da72f6246613", "technique": "idor_bola", "onset": 1791794100.678983, "ttd_s": 296.100749, "n_requests": 54}
+{"t": 1791794419.362, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794419.362, "event": "campaign_detected", "actor": "h:62b4eaa9d4a513aa", "technique": "credential_stuffing", "onset": 1791794380.44592, "ttd_s": 0.735472, "n_requests": 12}
+{"t": 1791794419.368, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0038, "signature": "87ac366fab484cfb"}
+{"t": 1791794419.369, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794419.37, "event": "campaign_detected", "actor": "h:62b4eaa9d4a513aa", "technique": "user_enumeration", "onset": 1791794380.44592, "ttd_s": 0.591194, "n_requests": 12}
+{"t": 1791794419.37, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794419.37, "event": "campaign_detected", "actor": "h:6fb6eafa25de2039", "technique": "credential_stuffing", "onset": 1791794350.083672, "ttd_s": 0.81372, "n_requests": 12}
+{"t": 1791794419.37, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0039, "signature": "87ac366fab484cfb"}
+{"t": 1791794419.37, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794419.37, "event": "campaign_detected", "actor": "h:6fb6eafa25de2039", "technique": "user_enumeration", "onset": 1791794350.083672, "ttd_s": 0.647194, "n_requests": 12}
+{"t": 1791794419.37, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794419.37, "event": "campaign_detected", "actor": "h:75cca120776a14bd", "technique": "credential_stuffing", "onset": 1791794311.284356, "ttd_s": 1.05158, "n_requests": 12}
+{"t": 1791794419.387, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.005, "signature": "87ac366fab484cfb"}
+{"t": 1791794419.388, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794419.388, "event": "campaign_detected", "actor": "h:75cca120776a14bd", "technique": "user_enumeration", "onset": 1791794311.284356, "ttd_s": 0.911023, "n_requests": 12}
+{"t": 1791794419.388, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794419.388, "event": "campaign_detected", "actor": "h:780d29674a1253da", "technique": "sqli", "onset": 1791794410.498875, "ttd_s": 0.263669, "n_requests": 10}
+{"t": 1791794437.651, "event": "mitigation", "technique": "sqli", "source": "fresh", "rule": "aegis-sqli-3", "ttm_s": 18.2497, "signature": "6997d6acecfa5647"}
+{"t": 1791794437.652, "event": "live_start", "rule": "aegis-sqli-3", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794494.344, "event": "live_stage", "rule": "aegis-sqli-3", "stage": "shadow", "passed": true, "detail": "1518 live requests; suspected FPs 0/1356 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 24 vs replay-predicted 24 (tol 2)", "numbers": {"window_requests": 1518, "live_matches": 24, "logged_matches": 24, "nonflagged_requests": 1356, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 75, "sample_suspect_uris": [], "replay_predicted": 24, "tolerance": 2}}
+{"t": 1791794494.344, "event": "live_stage", "rule": "aegis-sqli-3", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 16 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2026, "rule_blocks": 16, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 16, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794494.344, "event": "enforced", "rule": "aegis-sqli-3"}
+{"t": 1791794494.346, "event": "campaign_detected", "actor": "h:780d29674a1253da", "technique": "user_enumeration", "onset": 1791794410.498875, "ttd_s": 0.788084, "n_requests": 10}
+{"t": 1791794494.346, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.346, "event": "campaign_detected", "actor": "h:78c9adbfc3b63051", "technique": "idor_bola", "onset": 1791794302.168146, "ttd_s": 35.226691, "n_requests": 53}
+{"t": 1791794494.362, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.376, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.378, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0302, "signature": "847354a48c8431f4"}
+{"t": 1791794494.378, "event": "campaign_detected", "actor": "h:7ba4052f32e2a9cf", "technique": "credential_stuffing", "onset": 1791794356.037679, "ttd_s": 0.92941, "n_requests": 12}
+{"t": 1791794494.386, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0044, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.387, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.388, "event": "campaign_detected", "actor": "h:7ba4052f32e2a9cf", "technique": "user_enumeration", "onset": 1791794356.037679, "ttd_s": 0.628108, "n_requests": 12}
+{"t": 1791794494.388, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.388, "event": "campaign_detected", "actor": "h:7ebdef3783f88162", "technique": "idor_bola", "onset": 1791794166.812972, "ttd_s": 128.47216, "n_requests": 48}
+{"t": 1791794494.404, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.416, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.42, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0287, "signature": "b856c0b4e4c6119f"}
+{"t": 1791794494.42, "event": "campaign_detected", "actor": "h:8008dfb5559a33a4", "technique": "idor_bola", "onset": 1791794121.436397, "ttd_s": 191.959506, "n_requests": 60}
+{"t": 1791794494.42, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794494.422, "event": "campaign_detected", "actor": "h:848b6a31d9bf54c4", "technique": "credential_stuffing", "onset": 1791794397.273934, "ttd_s": 0.782897, "n_requests": 12}
+{"t": 1791794494.427, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0042, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.428, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.428, "event": "campaign_detected", "actor": "h:848b6a31d9bf54c4", "technique": "user_enumeration", "onset": 1791794397.273934, "ttd_s": 0.623669, "n_requests": 12}
+{"t": 1791794494.429, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.429, "event": "campaign_detected", "actor": "h:8542413cad9e0350", "technique": "idor_bola", "onset": 1791794176.450439, "ttd_s": 108.887403, "n_requests": 56}
+{"t": 1791794494.429, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.429, "event": "campaign_detected", "actor": "h:99929584fa173740", "technique": "idor_bola", "onset": 1791794092.772823, "ttd_s": 255.955155, "n_requests": 59}
+{"t": 1791794494.429, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.43, "event": "campaign_detected", "actor": "h:9fdaf25380e88a40", "technique": "credential_stuffing", "onset": 1791794305.543248, "ttd_s": 0.71533, "n_requests": 12}
+{"t": 1791794494.437, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0049, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.438, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.438, "event": "campaign_detected", "actor": "h:9fdaf25380e88a40", "technique": "user_enumeration", "onset": 1791794305.543248, "ttd_s": 0.578482, "n_requests": 12}
+{"t": 1791794494.439, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.439, "event": "campaign_detected", "actor": "h:a22cf9546f1b41c9", "technique": "idor_bola", "onset": 1791794164.091403, "ttd_s": 163.4912, "n_requests": 55}
+{"t": 1791794494.439, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.439, "event": "campaign_detected", "actor": "h:a875fa6c0b3d90fc", "technique": "credential_stuffing", "onset": 1791794331.016415, "ttd_s": 1.259076, "n_requests": 12}
+{"t": 1791794494.445, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0041, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.447, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.447, "event": "campaign_detected", "actor": "h:a875fa6c0b3d90fc", "technique": "user_enumeration", "onset": 1791794331.016415, "ttd_s": 0.849532, "n_requests": 12}
+{"t": 1791794494.447, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.448, "event": "campaign_detected", "actor": "h:b73aedbd587c5c1b", "technique": "credential_stuffing", "onset": 1791794374.552289, "ttd_s": 1.173938, "n_requests": 12}
+{"t": 1791794494.454, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0041, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.455, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.455, "event": "campaign_detected", "actor": "h:b73aedbd587c5c1b", "technique": "user_enumeration", "onset": 1791794374.552289, "ttd_s": 0.99729, "n_requests": 12}
+{"t": 1791794494.455, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.456, "event": "campaign_detected", "actor": "h:bbc54b6b1ddceed2", "technique": "credential_stuffing", "onset": 1791794391.379055, "ttd_s": 1.167686, "n_requests": 12}
+{"t": 1791794494.461, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0044, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.463, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.463, "event": "campaign_detected", "actor": "h:bbc54b6b1ddceed2", "technique": "user_enumeration", "onset": 1791794391.379055, "ttd_s": 0.747612, "n_requests": 12}
+{"t": 1791794494.463, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.464, "event": "campaign_detected", "actor": "h:c194600aa4cab10b", "technique": "idor_bola", "onset": 1791794115.99898, "ttd_s": 262.948036, "n_requests": 46}
+{"t": 1791794494.479, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.492, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.495, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0286, "signature": "39c137876184648f"}
+{"t": 1791794494.496, "event": "campaign_detected", "actor": "h:c257092ac800fe0b", "technique": "idor_bola", "onset": 1791794156.432247, "ttd_s": 260.99773, "n_requests": 54}
+{"t": 1791794494.496, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.496, "event": "campaign_detected", "actor": "h:c4df934e38337e56", "technique": "idor_bola", "onset": 1791794101.795949, "ttd_s": 252.554366, "n_requests": 63}
+{"t": 1791794494.512, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.525, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/523", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794494.527, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0286, "signature": "1e7bac1edd3d3259"}
+{"t": 1791794494.527, "event": "campaign_detected", "actor": "h:c89885892f7df67a", "technique": "idor_bola", "onset": 1791794247.826565, "ttd_s": 108.631826, "n_requests": 56}
+{"t": 1791794494.528, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.528, "event": "campaign_detected", "actor": "h:cf5b48136e3d6d92", "technique": "idor_bola", "onset": 1791794087.153199, "ttd_s": 268.423234, "n_requests": 45}
+{"t": 1791794494.528, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.528, "event": "campaign_detected", "actor": "h:d50020d6746a5032", "technique": "credential_stuffing", "onset": 1791794337.121659, "ttd_s": 1.47219, "n_requests": 12}
+{"t": 1791794494.535, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.004, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.536, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.537, "event": "campaign_detected", "actor": "h:d50020d6746a5032", "technique": "user_enumeration", "onset": 1791794337.121659, "ttd_s": 0.941566, "n_requests": 12}
+{"t": 1791794494.537, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.537, "event": "campaign_detected", "actor": "h:d52936d914f5a6aa", "technique": "credential_stuffing", "onset": 1791794368.001023, "ttd_s": 1.784936, "n_requests": 12}
+{"t": 1791794494.544, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0051, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.546, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.546, "event": "campaign_detected", "actor": "h:d52936d914f5a6aa", "technique": "user_enumeration", "onset": 1791794368.001023, "ttd_s": 1.480026, "n_requests": 12}
+{"t": 1791794494.547, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.547, "event": "campaign_detected", "actor": "h:d7d8413286e0f436", "technique": "sqli", "onset": 1791794416.787038, "ttd_s": 0.253121, "n_requests": 10}
+{"t": 1791794494.554, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0022, "signature": "6997d6acecfa5647"}
+{"t": 1791794494.554, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794494.555, "event": "campaign_detected", "actor": "h:d7d8413286e0f436", "technique": "user_enumeration", "onset": 1791794416.787038, "ttd_s": 0.759111, "n_requests": 10}
+{"t": 1791794494.555, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.555, "event": "campaign_detected", "actor": "h:db500796efe49da2", "technique": "idor_bola", "onset": 1791794143.123765, "ttd_s": 187.846858, "n_requests": 49}
+{"t": 1791794494.555, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794494.555, "event": "campaign_detected", "actor": "h:dd20b8f92c2fb014", "technique": "credential_stuffing", "onset": 1791794362.036694, "ttd_s": 1.038629, "n_requests": 12}
+{"t": 1791794494.562, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0042, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.562, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.562, "event": "campaign_detected", "actor": "h:dd20b8f92c2fb014", "technique": "user_enumeration", "onset": 1791794362.036694, "ttd_s": 0.897381, "n_requests": 12}
+{"t": 1791794494.563, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.564, "event": "campaign_detected", "actor": "h:e94d313fc1f4402e", "technique": "idor_bola", "onset": 1791794148.411819, "ttd_s": 254.643344, "n_requests": 56}
+{"t": 1791794494.564, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.564, "event": "campaign_detected", "actor": "h:ec4e83c4b3cc8072", "technique": "credential_stuffing", "onset": 1791794402.800354, "ttd_s": 0.732764, "n_requests": 12}
+{"t": 1791794494.572, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0047, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.572, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.572, "event": "campaign_detected", "actor": "h:ec4e83c4b3cc8072", "technique": "user_enumeration", "onset": 1791794402.800354, "ttd_s": 0.570704, "n_requests": 12}
+{"t": 1791794494.572, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.573, "event": "campaign_detected", "actor": "h:eed576d12d345378", "technique": "credential_stuffing", "onset": 1791794292.359652, "ttd_s": 1.900704, "n_requests": 12}
+{"t": 1791794494.579, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0039, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.58, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.58, "event": "campaign_detected", "actor": "h:eed576d12d345378", "technique": "user_enumeration", "onset": 1791794292.359652, "ttd_s": 1.352953, "n_requests": 12}
+{"t": 1791794494.58, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.581, "event": "campaign_detected", "actor": "h:f184a5f91169dd69", "technique": "credential_stuffing", "onset": 1791794344.431089, "ttd_s": 0.928448, "n_requests": 12}
+{"t": 1791794494.587, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0048, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.588, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.588, "event": "campaign_detected", "actor": "h:f184a5f91169dd69", "technique": "user_enumeration", "onset": 1791794344.431089, "ttd_s": 0.772945, "n_requests": 12}
+{"t": 1791794494.589, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.589, "event": "campaign_detected", "actor": "h:f40b78d035fa70c8", "technique": "credential_stuffing", "onset": 1791794385.937409, "ttd_s": 0.746715, "n_requests": 12}
+{"t": 1791794494.595, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0043, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.597, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.597, "event": "campaign_detected", "actor": "h:f40b78d035fa70c8", "technique": "user_enumeration", "onset": 1791794385.937409, "ttd_s": 0.593325, "n_requests": 12}
+{"t": 1791794494.598, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.598, "event": "campaign_detected", "actor": "h:f49eddfa462a28b2", "technique": "idor_bola", "onset": 1791794106.535356, "ttd_s": 223.478651, "n_requests": 63}
+{"t": 1791794494.599, "event": "cooldown_skip", "technique": "idor_bola", "signature": "39c137876184648f"}
+{"t": 1791794494.599, "event": "campaign_detected", "actor": "h:fb032f3bf8073e4d", "technique": "credential_stuffing", "onset": 1791794317.896213, "ttd_s": 1.811149, "n_requests": 12}
+{"t": 1791794494.606, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0037, "signature": "87ac366fab484cfb"}
+{"t": 1791794494.606, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791794494.606, "event": "campaign_detected", "actor": "h:fb032f3bf8073e4d", "technique": "user_enumeration", "onset": 1791794317.896213, "ttd_s": 1.42401, "n_requests": 12}
+{"t": 1791794494.607, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.607, "event": "campaign_detected", "actor": "h:fb5c81fd94343c56", "technique": "idor_bola", "onset": 1791794121.56011, "ttd_s": 280.137659, "n_requests": 53}
+{"t": 1791794494.607, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794494.607, "event": "campaign_detected", "actor": "h:fd133994150ea8b4", "technique": "sqli", "onset": 1791794404.307365, "ttd_s": 0.253606, "n_requests": 10}
+{"t": 1791794494.616, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "6997d6acecfa5647"}
+{"t": 1791794494.616, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794494.616, "event": "campaign_detected", "actor": "h:fd133994150ea8b4", "technique": "user_enumeration", "onset": 1791794404.307365, "ttd_s": 0.773437, "n_requests": 10}
+{"t": 1791794494.617, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794494.617, "event": "campaign_detected", "actor": "h:fe00a47cdc1bff10", "technique": "idor_bola", "onset": 1791794176.971379, "ttd_s": 230.926794, "n_requests": 52}
+{"t": 1791794494.617, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.917, "event": "campaign_detected", "actor": "h:1796f9c9e1c9f91f", "technique": "idor_bola", "onset": 1791794098.093087, "ttd_s": 362.622045, "n_requests": 62}
+{"t": 1791794495.919, "event": "cooldown_skip", "technique": "idor_bola", "signature": "39c137876184648f"}
+{"t": 1791794495.919, "event": "campaign_detected", "actor": "h:470af8e1cf83cb4f", "technique": "idor_bola", "onset": 1791794261.517223, "ttd_s": 152.339249, "n_requests": 91}
+{"t": 1791794495.919, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.919, "event": "campaign_detected", "actor": "h:49c19dc1e71c6567", "technique": "idor_bola", "onset": 1791794182.857135, "ttd_s": 296.874198, "n_requests": 81}
+{"t": 1791794495.919, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.919, "event": "campaign_detected", "actor": "h:4c7fe9c2a81648d6", "technique": "idor_bola", "onset": 1791794141.384167, "ttd_s": 332.643917, "n_requests": 57}
+{"t": 1791794495.919, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.919, "event": "campaign_detected", "actor": "h:55af307fa9a905d5", "technique": "sqli", "onset": 1791794478.878759, "ttd_s": 0.25423, "n_requests": 10}
+{"t": 1791794495.924, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.928, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.928, "event": "campaign_detected", "actor": "h:55af307fa9a905d5", "technique": "user_enumeration", "onset": 1791794478.878759, "ttd_s": 0.772793, "n_requests": 10}
+{"t": 1791794495.928, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.928, "event": "campaign_detected", "actor": "h:5bcfddaec26241fb", "technique": "sqli", "onset": 1791794435.608473, "ttd_s": 0.254213, "n_requests": 10}
+{"t": 1791794495.936, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.936, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.936, "event": "campaign_detected", "actor": "h:5bcfddaec26241fb", "technique": "user_enumeration", "onset": 1791794435.608473, "ttd_s": 0.773721, "n_requests": 10}
+{"t": 1791794495.937, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.937, "event": "campaign_detected", "actor": "h:67bcb4050c67a05c", "technique": "idor_bola", "onset": 1791794108.594872, "ttd_s": 328.3198, "n_requests": 74}
+{"t": 1791794495.937, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.937, "event": "campaign_detected", "actor": "h:690a43c5f672bcb9", "technique": "sqli", "onset": 1791794447.92199, "ttd_s": 0.253849, "n_requests": 10}
+{"t": 1791794495.944, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0018, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.944, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.944, "event": "campaign_detected", "actor": "h:690a43c5f672bcb9", "technique": "user_enumeration", "onset": 1791794447.92199, "ttd_s": 0.76147, "n_requests": 10}
+{"t": 1791794495.945, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.945, "event": "campaign_detected", "actor": "h:814714e9ef752758", "technique": "sqli", "onset": 1791794485.005445, "ttd_s": 0.270199, "n_requests": 10}
+{"t": 1791794495.952, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0017, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.953, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.953, "event": "campaign_detected", "actor": "h:814714e9ef752758", "technique": "user_enumeration", "onset": 1791794485.005445, "ttd_s": 0.7889, "n_requests": 10}
+{"t": 1791794495.954, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.954, "event": "campaign_detected", "actor": "h:87ef0fc4a37600fe", "technique": "idor_bola", "onset": 1791794103.836217, "ttd_s": 169.261694, "n_requests": 72}
+{"t": 1791794495.954, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.954, "event": "campaign_detected", "actor": "h:9dbd6308e04862bf", "technique": "sqli", "onset": 1791794454.262742, "ttd_s": 0.253945, "n_requests": 10}
+{"t": 1791794495.959, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0026, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.959, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.959, "event": "campaign_detected", "actor": "h:9dbd6308e04862bf", "technique": "user_enumeration", "onset": 1791794454.262742, "ttd_s": 0.783805, "n_requests": 10}
+{"t": 1791794495.964, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.964, "event": "campaign_detected", "actor": "h:a1c99c060a8c0e4e", "technique": "idor_bola", "onset": 1791794314.550887, "ttd_s": 121.461973, "n_requests": 59}
+{"t": 1791794495.964, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794495.964, "event": "campaign_detected", "actor": "h:a41eae11a62c3892", "technique": "idor_bola", "onset": 1791794276.839196, "ttd_s": 73.685188, "n_requests": 63}
+{"t": 1791794495.964, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794495.964, "event": "campaign_detected", "actor": "h:a7fc08e69c776d09", "technique": "sqli", "onset": 1791794491.352441, "ttd_s": 0.253918, "n_requests": 10}
+{"t": 1791794495.964, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.973, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.974, "event": "campaign_detected", "actor": "h:a7fc08e69c776d09", "technique": "user_enumeration", "onset": 1791794491.352441, "ttd_s": 0.780788, "n_requests": 10}
+{"t": 1791794495.974, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.974, "event": "campaign_detected", "actor": "h:ab2b8e2f42ece2a1", "technique": "sqli", "onset": 1791794472.761133, "ttd_s": 0.254463, "n_requests": 10}
+{"t": 1791794495.977, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0018, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.977, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.977, "event": "campaign_detected", "actor": "h:ab2b8e2f42ece2a1", "technique": "user_enumeration", "onset": 1791794472.761133, "ttd_s": 0.774327, "n_requests": 10}
+{"t": 1791794495.977, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.977, "event": "campaign_detected", "actor": "h:b27118992d6aae11", "technique": "idor_bola", "onset": 1791794278.803374, "ttd_s": 157.891507, "n_requests": 67}
+{"t": 1791794495.977, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.977, "event": "campaign_detected", "actor": "h:b6ac4ca76071a8bf", "technique": "sqli", "onset": 1791794423.000862, "ttd_s": 0.271104, "n_requests": 10}
+{"t": 1791794495.99, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0022, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.991, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.991, "event": "campaign_detected", "actor": "h:b6ac4ca76071a8bf", "technique": "user_enumeration", "onset": 1791794423.000862, "ttd_s": 0.777285, "n_requests": 10}
+{"t": 1791794495.991, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794495.991, "event": "campaign_detected", "actor": "h:bfa3c9e2fe9e665d", "technique": "idor_bola", "onset": 1791794190.339035, "ttd_s": 239.863729, "n_requests": 80}
+{"t": 1791794495.991, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794495.991, "event": "campaign_detected", "actor": "h:c6d8c8b5fb8a7a6d", "technique": "idor_bola", "onset": 1791794182.056875, "ttd_s": 300.697235, "n_requests": 72}
+{"t": 1791794495.991, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794495.991, "event": "campaign_detected", "actor": "h:ca807c86d3c04161", "technique": "sqli", "onset": 1791794460.38725, "ttd_s": 0.254737, "n_requests": 10}
+{"t": 1791794495.999, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0018, "signature": "6997d6acecfa5647"}
+{"t": 1791794495.999, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794495.999, "event": "campaign_detected", "actor": "h:ca807c86d3c04161", "technique": "user_enumeration", "onset": 1791794460.38725, "ttd_s": 0.775764, "n_requests": 10}
+{"t": 1791794496.0, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794496.0, "event": "campaign_detected", "actor": "h:d3f5aa8267d0fcee", "technique": "idor_bola", "onset": 1791794243.317162, "ttd_s": 235.684182, "n_requests": 63}
+{"t": 1791794496.001, "event": "cooldown_skip", "technique": "idor_bola", "signature": "1e7bac1edd3d3259"}
+{"t": 1791794496.001, "event": "campaign_detected", "actor": "h:d728de95ea9b322d", "technique": "idor_bola", "onset": 1791794132.633539, "ttd_s": 302.506556, "n_requests": 79}
+{"t": 1791794496.001, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794496.001, "event": "campaign_detected", "actor": "h:db3f7bd8f5f51d39", "technique": "idor_bola", "onset": 1791794108.575168, "ttd_s": 326.233417, "n_requests": 66}
+{"t": 1791794496.001, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794496.002, "event": "campaign_detected", "actor": "h:de402cfc28377708", "technique": "sqli", "onset": 1791794466.534522, "ttd_s": 0.253325, "n_requests": 10}
+{"t": 1791794496.008, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0017, "signature": "6997d6acecfa5647"}
+{"t": 1791794496.01, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794496.01, "event": "campaign_detected", "actor": "h:de402cfc28377708", "technique": "user_enumeration", "onset": 1791794466.534522, "ttd_s": 0.763687, "n_requests": 10}
+{"t": 1791794496.01, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794496.01, "event": "campaign_detected", "actor": "h:e11ca7382ef8f370", "technique": "idor_bola", "onset": 1791794103.771596, "ttd_s": 340.429429, "n_requests": 67}
+{"t": 1791794496.01, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794496.01, "event": "campaign_detected", "actor": "h:e1a922e99ac1b489", "technique": "sqli", "onset": 1791794429.155131, "ttd_s": 0.253659, "n_requests": 10}
+{"t": 1791794496.018, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "6997d6acecfa5647"}
+{"t": 1791794496.018, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794496.018, "event": "campaign_detected", "actor": "h:e1a922e99ac1b489", "technique": "user_enumeration", "onset": 1791794429.155131, "ttd_s": 0.776032, "n_requests": 10}
+{"t": 1791794496.018, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794496.018, "event": "campaign_detected", "actor": "h:e7837135d1e9dedf", "technique": "idor_bola", "onset": 1791794274.902338, "ttd_s": 175.721242, "n_requests": 71}
+{"t": 1791794496.02, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794496.02, "event": "campaign_detected", "actor": "h:e7e6aa40f45d3ab6", "technique": "idor_bola", "onset": 1791794216.204978, "ttd_s": 202.128117, "n_requests": 67}
+{"t": 1791794496.02, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794496.02, "event": "campaign_detected", "actor": "h:f992466c3a136c82", "technique": "idor_bola", "onset": 1791794139.308972, "ttd_s": 237.469581, "n_requests": 74}
+{"t": 1791794496.02, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794496.02, "event": "campaign_detected", "actor": "h:fb3038a8c27cbf33", "technique": "sqli", "onset": 1791794441.774422, "ttd_s": 0.252621, "n_requests": 10}
+{"t": 1791794496.027, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.002, "signature": "6997d6acecfa5647"}
+{"t": 1791794496.029, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794496.029, "event": "campaign_detected", "actor": "h:fb3038a8c27cbf33", "technique": "user_enumeration", "onset": 1791794441.774422, "ttd_s": 0.78252, "n_requests": 10}
+{"t": 1791794496.029, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794498.086, "event": "campaign_detected", "actor": "h:7d121be2f29f082f", "technique": "idor_bola", "onset": 1791794362.884507, "ttd_s": 134.06289, "n_requests": 78}
+{"t": 1791794498.086, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794499.125, "event": "campaign_detected", "actor": "h:9ddbe54071218802", "technique": "sqli", "onset": 1791794497.528987, "ttd_s": 0.263841, "n_requests": 8}
+{"t": 1791794499.132, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "6997d6acecfa5647"}
+{"t": 1791794499.134, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794499.134, "event": "campaign_detected", "actor": "h:9ddbe54071218802", "technique": "user_enumeration", "onset": 1791794497.528987, "ttd_s": 0.816325, "n_requests": 8}
+{"t": 1791794499.134, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794500.161, "event": "campaign_detected", "actor": "h:11cbb18226fe0024", "technique": "idor_bola", "onset": 1791794192.289043, "ttd_s": 307.066638, "n_requests": 73}
+{"t": 1791794500.161, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794503.247, "event": "campaign_detected", "actor": "h:3c5e1ef4e4d843e2", "technique": "idor_bola", "onset": 1791794146.605052, "ttd_s": 356.06605, "n_requests": 66}
+{"t": 1791794503.247, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794504.282, "event": "campaign_detected", "actor": "h:034fb0bd17e58cf6", "technique": "idor_bola", "onset": 1791794151.861883, "ttd_s": 351.562847, "n_requests": 56}
+{"t": 1791794504.283, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794504.283, "event": "campaign_detected", "actor": "h:78b7ff20379d83b7", "technique": "sqli", "onset": 1791794503.81375, "ttd_s": 0.254124, "n_requests": 4}
+{"t": 1791794504.463, "event": "mitigation", "technique": "sqli", "source": "generalised", "rule": "aegis-sqli-3", "ttm_s": 0.1724, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791794504.463, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794504.463, "event": "campaign_detected", "actor": "h:f3cff543b28e41da", "technique": "idor_bola", "onset": 1791794138.705694, "ttd_s": 365.056759, "n_requests": 67}
+{"t": 1791794504.481, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/543", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794504.496, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/543", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794504.498, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0319, "signature": "a2095478c6dfbe91"}
+{"t": 1791794505.522, "event": "campaign_detected", "actor": "h:78b7ff20379d83b7", "technique": "user_enumeration", "onset": 1791794503.81375, "ttd_s": 0.800666, "n_requests": 7}
+{"t": 1791794505.522, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794509.655, "event": "campaign_detected", "actor": "h:0e6135cecd0d561e", "technique": "idor_bola", "onset": 1791794371.470827, "ttd_s": 137.527511, "n_requests": 71}
+{"t": 1791794509.656, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794509.656, "event": "campaign_detected", "actor": "h:4c6cc801a9695f5a", "technique": "idor_bola", "onset": 1791794334.222258, "ttd_s": 175.181201, "n_requests": 75}
+{"t": 1791794509.657, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794510.681, "event": "campaign_detected", "actor": "h:d578e961370a8d34", "technique": "sqli", "onset": 1791794510.223318, "ttd_s": 0.253407, "n_requests": 4}
+{"t": 1791794510.692, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0028, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791794510.692, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794511.725, "event": "campaign_detected", "actor": "h:d578e961370a8d34", "technique": "user_enumeration", "onset": 1791794510.223318, "ttd_s": 0.774731, "n_requests": 8}
+{"t": 1791794511.725, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794517.907, "event": "campaign_detected", "actor": "h:b58d9ab297dd613e", "technique": "sqli", "onset": 1791794516.514205, "ttd_s": 0.253281, "n_requests": 6}
+{"t": 1791794517.921, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0026, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791794517.921, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794517.921, "event": "campaign_detected", "actor": "h:b58d9ab297dd613e", "technique": "user_enumeration", "onset": 1791794516.514205, "ttd_s": 0.800962, "n_requests": 6}
+{"t": 1791794517.921, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794519.989, "event": "campaign_detected", "actor": "h:fcdaa623b8a2f23f", "technique": "idor_bola", "onset": 1791794233.843928, "ttd_s": 284.885046, "n_requests": 67}
+{"t": 1791794519.99, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794521.017, "event": "campaign_detected", "actor": "h:f1564e03f6797caa", "technique": "idor_bola", "onset": 1791794097.633887, "ttd_s": 422.216091, "n_requests": 79}
+{"t": 1791794521.017, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794524.102, "event": "campaign_detected", "actor": "h:ba7380cbab50f461", "technique": "sqli", "onset": 1791794522.759186, "ttd_s": 0.271895, "n_requests": 6}
+{"t": 1791794524.111, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791794524.111, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794524.112, "event": "campaign_detected", "actor": "h:ba7380cbab50f461", "technique": "user_enumeration", "onset": 1791794522.759186, "ttd_s": 0.795541, "n_requests": 6}
+{"t": 1791794524.112, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794528.246, "event": "campaign_detected", "actor": "h:0a1512f4f07d69d2", "technique": "idor_bola", "onset": 1791794153.636763, "ttd_s": 373.687989, "n_requests": 71}
+{"t": 1791794528.246, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794530.31, "event": "campaign_detected", "actor": "h:402793509a5cb8ae", "technique": "sqli", "onset": 1791794529.074368, "ttd_s": 0.254897, "n_requests": 6}
+{"t": 1791794530.321, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0022, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791794530.322, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791794530.322, "event": "campaign_detected", "actor": "h:402793509a5cb8ae", "technique": "user_enumeration", "onset": 1791794529.074368, "ttd_s": 0.786753, "n_requests": 6}
+{"t": 1791794530.322, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791794534.443, "event": "campaign_detected", "actor": "h:fd713997a2bf3fc1", "technique": "idor_bola", "onset": 1791794108.516416, "ttd_s": 425.278168, "n_requests": 81}
+{"t": 1791794534.443, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794537.547, "event": "campaign_detected", "actor": "h:84132a9c3490d3eb", "technique": "idor_bola", "onset": 1791794300.811266, "ttd_s": 236.074908, "n_requests": 85}
+{"t": 1791794537.547, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794538.577, "event": "campaign_detected", "actor": "h:8fde9166498a062d", "technique": "cmdi", "onset": 1791794537.482614, "ttd_s": 0.009153, "n_requests": 8}
+{"t": 1791794538.577, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794538.577, "event": "campaign_detected", "actor": "h:8fde9166498a062d", "technique": "traversal", "onset": 1791794537.482614, "ttd_s": 0.009153, "n_requests": 8}
+{"t": 1791794538.586, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794538.586, "event": "live_start", "rule": "aegis-traversal-1", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794597.718, "event": "live_stage", "rule": "aegis-traversal-1", "stage": "shadow", "passed": true, "detail": "1360 live requests; suspected FPs 0/1109 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 3 vs replay-predicted 3 (tol 2)", "numbers": {"window_requests": 1360, "live_matches": 9, "logged_matches": 3, "nonflagged_requests": 1109, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 120, "sample_suspect_uris": [], "replay_predicted": 3, "tolerance": 2}}
+{"t": 1791794597.718, "event": "live_stage", "rule": "aegis-traversal-1", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 1 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2790, "rule_blocks": 1, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 1, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794597.718, "event": "enforced", "rule": "aegis-traversal-1"}
+{"t": 1791794598.953, "event": "campaign_detected", "actor": "h:0e031d5a4edc550f", "technique": "idor_bola", "onset": 1791794124.968758, "ttd_s": 437.388457, "n_requests": 110}
+{"t": 1791794598.953, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794598.953, "event": "campaign_detected", "actor": "h:1ab4b8c8106d0e8d", "technique": "cmdi", "onset": 1791794554.7236, "ttd_s": 0.034558, "n_requests": 14}
+{"t": 1791794598.953, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794598.953, "event": "campaign_detected", "actor": "h:1ab4b8c8106d0e8d", "technique": "traversal", "onset": 1791794554.7236, "ttd_s": 0.034558, "n_requests": 14}
+{"t": 1791794598.964, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794598.964, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794598.964, "event": "campaign_detected", "actor": "h:27a2fa22abe29b05", "technique": "idor_bola", "onset": 1791794149.315573, "ttd_s": 237.771969, "n_requests": 101}
+{"t": 1791794598.966, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794598.966, "event": "campaign_detected", "actor": "h:29b19dd187f0f9cc", "technique": "idor_bola", "onset": 1791794106.161896, "ttd_s": 459.753873, "n_requests": 86}
+{"t": 1791794598.966, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794598.966, "event": "campaign_detected", "actor": "h:355556a0d06057e1", "technique": "cmdi", "onset": 1791794584.817419, "ttd_s": 0.303947, "n_requests": 14}
+{"t": 1791794598.966, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794598.966, "event": "campaign_detected", "actor": "h:355556a0d06057e1", "technique": "traversal", "onset": 1791794584.817419, "ttd_s": 0.303947, "n_requests": 14}
+{"t": 1791794598.975, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794598.975, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794598.975, "event": "campaign_detected", "actor": "h:5ab63cc9ea5eeabb", "technique": "cmdi", "onset": 1791794596.787206, "ttd_s": 0.036897, "n_requests": 14}
+{"t": 1791794598.975, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794598.975, "event": "campaign_detected", "actor": "h:5ab63cc9ea5eeabb", "technique": "traversal", "onset": 1791794596.787206, "ttd_s": 0.036897, "n_requests": 14}
+{"t": 1791794598.981, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0026, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794598.981, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794598.981, "event": "campaign_detected", "actor": "h:5cd46323be86e56f", "technique": "cmdi", "onset": 1791794566.253038, "ttd_s": 0.00272, "n_requests": 14}
+{"t": 1791794598.985, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794598.985, "event": "campaign_detected", "actor": "h:5cd46323be86e56f", "technique": "traversal", "onset": 1791794566.253038, "ttd_s": 0.00272, "n_requests": 14}
+{"t": 1791794598.989, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0024, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794598.989, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794598.989, "event": "campaign_detected", "actor": "h:62f8f9782a20323b", "technique": "cmdi", "onset": 1791794560.596599, "ttd_s": 0.036976, "n_requests": 14}
+{"t": 1791794598.989, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794598.989, "event": "campaign_detected", "actor": "h:62f8f9782a20323b", "technique": "traversal", "onset": 1791794560.596599, "ttd_s": 0.036976, "n_requests": 14}
+{"t": 1791794598.999, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794599.0, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794599.0, "event": "campaign_detected", "actor": "h:6a6c8d6e5678361f", "technique": "idor_bola", "onset": 1791794132.578459, "ttd_s": 433.861101, "n_requests": 90}
+{"t": 1791794599.0, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794599.0, "event": "campaign_detected", "actor": "h:738534bd9c2347fd", "technique": "idor_bola", "onset": 1791794171.771719, "ttd_s": 127.888826, "n_requests": 83}
+{"t": 1791794599.0, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794599.0, "event": "campaign_detected", "actor": "h:8ea057388e531cc7", "technique": "idor_bola", "onset": 1791794224.43861, "ttd_s": 361.964331, "n_requests": 97}
+{"t": 1791794599.0, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794599.002, "event": "campaign_detected", "actor": "h:99f11d790df79411", "technique": "idor_bola", "onset": 1791794264.69093, "ttd_s": 218.979978, "n_requests": 96}
+{"t": 1791794599.002, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794599.002, "event": "campaign_detected", "actor": "h:9f8bacf45948e4d4", "technique": "idor_bola", "onset": 1791794278.352706, "ttd_s": 291.440423, "n_requests": 95}
+{"t": 1791794599.002, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794599.002, "event": "campaign_detected", "actor": "h:a2d833888b855016", "technique": "idor_bola", "onset": 1791794175.729117, "ttd_s": 381.801362, "n_requests": 102}
+{"t": 1791794599.004, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794599.004, "event": "campaign_detected", "actor": "h:a43d2fc5d7cecaa1", "technique": "idor_bola", "onset": 1791794106.616011, "ttd_s": 340.323896, "n_requests": 89}
+{"t": 1791794599.004, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794599.004, "event": "campaign_detected", "actor": "h:af71619828a1c229", "technique": "idor_bola", "onset": 1791794147.542425, "ttd_s": 431.854441, "n_requests": 102}
+{"t": 1791794599.004, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794599.004, "event": "campaign_detected", "actor": "h:b248d5ca55c3ad37", "technique": "cmdi", "onset": 1791794572.356345, "ttd_s": 0.508826, "n_requests": 14}
+{"t": 1791794599.005, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794599.005, "event": "campaign_detected", "actor": "h:b248d5ca55c3ad37", "technique": "traversal", "onset": 1791794572.356345, "ttd_s": 0.508826, "n_requests": 14}
+{"t": 1791794599.013, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0017, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794599.013, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794599.014, "event": "campaign_detected", "actor": "h:cd504b47aaa5c538", "technique": "idor_bola", "onset": 1791794328.10746, "ttd_s": 263.267163, "n_requests": 100}
+{"t": 1791794599.014, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794599.014, "event": "campaign_detected", "actor": "h:d51aa712111cf0b9", "technique": "cmdi", "onset": 1791794548.999132, "ttd_s": 0.062427, "n_requests": 14}
+{"t": 1791794599.014, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794599.014, "event": "campaign_detected", "actor": "h:d51aa712111cf0b9", "technique": "traversal", "onset": 1791794548.999132, "ttd_s": 0.062427, "n_requests": 14}
+{"t": 1791794599.02, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0017, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794599.022, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794599.022, "event": "campaign_detected", "actor": "h:dc4632abc5dd3000", "technique": "idor_bola", "onset": 1791794247.525766, "ttd_s": 327.01495, "n_requests": 85}
+{"t": 1791794599.022, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794599.022, "event": "campaign_detected", "actor": "h:dd157bb9cb063d87", "technique": "cmdi", "onset": 1791794543.189629, "ttd_s": 0.036329, "n_requests": 14}
+{"t": 1791794599.022, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794599.022, "event": "campaign_detected", "actor": "h:dd157bb9cb063d87", "technique": "traversal", "onset": 1791794543.189629, "ttd_s": 0.036329, "n_requests": 14}
+{"t": 1791794599.029, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794599.029, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794599.029, "event": "campaign_detected", "actor": "h:f220d0f27ccd3f1e", "technique": "cmdi", "onset": 1791794590.950726, "ttd_s": 0.017128, "n_requests": 14}
+{"t": 1791794599.029, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794599.029, "event": "campaign_detected", "actor": "h:f220d0f27ccd3f1e", "technique": "traversal", "onset": 1791794590.950726, "ttd_s": 0.017128, "n_requests": 14}
+{"t": 1791794599.039, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0024, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794599.04, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794599.04, "event": "campaign_detected", "actor": "h:f4bd1fc0266e9946", "technique": "idor_bola", "onset": 1791794210.723545, "ttd_s": 386.563318, "n_requests": 89}
+{"t": 1791794599.04, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794599.04, "event": "campaign_detected", "actor": "h:ff66d723f67cdc0c", "technique": "cmdi", "onset": 1791794578.602576, "ttd_s": 0.035786, "n_requests": 14}
+{"t": 1791794599.04, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794599.04, "event": "campaign_detected", "actor": "h:ff66d723f67cdc0c", "technique": "traversal", "onset": 1791794578.602576, "ttd_s": 0.035786, "n_requests": 14}
+{"t": 1791794599.047, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794599.047, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794602.187, "event": "campaign_detected", "actor": "h:171f498dd5c5ae54", "technique": "idor_bola", "onset": 1791794120.658686, "ttd_s": 480.805455, "n_requests": 81}
+{"t": 1791794602.187, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794603.219, "event": "campaign_detected", "actor": "h:3924b48854d603f2", "technique": "cmdi", "onset": 1791794602.704075, "ttd_s": 0.012157, "n_requests": 6}
+{"t": 1791794603.22, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794603.22, "event": "campaign_detected", "actor": "h:3924b48854d603f2", "technique": "traversal", "onset": 1791794602.704075, "ttd_s": 0.012157, "n_requests": 6}
+{"t": 1791794603.23, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0026, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794603.23, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794609.44, "event": "campaign_detected", "actor": "h:4f0ecdd7414169d3", "technique": "cmdi", "onset": 1791794608.819204, "ttd_s": 0.003032, "n_requests": 6}
+{"t": 1791794609.44, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794609.441, "event": "campaign_detected", "actor": "h:4f0ecdd7414169d3", "technique": "traversal", "onset": 1791794608.819204, "ttd_s": 0.003032, "n_requests": 6}
+{"t": 1791794609.452, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0029, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794609.453, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794609.453, "event": "campaign_detected", "actor": "h:fce489623427cd85", "technique": "idor_bola", "onset": 1791794164.53765, "ttd_s": 444.381528, "n_requests": 83}
+{"t": 1791794609.478, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/589", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794609.497, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/589", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794609.498, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0428, "signature": "2fcf07e954cb25fc"}
+{"t": 1791794611.58, "event": "campaign_detected", "actor": "h:1914e2c08e869c18", "technique": "idor_bola", "onset": 1791794142.376487, "ttd_s": 244.473607, "n_requests": 108}
+{"t": 1791794611.581, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794613.666, "event": "campaign_detected", "actor": "h:283e5592ea773e43", "technique": "idor_bola", "onset": 1791794109.420154, "ttd_s": 452.78606, "n_requests": 88}
+{"t": 1791794613.667, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794614.703, "event": "campaign_detected", "actor": "h:3d051d9d48b25ee8", "technique": "idor_bola", "onset": 1791794174.657151, "ttd_s": 439.580088, "n_requests": 111}
+{"t": 1791794614.703, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794615.746, "event": "campaign_detected", "actor": "h:0a8c52c786421006", "technique": "idor_bola", "onset": 1791794210.097845, "ttd_s": 405.156568, "n_requests": 106}
+{"t": 1791794615.746, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794615.747, "event": "campaign_detected", "actor": "h:74c64f35c6c6d50b", "technique": "idor_bola", "onset": 1791794131.021355, "ttd_s": 484.547296, "n_requests": 104}
+{"t": 1791794615.747, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794615.747, "event": "campaign_detected", "actor": "h:f31c9592f9ace69d", "technique": "cmdi", "onset": 1791794614.685499, "ttd_s": 0.0021, "n_requests": 10}
+{"t": 1791794615.747, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794615.748, "event": "campaign_detected", "actor": "h:f31c9592f9ace69d", "technique": "traversal", "onset": 1791794614.685499, "ttd_s": 0.0021, "n_requests": 10}
+{"t": 1791794615.757, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794615.758, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794617.837, "event": "campaign_detected", "actor": "h:df7a9ae2d40fe1bb", "technique": "idor_bola", "onset": 1791794257.799564, "ttd_s": 359.413977, "n_requests": 93}
+{"t": 1791794617.837, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794618.875, "event": "campaign_detected", "actor": "h:65d8b048183c1f66", "technique": "idor_bola", "onset": 1791794127.631027, "ttd_s": 490.939304, "n_requests": 111}
+{"t": 1791794618.876, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794620.95, "event": "campaign_detected", "actor": "h:0f282959af4a6819", "technique": "idor_bola", "onset": 1791794260.58689, "ttd_s": 359.548782, "n_requests": 84}
+{"t": 1791794620.95, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794620.95, "event": "campaign_detected", "actor": "h:90f78fa2a2886418", "technique": "cmdi", "onset": 1791794620.408431, "ttd_s": 0.003415, "n_requests": 4}
+{"t": 1791794620.95, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794620.95, "event": "campaign_detected", "actor": "h:90f78fa2a2886418", "technique": "traversal", "onset": 1791794620.408431, "ttd_s": 0.003415, "n_requests": 4}
+{"t": 1791794620.955, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794620.96, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794624.072, "event": "campaign_detected", "actor": "h:c02ea7e123c2a518", "technique": "idor_bola", "onset": 1791794093.272496, "ttd_s": 437.37158, "n_requests": 110}
+{"t": 1791794624.073, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794626.167, "event": "campaign_detected", "actor": "h:efdaec40872737c7", "technique": "idor_bola", "onset": 1791794184.870185, "ttd_s": 421.751314, "n_requests": 101}
+{"t": 1791794626.167, "event": "cooldown_skip", "technique": "idor_bola", "signature": "39c137876184648f"}
+{"t": 1791794627.205, "event": "campaign_detected", "actor": "h:1305fc0dc6a7481b", "technique": "cmdi", "onset": 1791794626.174543, "ttd_s": 0.01392, "n_requests": 10}
+{"t": 1791794627.206, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794627.206, "event": "campaign_detected", "actor": "h:1305fc0dc6a7481b", "technique": "traversal", "onset": 1791794626.174543, "ttd_s": 0.01392, "n_requests": 10}
+{"t": 1791794627.214, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794627.215, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794627.215, "event": "campaign_detected", "actor": "h:901f476834892685", "technique": "idor_bola", "onset": 1791794135.647703, "ttd_s": 264.62047, "n_requests": 115}
+{"t": 1791794627.216, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794628.256, "event": "campaign_detected", "actor": "h:e53fe027c8ab1ba0", "technique": "idor_bola", "onset": 1791794166.496128, "ttd_s": 460.717645, "n_requests": 95}
+{"t": 1791794628.256, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794629.301, "event": "campaign_detected", "actor": "h:4d96baa0a115596b", "technique": "idor_bola", "onset": 1791794088.816038, "ttd_s": 540.167861, "n_requests": 87}
+{"t": 1791794629.301, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794631.368, "event": "campaign_detected", "actor": "h:201387c8118182ba", "technique": "idor_bola", "onset": 1791794222.496498, "ttd_s": 361.042944, "n_requests": 105}
+{"t": 1791794631.369, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794633.453, "event": "campaign_detected", "actor": "h:7d0044eebb52b303", "technique": "cmdi", "onset": 1791794632.253442, "ttd_s": 0.018519, "n_requests": 8}
+{"t": 1791794633.453, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794633.454, "event": "campaign_detected", "actor": "h:7d0044eebb52b303", "technique": "traversal", "onset": 1791794632.253442, "ttd_s": 0.018519, "n_requests": 8}
+{"t": 1791794633.464, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794633.465, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794635.548, "event": "campaign_detected", "actor": "h:8dd559a85e0aab6b", "technique": "idor_bola", "onset": 1791794199.887391, "ttd_s": 434.596746, "n_requests": 102}
+{"t": 1791794635.549, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794638.667, "event": "campaign_detected", "actor": "h:c3833e9aaa347b2e", "technique": "cmdi", "onset": 1791794638.049005, "ttd_s": 0.003326, "n_requests": 6}
+{"t": 1791794638.669, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794638.669, "event": "campaign_detected", "actor": "h:c3833e9aaa347b2e", "technique": "traversal", "onset": 1791794638.049005, "ttd_s": 0.003326, "n_requests": 6}
+{"t": 1791794638.678, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.003, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794638.678, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794641.798, "event": "campaign_detected", "actor": "h:517adc1ccea05478", "technique": "idor_bola", "onset": 1791794521.591411, "ttd_s": 119.06335, "n_requests": 100}
+{"t": 1791794641.798, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794644.922, "event": "campaign_detected", "actor": "h:06e54cd06731084e", "technique": "cmdi", "onset": 1791794643.741142, "ttd_s": 0.02599, "n_requests": 8}
+{"t": 1791794644.923, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794644.923, "event": "campaign_detected", "actor": "h:06e54cd06731084e", "technique": "traversal", "onset": 1791794643.741142, "ttd_s": 0.02599, "n_requests": 8}
+{"t": 1791794644.931, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794644.932, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794650.119, "event": "campaign_detected", "actor": "h:5de71b717270a299", "technique": "cmdi", "onset": 1791794649.522362, "ttd_s": 0.002713, "n_requests": 4}
+{"t": 1791794650.119, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794650.119, "event": "campaign_detected", "actor": "h:5de71b717270a299", "technique": "traversal", "onset": 1791794649.522362, "ttd_s": 0.002713, "n_requests": 4}
+{"t": 1791794650.126, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0029, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794650.126, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794651.193, "event": "campaign_detected", "actor": "h:25d78bd8b471b6de", "technique": "idor_bola", "onset": 1791794111.144112, "ttd_s": 320.871517, "n_requests": 109}
+{"t": 1791794651.193, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794651.194, "event": "campaign_detected", "actor": "h:d3751d87027cf423", "technique": "idor_bola", "onset": 1791794117.568896, "ttd_s": 532.080581, "n_requests": 96}
+{"t": 1791794651.195, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794652.232, "event": "campaign_detected", "actor": "h:53c35e804c74a54c", "technique": "idor_bola", "onset": 1791794179.120367, "ttd_s": 260.284927, "n_requests": 110}
+{"t": 1791794652.232, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794653.276, "event": "campaign_detected", "actor": "h:99f4fafd31cdb254", "technique": "idor_bola", "onset": 1791794117.849897, "ttd_s": 471.276235, "n_requests": 81}
+{"t": 1791794653.278, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794656.4, "event": "campaign_detected", "actor": "h:4ea3a6297aebc28a", "technique": "cmdi", "onset": 1791794655.301598, "ttd_s": 0.003263, "n_requests": 8}
+{"t": 1791794656.4, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794656.4, "event": "campaign_detected", "actor": "h:4ea3a6297aebc28a", "technique": "traversal", "onset": 1791794655.301598, "ttd_s": 0.003263, "n_requests": 8}
+{"t": 1791794656.409, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794656.41, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794661.62, "event": "campaign_detected", "actor": "h:0309de81965e00c0", "technique": "idor_bola", "onset": 1791794185.575891, "ttd_s": 475.422289, "n_requests": 105}
+{"t": 1791794661.621, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794661.621, "event": "campaign_detected", "actor": "h:61e7da0d24a6b810", "technique": "cmdi", "onset": 1791794661.067258, "ttd_s": 0.00211, "n_requests": 4}
+{"t": 1791794661.621, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794661.622, "event": "campaign_detected", "actor": "h:61e7da0d24a6b810", "technique": "traversal", "onset": 1791794661.067258, "ttd_s": 0.00211, "n_requests": 4}
+{"t": 1791794661.631, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794661.632, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794662.7, "event": "campaign_detected", "actor": "h:d4f06db848ce47fb", "technique": "idor_bola", "onset": 1791794231.036593, "ttd_s": 430.865233, "n_requests": 117}
+{"t": 1791794662.701, "event": "cooldown_skip", "technique": "idor_bola", "signature": "1e7bac1edd3d3259"}
+{"t": 1791794665.817, "event": "campaign_detected", "actor": "h:256ac6a89859873e", "technique": "idor_bola", "onset": 1791794192.647184, "ttd_s": 307.612536, "n_requests": 96}
+{"t": 1791794665.818, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794667.894, "event": "campaign_detected", "actor": "h:317556931edcea8d", "technique": "cmdi", "onset": 1791794666.935032, "ttd_s": 0.002451, "n_requests": 8}
+{"t": 1791794667.894, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794667.894, "event": "campaign_detected", "actor": "h:317556931edcea8d", "technique": "traversal", "onset": 1791794666.935032, "ttd_s": 0.002451, "n_requests": 8}
+{"t": 1791794667.903, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794667.904, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794667.904, "event": "campaign_detected", "actor": "h:8a13fecebb2b8a73", "technique": "idor_bola", "onset": 1791794087.453927, "ttd_s": 580.021225, "n_requests": 104}
+{"t": 1791794667.904, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794668.945, "event": "campaign_detected", "actor": "h:2fefc9b394b66606", "technique": "idor_bola", "onset": 1791794407.790672, "ttd_s": 260.682063, "n_requests": 112}
+{"t": 1791794668.946, "event": "cooldown_skip", "technique": "idor_bola", "signature": "39c137876184648f"}
+{"t": 1791794668.946, "event": "campaign_detected", "actor": "h:5f3c374acb8535c3", "technique": "idor_bola", "onset": 1791794407.034873, "ttd_s": 260.835364, "n_requests": 92}
+{"t": 1791794668.946, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794674.175, "event": "campaign_detected", "actor": "h:eece522496d74b7e", "technique": "cmdi", "onset": 1791794672.72893, "ttd_s": 0.024303, "n_requests": 12}
+{"t": 1791794674.175, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794674.175, "event": "campaign_detected", "actor": "h:eece522496d74b7e", "technique": "traversal", "onset": 1791794672.72893, "ttd_s": 0.024303, "n_requests": 12}
+{"t": 1791794674.186, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794674.186, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794675.223, "event": "campaign_detected", "actor": "h:361173450b705cea", "technique": "idor_bola", "onset": 1791794313.701716, "ttd_s": 360.592762, "n_requests": 107}
+{"t": 1791794675.223, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794679.379, "event": "campaign_detected", "actor": "h:dfbc81b82d63eb3d", "technique": "cmdi", "onset": 1791794678.418995, "ttd_s": 0.002084, "n_requests": 8}
+{"t": 1791794679.379, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794679.38, "event": "campaign_detected", "actor": "h:dfbc81b82d63eb3d", "technique": "traversal", "onset": 1791794678.418995, "ttd_s": 0.002084, "n_requests": 8}
+{"t": 1791794679.388, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0021, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794679.388, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794681.486, "event": "campaign_detected", "actor": "h:d1714f965ee32055", "technique": "idor_bola", "onset": 1791794087.302762, "ttd_s": 509.341667, "n_requests": 102}
+{"t": 1791794681.487, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794683.569, "event": "campaign_detected", "actor": "h:cb72743cf8e2ca47", "technique": "idor_bola", "onset": 1791794173.430257, "ttd_s": 509.464556, "n_requests": 115}
+{"t": 1791794683.57, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794685.66, "event": "campaign_detected", "actor": "h:1c5ec27f94d79c9c", "technique": "cmdi", "onset": 1791794684.133909, "ttd_s": 0.003115, "n_requests": 14}
+{"t": 1791794685.66, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794685.66, "event": "campaign_detected", "actor": "h:1c5ec27f94d79c9c", "technique": "traversal", "onset": 1791794684.133909, "ttd_s": 0.003115, "n_requests": 14}
+{"t": 1791794685.668, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794685.668, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794686.704, "event": "campaign_detected", "actor": "h:4dbcf7360e4deaa7", "technique": "idor_bola", "onset": 1791794372.192035, "ttd_s": 314.135734, "n_requests": 90}
+{"t": 1791794686.704, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794690.88, "event": "campaign_detected", "actor": "h:8f961506b472c58b", "technique": "cmdi", "onset": 1791794690.063522, "ttd_s": 0.003136, "n_requests": 6}
+{"t": 1791794690.88, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794690.881, "event": "campaign_detected", "actor": "h:8f961506b472c58b", "technique": "traversal", "onset": 1791794690.063522, "ttd_s": 0.003136, "n_requests": 6}
+{"t": 1791794690.89, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0024, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794690.892, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794690.892, "event": "campaign_detected", "actor": "h:a4a61de288b7a56a", "technique": "idor_bola", "onset": 1791794119.586639, "ttd_s": 570.854421, "n_requests": 110}
+{"t": 1791794690.893, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794694.024, "event": "campaign_detected", "actor": "h:96c0833670d53db6", "technique": "idor_bola", "onset": 1791794141.969521, "ttd_s": 550.695155, "n_requests": 101}
+{"t": 1791794694.025, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794697.2, "event": "campaign_detected", "actor": "h:cb82991ff43d0962", "technique": "cmdi", "onset": 1791794696.014472, "ttd_s": 0.003708, "n_requests": 8}
+{"t": 1791794697.201, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794697.201, "event": "campaign_detected", "actor": "h:cb82991ff43d0962", "technique": "traversal", "onset": 1791794696.014472, "ttd_s": 0.003708, "n_requests": 8}
+{"t": 1791794697.213, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0032, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794697.214, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794700.332, "event": "campaign_detected", "actor": "h:2930b43f2b34169f", "technique": "idor_bola", "onset": 1791794274.928648, "ttd_s": 424.93205, "n_requests": 114}
+{"t": 1791794700.333, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794701.383, "event": "campaign_detected", "actor": "h:8e9ab86b102bc897", "technique": "idor_bola", "onset": 1791794176.686286, "ttd_s": 523.609432, "n_requests": 119}
+{"t": 1791794701.385, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794703.589, "event": "campaign_detected", "actor": "h:710b7bc9cdf52117", "technique": "cmdi", "onset": 1791794702.282507, "ttd_s": 0.002773, "n_requests": 8}
+{"t": 1791794703.589, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794703.589, "event": "campaign_detected", "actor": "h:710b7bc9cdf52117", "technique": "traversal", "onset": 1791794702.282507, "ttd_s": 0.002773, "n_requests": 8}
+{"t": 1791794703.597, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794703.597, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794705.695, "event": "campaign_detected", "actor": "h:401f30054b96fc75", "technique": "idor_bola", "onset": 1791794154.322334, "ttd_s": 550.3433, "n_requests": 112}
+{"t": 1791794705.695, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794708.835, "event": "campaign_detected", "actor": "h:108c5433629151ce", "technique": "cmdi", "onset": 1791794707.970526, "ttd_s": 0.002618, "n_requests": 8}
+{"t": 1791794708.835, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794708.836, "event": "campaign_detected", "actor": "h:108c5433629151ce", "technique": "traversal", "onset": 1791794707.970526, "ttd_s": 0.002618, "n_requests": 8}
+{"t": 1791794708.844, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794708.845, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794709.884, "event": "campaign_detected", "actor": "h:28f6791fe73d17b2", "technique": "idor_bola", "onset": 1791794378.0419, "ttd_s": 152.367056, "n_requests": 107}
+{"t": 1791794709.885, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794709.885, "event": "campaign_detected", "actor": "h:8060df65f9cdb4b5", "technique": "idor_bola", "onset": 1791794162.190782, "ttd_s": 547.364033, "n_requests": 98}
+{"t": 1791794709.886, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794711.975, "event": "campaign_detected", "actor": "h:645b73f98c9e3980", "technique": "idor_bola", "onset": 1791794315.630391, "ttd_s": 395.021811, "n_requests": 98}
+{"t": 1791794711.976, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794715.086, "event": "campaign_detected", "actor": "h:5fdf05f263f86a3a", "technique": "cmdi", "onset": 1791794713.641513, "ttd_s": 0.002372, "n_requests": 10}
+{"t": 1791794715.086, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794715.086, "event": "campaign_detected", "actor": "h:5fdf05f263f86a3a", "technique": "traversal", "onset": 1791794713.641513, "ttd_s": 0.002372, "n_requests": 10}
+{"t": 1791794715.1, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794715.1, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794716.163, "event": "campaign_detected", "actor": "h:1b3677ece4b36d31", "technique": "idor_bola", "onset": 1791794415.623358, "ttd_s": 300.361697, "n_requests": 108}
+{"t": 1791794716.164, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794719.308, "event": "campaign_detected", "actor": "h:0edeacdca2f46c36", "technique": "idor_bola", "onset": 1791794433.915027, "ttd_s": 284.631597, "n_requests": 100}
+{"t": 1791794719.309, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794719.309, "event": "campaign_detected", "actor": "h:be30b0d1ad818400", "technique": "idor_bola", "onset": 1791794149.359548, "ttd_s": 388.202566, "n_requests": 134}
+{"t": 1791794719.311, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794720.354, "event": "campaign_detected", "actor": "h:47164d7291638df0", "technique": "cmdi", "onset": 1791794719.547409, "ttd_s": 0.002482, "n_requests": 7}
+{"t": 1791794720.355, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794720.355, "event": "campaign_detected", "actor": "h:47164d7291638df0", "technique": "traversal", "onset": 1791794719.547409, "ttd_s": 0.002482, "n_requests": 7}
+{"t": 1791794720.364, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794720.365, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794720.365, "event": "campaign_detected", "actor": "h:e69cf277ff962423", "technique": "idor_bola", "onset": 1791794331.872048, "ttd_s": 387.937801, "n_requests": 107}
+{"t": 1791794720.365, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794721.407, "event": "campaign_detected", "actor": "h:cf3e2c41b6c468ed", "technique": "idor_bola", "onset": 1791794151.832459, "ttd_s": 568.374672, "n_requests": 106}
+{"t": 1791794721.408, "event": "cooldown_skip", "technique": "idor_bola", "signature": "39c137876184648f"}
+{"t": 1791794726.707, "event": "campaign_detected", "actor": "h:e6c648fcd81672fa", "technique": "cmdi", "onset": 1791794725.316484, "ttd_s": 0.013127, "n_requests": 12}
+{"t": 1791794726.708, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794726.709, "event": "campaign_detected", "actor": "h:e6c648fcd81672fa", "technique": "traversal", "onset": 1791794725.316484, "ttd_s": 0.013127, "n_requests": 12}
+{"t": 1791794726.723, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0036, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794726.724, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794728.804, "event": "campaign_detected", "actor": "h:c2532f2805ef9e4b", "technique": "idor_bola", "onset": 1791794169.894414, "ttd_s": 558.020243, "n_requests": 116}
+{"t": 1791794728.804, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794731.947, "event": "campaign_detected", "actor": "h:106394246886d5b1", "technique": "cmdi", "onset": 1791794731.039433, "ttd_s": 0.002824, "n_requests": 8}
+{"t": 1791794731.948, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794731.948, "event": "campaign_detected", "actor": "h:106394246886d5b1", "technique": "traversal", "onset": 1791794731.039433, "ttd_s": 0.002824, "n_requests": 8}
+{"t": 1791794731.954, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794731.956, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794734.05, "event": "campaign_detected", "actor": "h:efac7a3ecab71b4e", "technique": "idor_bola", "onset": 1791794155.365867, "ttd_s": 578.158255, "n_requests": 100}
+{"t": 1791794734.05, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794735.117, "event": "campaign_detected", "actor": "h:cc9532d1dbfa362c", "technique": "idor_bola", "onset": 1791794300.606804, "ttd_s": 433.230584, "n_requests": 128}
+{"t": 1791794735.117, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794736.171, "event": "campaign_detected", "actor": "h:89f75e7cc626b626", "technique": "idor_bola", "onset": 1791794136.914286, "ttd_s": 251.33462, "n_requests": 126}
+{"t": 1791794736.171, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794736.171, "event": "campaign_detected", "actor": "h:aaa3ef44d3668190", "technique": "idor_bola", "onset": 1791794151.1285, "ttd_s": 347.777234, "n_requests": 126}
+{"t": 1791794736.171, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794737.237, "event": "campaign_detected", "actor": "h:4e1180cbc7e10100", "technique": "cmdi", "onset": 1791794736.777962, "ttd_s": 0.002969, "n_requests": 6}
+{"t": 1791794737.237, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794737.237, "event": "campaign_detected", "actor": "h:4e1180cbc7e10100", "technique": "traversal", "onset": 1791794736.777962, "ttd_s": 0.002969, "n_requests": 6}
+{"t": 1791794737.249, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0031, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794737.249, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794738.292, "event": "campaign_detected", "actor": "h:be3acfa47526046d", "technique": "idor_bola", "onset": 1791794193.478799, "ttd_s": 544.514935, "n_requests": 117}
+{"t": 1791794738.293, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794739.336, "event": "campaign_detected", "actor": "h:29c3c7a6577ea145", "technique": "idor_bola", "onset": 1791794183.967044, "ttd_s": 555.079431, "n_requests": 112}
+{"t": 1791794739.336, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794740.384, "event": "campaign_detected", "actor": "h:490ddd341b662963", "technique": "idor_bola", "onset": 1791794335.127654, "ttd_s": 404.850486, "n_requests": 127}
+{"t": 1791794740.384, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794743.524, "event": "campaign_detected", "actor": "h:40814c187cde6f6f", "technique": "cmdi", "onset": 1791794742.49228, "ttd_s": 0.003077, "n_requests": 8}
+{"t": 1791794743.524, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794743.524, "event": "campaign_detected", "actor": "h:40814c187cde6f6f", "technique": "traversal", "onset": 1791794742.49228, "ttd_s": 0.003077, "n_requests": 8}
+{"t": 1791794743.532, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794743.532, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794748.794, "event": "campaign_detected", "actor": "h:c1b5e96ad9314ebc", "technique": "cmdi", "onset": 1791794748.218861, "ttd_s": 0.002711, "n_requests": 6}
+{"t": 1791794748.794, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794748.794, "event": "campaign_detected", "actor": "h:c1b5e96ad9314ebc", "technique": "traversal", "onset": 1791794748.218861, "ttd_s": 0.002711, "n_requests": 6}
+{"t": 1791794748.802, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794748.803, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794750.878, "event": "campaign_detected", "actor": "h:602c0ecb26b53174", "technique": "idor_bola", "onset": 1791794287.18157, "ttd_s": 462.604958, "n_requests": 103}
+{"t": 1791794750.899, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/599", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794750.917, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/599", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794750.92, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0389, "signature": "4e617f21a0cb695f"}
+{"t": 1791794755.107, "event": "campaign_detected", "actor": "h:61af77a5401b7700", "technique": "cmdi", "onset": 1791794754.298923, "ttd_s": 0.003025, "n_requests": 6}
+{"t": 1791794755.107, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794755.107, "event": "campaign_detected", "actor": "h:61af77a5401b7700", "technique": "traversal", "onset": 1791794754.298923, "ttd_s": 0.003025, "n_requests": 6}
+{"t": 1791794755.12, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0039, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794755.121, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794760.382, "event": "campaign_detected", "actor": "h:649680349d2f2aa5", "technique": "cmdi", "onset": 1791794759.993836, "ttd_s": 0.002742, "n_requests": 4}
+{"t": 1791794760.382, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794760.382, "event": "campaign_detected", "actor": "h:649680349d2f2aa5", "technique": "traversal", "onset": 1791794759.993836, "ttd_s": 0.002742, "n_requests": 4}
+{"t": 1791794760.392, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0023, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794760.393, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794762.489, "event": "campaign_detected", "actor": "h:8d0a5d3637f0aa2d", "technique": "idor_bola", "onset": 1791794130.856411, "ttd_s": 598.817404, "n_requests": 114}
+{"t": 1791794762.489, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794764.59, "event": "campaign_detected", "actor": "h:4dcf829229120f1c", "technique": "idor_bola", "onset": 1791794128.040662, "ttd_s": 635.662602, "n_requests": 125}
+{"t": 1791794764.59, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794766.702, "event": "campaign_detected", "actor": "h:5cf15f23e0dbd560", "technique": "cmdi", "onset": 1791794765.611636, "ttd_s": 0.003921, "n_requests": 10}
+{"t": 1791794766.702, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794766.702, "event": "campaign_detected", "actor": "h:5cf15f23e0dbd560", "technique": "traversal", "onset": 1791794765.611636, "ttd_s": 0.003921, "n_requests": 10}
+{"t": 1791794766.71, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794766.71, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794769.855, "event": "campaign_detected", "actor": "h:d77fcf8dcaa23c16", "technique": "idor_bola", "onset": 1791794413.79205, "ttd_s": 355.335811, "n_requests": 119}
+{"t": 1791794769.855, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794771.947, "event": "campaign_detected", "actor": "h:9e7d23f0a3d644e4", "technique": "cmdi", "onset": 1791794771.244716, "ttd_s": 0.013227, "n_requests": 6}
+{"t": 1791794771.947, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794771.953, "event": "campaign_detected", "actor": "h:9e7d23f0a3d644e4", "technique": "traversal", "onset": 1791794771.244716, "ttd_s": 0.013227, "n_requests": 6}
+{"t": 1791794771.96, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0027, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794771.96, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794778.285, "event": "campaign_detected", "actor": "h:0c5f11c6a74f41b1", "technique": "idor_bola", "onset": 1791794255.165174, "ttd_s": 522.454495, "n_requests": 130}
+{"t": 1791794778.286, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794778.286, "event": "campaign_detected", "actor": "h:b74e020cb59924c6", "technique": "cmdi", "onset": 1791794777.127267, "ttd_s": 0.013004, "n_requests": 10}
+{"t": 1791794778.287, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794778.287, "event": "campaign_detected", "actor": "h:b74e020cb59924c6", "technique": "traversal", "onset": 1791794777.127267, "ttd_s": 0.013004, "n_requests": 10}
+{"t": 1791794778.295, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0026, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794778.297, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794779.342, "event": "campaign_detected", "actor": "h:02c2a36d577f8c13", "technique": "idor_bola", "onset": 1791794236.000702, "ttd_s": 311.376894, "n_requests": 103}
+{"t": 1791794779.343, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794783.552, "event": "campaign_detected", "actor": "h:8d38ef60e0b827fd", "technique": "cmdi", "onset": 1791794782.897154, "ttd_s": 0.002641, "n_requests": 4}
+{"t": 1791794783.553, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794783.553, "event": "campaign_detected", "actor": "h:8d38ef60e0b827fd", "technique": "traversal", "onset": 1791794782.897154, "ttd_s": 0.002641, "n_requests": 4}
+{"t": 1791794783.56, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794783.562, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794786.741, "event": "campaign_detected", "actor": "h:09a9b98fe4e39bcc", "technique": "idor_bola", "onset": 1791794594.984664, "ttd_s": 190.713025, "n_requests": 129}
+{"t": 1791794786.741, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794789.895, "event": "campaign_detected", "actor": "h:37ed36abe9b46e6d", "technique": "cmdi", "onset": 1791794788.587359, "ttd_s": 0.002794, "n_requests": 10}
+{"t": 1791794789.895, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794789.895, "event": "campaign_detected", "actor": "h:37ed36abe9b46e6d", "technique": "traversal", "onset": 1791794788.587359, "ttd_s": 0.002794, "n_requests": 10}
+{"t": 1791794789.906, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0029, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794789.907, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794792.017, "event": "campaign_detected", "actor": "h:e16ed51c228419d6", "technique": "idor_bola", "onset": 1791794310.612504, "ttd_s": 480.479641, "n_requests": 132}
+{"t": 1791794792.018, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794793.054, "event": "campaign_detected", "actor": "h:aeaeb612295f0694", "technique": "idor_bola", "onset": 1791794553.259243, "ttd_s": 51.746476, "n_requests": 135}
+{"t": 1791794793.065, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794794.112, "event": "campaign_detected", "actor": "h:2b1cbcead585cf4b", "technique": "idor_bola", "onset": 1791794115.562998, "ttd_s": 677.754781, "n_requests": 135}
+{"t": 1791794794.112, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794795.188, "event": "campaign_detected", "actor": "h:4b1aa0cfc1cc1d97", "technique": "cmdi", "onset": 1791794794.42172, "ttd_s": 0.003779, "n_requests": 8}
+{"t": 1791794795.189, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794795.189, "event": "campaign_detected", "actor": "h:4b1aa0cfc1cc1d97", "technique": "traversal", "onset": 1791794794.42172, "ttd_s": 0.003779, "n_requests": 8}
+{"t": 1791794795.196, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0017, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794795.197, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794801.511, "event": "campaign_detected", "actor": "h:8b2dc8dbbfd795b0", "technique": "cmdi", "onset": 1791794800.238659, "ttd_s": 0.005777, "n_requests": 8}
+{"t": 1791794801.511, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794801.511, "event": "campaign_detected", "actor": "h:8b2dc8dbbfd795b0", "technique": "traversal", "onset": 1791794800.238659, "ttd_s": 0.005777, "n_requests": 8}
+{"t": 1791794801.523, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.003, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794801.523, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794802.573, "event": "campaign_detected", "actor": "h:44202de0b40c25fb", "technique": "idor_bola", "onset": 1791794365.163426, "ttd_s": 435.935808, "n_requests": 119}
+{"t": 1791794802.574, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794806.787, "event": "campaign_detected", "actor": "h:0bafda6a072c4087", "technique": "cmdi", "onset": 1791794806.194815, "ttd_s": 0.019498, "n_requests": 6}
+{"t": 1791794806.787, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794806.787, "event": "campaign_detected", "actor": "h:0bafda6a072c4087", "technique": "traversal", "onset": 1791794806.194815, "ttd_s": 0.019498, "n_requests": 6}
+{"t": 1791794806.797, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0023, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794806.797, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794806.797, "event": "campaign_detected", "actor": "h:935a03dfb9152bb0", "technique": "idor_bola", "onset": 1791794452.401094, "ttd_s": 340.53574, "n_requests": 132}
+{"t": 1791794806.798, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794813.086, "event": "campaign_detected", "actor": "h:6e63ccf6c477d871", "technique": "cmdi", "onset": 1791794811.895922, "ttd_s": 0.002539, "n_requests": 8}
+{"t": 1791794813.087, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794813.087, "event": "campaign_detected", "actor": "h:6e63ccf6c477d871", "technique": "traversal", "onset": 1791794811.895922, "ttd_s": 0.002539, "n_requests": 8}
+{"t": 1791794813.094, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0024, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794813.094, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794814.164, "event": "campaign_detected", "actor": "h:d2a6889433220df4", "technique": "idor_bola", "onset": 1791794263.658491, "ttd_s": 549.938916, "n_requests": 127}
+{"t": 1791794814.164, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794816.27, "event": "campaign_detected", "actor": "h:569a281a7bbc0624", "technique": "idor_bola", "onset": 1791794157.539769, "ttd_s": 657.817625, "n_requests": 162}
+{"t": 1791794816.271, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794817.321, "event": "campaign_detected", "actor": "h:f35630059b5e4a31", "technique": "idor_bola", "onset": 1791794579.910498, "ttd_s": 237.058095, "n_requests": 127}
+{"t": 1791794817.322, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794818.386, "event": "campaign_detected", "actor": "h:4004273c577f61d8", "technique": "cmdi", "onset": 1791794817.603125, "ttd_s": 0.002783, "n_requests": 6}
+{"t": 1791794818.386, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794818.386, "event": "campaign_detected", "actor": "h:4004273c577f61d8", "technique": "traversal", "onset": 1791794817.603125, "ttd_s": 0.002783, "n_requests": 6}
+{"t": 1791794818.395, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794818.398, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794819.447, "event": "campaign_detected", "actor": "h:9e46ed00a92ff29d", "technique": "idor_bola", "onset": 1791794153.321107, "ttd_s": 571.216135, "n_requests": 121}
+{"t": 1791794819.448, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794823.672, "event": "campaign_detected", "actor": "h:be5500bc6f63d472", "technique": "cmdi", "onset": 1791794823.276329, "ttd_s": 0.003413, "n_requests": 6}
+{"t": 1791794823.672, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794823.673, "event": "campaign_detected", "actor": "h:be5500bc6f63d472", "technique": "traversal", "onset": 1791794823.276329, "ttd_s": 0.003413, "n_requests": 6}
+{"t": 1791794823.681, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0023, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794823.683, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794829.972, "event": "campaign_detected", "actor": "h:6ac0effac6444e2c", "technique": "cmdi", "onset": 1791794828.977987, "ttd_s": 0.003851, "n_requests": 8}
+{"t": 1791794829.972, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794829.973, "event": "campaign_detected", "actor": "h:6ac0effac6444e2c", "technique": "traversal", "onset": 1791794828.977987, "ttd_s": 0.003851, "n_requests": 8}
+{"t": 1791794829.982, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794829.984, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794829.985, "event": "campaign_detected", "actor": "h:c1a74cab0091a2d5", "technique": "idor_bola", "onset": 1791794099.830171, "ttd_s": 729.069373, "n_requests": 132}
+{"t": 1791794829.985, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794835.264, "event": "campaign_detected", "actor": "h:213aa707f63d7033", "technique": "idor_bola", "onset": 1791794366.06672, "ttd_s": 468.943041, "n_requests": 157}
+{"t": 1791794835.266, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794835.266, "event": "campaign_detected", "actor": "h:6640eee09b71a608", "technique": "cmdi", "onset": 1791794834.693746, "ttd_s": 0.00465, "n_requests": 6}
+{"t": 1791794835.266, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794835.266, "event": "campaign_detected", "actor": "h:6640eee09b71a608", "technique": "traversal", "onset": 1791794834.693746, "ttd_s": 0.00465, "n_requests": 6}
+{"t": 1791794835.275, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0025, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794835.276, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794841.586, "event": "campaign_detected", "actor": "h:18c99d7c57ca0951", "technique": "cmdi", "onset": 1791794840.336677, "ttd_s": 0.002785, "n_requests": 8}
+{"t": 1791794841.586, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794841.586, "event": "campaign_detected", "actor": "h:18c99d7c57ca0951", "technique": "traversal", "onset": 1791794840.336677, "ttd_s": 0.002785, "n_requests": 8}
+{"t": 1791794841.597, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794841.598, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794842.666, "event": "campaign_detected", "actor": "h:cab139e0b6a0f0b9", "technique": "idor_bola", "onset": 1791794095.850555, "ttd_s": 745.540663, "n_requests": 134}
+{"t": 1791794842.666, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794846.884, "event": "campaign_detected", "actor": "h:d18a8ee75086683b", "technique": "cmdi", "onset": 1791794846.043946, "ttd_s": 0.013149, "n_requests": 6}
+{"t": 1791794846.884, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794846.884, "event": "campaign_detected", "actor": "h:d18a8ee75086683b", "technique": "traversal", "onset": 1791794846.043946, "ttd_s": 0.013149, "n_requests": 6}
+{"t": 1791794846.895, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794846.895, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794851.123, "event": "campaign_detected", "actor": "h:a2081c7b8568b9b8", "technique": "idor_bola", "onset": 1791794197.380307, "ttd_s": 652.282202, "n_requests": 136}
+{"t": 1791794851.123, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794852.2, "event": "campaign_detected", "actor": "h:5ca899ded5e719be", "technique": "cmdi", "onset": 1791794851.707167, "ttd_s": 0.003053, "n_requests": 6}
+{"t": 1791794852.2, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794852.2, "event": "campaign_detected", "actor": "h:5ca899ded5e719be", "technique": "traversal", "onset": 1791794851.707167, "ttd_s": 0.003053, "n_requests": 6}
+{"t": 1791794852.207, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794852.209, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794852.209, "event": "campaign_detected", "actor": "h:7d890be5c5cce01e", "technique": "idor_bola", "onset": 1791794261.136904, "ttd_s": 590.928444, "n_requests": 159}
+{"t": 1791794852.21, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794858.52, "event": "campaign_detected", "actor": "h:aa5fab2bdc44d96c", "technique": "cmdi", "onset": 1791794857.511882, "ttd_s": 0.015274, "n_requests": 8}
+{"t": 1791794858.52, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794858.52, "event": "campaign_detected", "actor": "h:aa5fab2bdc44d96c", "technique": "traversal", "onset": 1791794857.511882, "ttd_s": 0.015274, "n_requests": 8}
+{"t": 1791794858.529, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794858.529, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794859.581, "event": "campaign_detected", "actor": "h:c587d06f6120dbb7", "technique": "idor_bola", "onset": 1791794277.2911, "ttd_s": 580.951006, "n_requests": 133}
+{"t": 1791794859.581, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791794863.811, "event": "campaign_detected", "actor": "h:28934f1e89851e37", "technique": "cmdi", "onset": 1791794863.241879, "ttd_s": 0.003224, "n_requests": 6}
+{"t": 1791794863.811, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794863.811, "event": "campaign_detected", "actor": "h:28934f1e89851e37", "technique": "traversal", "onset": 1791794863.241879, "ttd_s": 0.003224, "n_requests": 6}
+{"t": 1791794863.814, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0017, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794863.814, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794865.919, "event": "campaign_detected", "actor": "h:666c9788c3c93422", "technique": "idor_bola", "onset": 1791794192.764606, "ttd_s": 244.755814, "n_requests": 125}
+{"t": 1791794865.92, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794865.921, "event": "campaign_detected", "actor": "h:6e3105ed5a6bf748", "technique": "idor_bola", "onset": 1791794301.168537, "ttd_s": 563.45222, "n_requests": 139}
+{"t": 1791794865.921, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794870.177, "event": "campaign_detected", "actor": "h:930724cf9fb6c913", "technique": "cmdi", "onset": 1791794868.962775, "ttd_s": 0.002866, "n_requests": 10}
+{"t": 1791794870.178, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794870.178, "event": "campaign_detected", "actor": "h:930724cf9fb6c913", "technique": "traversal", "onset": 1791794868.962775, "ttd_s": 0.002866, "n_requests": 10}
+{"t": 1791794870.187, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794870.188, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794872.307, "event": "campaign_detected", "actor": "h:b69e6288353e5fae", "technique": "idor_bola", "onset": 1791794545.775118, "ttd_s": 326.183889, "n_requests": 140}
+{"t": 1791794872.308, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794875.493, "event": "campaign_detected", "actor": "h:149678b08d8cd19d", "technique": "cmdi", "onset": 1791794874.803183, "ttd_s": 0.003162, "n_requests": 6}
+{"t": 1791794875.493, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794875.494, "event": "campaign_detected", "actor": "h:149678b08d8cd19d", "technique": "traversal", "onset": 1791794874.803183, "ttd_s": 0.003162, "n_requests": 6}
+{"t": 1791794875.502, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794875.502, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794876.566, "event": "campaign_detected", "actor": "h:b3765fc39e06d220", "technique": "idor_bola", "onset": 1791794602.518897, "ttd_s": 272.616398, "n_requests": 156}
+{"t": 1791794876.568, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794877.61, "event": "campaign_detected", "actor": "h:05bd164bf1678d8f", "technique": "idor_bola", "onset": 1791794130.645062, "ttd_s": 746.431636, "n_requests": 164}
+{"t": 1791794877.611, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794881.85, "event": "campaign_detected", "actor": "h:dbc01883dcfe6478", "technique": "cmdi", "onset": 1791794880.774244, "ttd_s": 0.002634, "n_requests": 8}
+{"t": 1791794881.851, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794881.851, "event": "campaign_detected", "actor": "h:dbc01883dcfe6478", "technique": "traversal", "onset": 1791794880.774244, "ttd_s": 0.002634, "n_requests": 8}
+{"t": 1791794881.86, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794881.86, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794887.173, "event": "campaign_detected", "actor": "h:378a5f726518a268", "technique": "cmdi", "onset": 1791794886.494775, "ttd_s": 0.002973, "n_requests": 8}
+{"t": 1791794887.173, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794887.174, "event": "campaign_detected", "actor": "h:378a5f726518a268", "technique": "traversal", "onset": 1791794886.494775, "ttd_s": 0.002973, "n_requests": 8}
+{"t": 1791794887.182, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794887.182, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794887.182, "event": "campaign_detected", "actor": "h:935db52eb1397d64", "technique": "idor_bola", "onset": 1791794395.10726, "ttd_s": 491.911851, "n_requests": 153}
+{"t": 1791794887.182, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794893.524, "event": "campaign_detected", "actor": "h:0adf3a5dc4e36a6d", "technique": "idor_bola", "onset": 1791794156.675597, "ttd_s": 448.264701, "n_requests": 138}
+{"t": 1791794893.524, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794893.524, "event": "campaign_detected", "actor": "h:4e569c39dfe4614b", "technique": "cmdi", "onset": 1791794892.251658, "ttd_s": 0.014094, "n_requests": 9}
+{"t": 1791794893.524, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794893.524, "event": "campaign_detected", "actor": "h:4e569c39dfe4614b", "technique": "traversal", "onset": 1791794892.251658, "ttd_s": 0.014094, "n_requests": 9}
+{"t": 1791794893.531, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794893.531, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794897.788, "event": "campaign_detected", "actor": "h:83a1c9b7ad9a2a59", "technique": "idor_bola", "onset": 1791794102.058019, "ttd_s": 795.35478, "n_requests": 135}
+{"t": 1791794897.788, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794898.843, "event": "campaign_detected", "actor": "h:223f299fcea7d52e", "technique": "cmdi", "onset": 1791794897.937549, "ttd_s": 0.002929, "n_requests": 8}
+{"t": 1791794898.843, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794898.843, "event": "campaign_detected", "actor": "h:223f299fcea7d52e", "technique": "traversal", "onset": 1791794897.937549, "ttd_s": 0.002929, "n_requests": 8}
+{"t": 1791794898.855, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0021, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794898.855, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794899.929, "event": "campaign_detected", "actor": "h:2b59900fe371d8c3", "technique": "idor_bola", "onset": 1791794355.098533, "ttd_s": 544.433761, "n_requests": 146}
+{"t": 1791794899.93, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794904.195, "event": "campaign_detected", "actor": "h:0a9efd343634f304", "technique": "cmdi", "onset": 1791794903.995413, "ttd_s": 0.003731, "n_requests": 4}
+{"t": 1791794904.195, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794904.196, "event": "campaign_detected", "actor": "h:0a9efd343634f304", "technique": "traversal", "onset": 1791794903.995413, "ttd_s": 0.003731, "n_requests": 4}
+{"t": 1791794904.205, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0032, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794904.205, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794904.205, "event": "campaign_detected", "actor": "h:e1582c8098c7222f", "technique": "idor_bola", "onset": 1791794331.42002, "ttd_s": 559.902863, "n_requests": 135}
+{"t": 1791794904.205, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794905.256, "event": "campaign_detected", "actor": "h:5106a4287244d263", "technique": "idor_bola", "onset": 1791794626.722901, "ttd_s": 278.082462, "n_requests": 143}
+{"t": 1791794905.258, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794911.627, "event": "campaign_detected", "actor": "h:440897bdbe13824d", "technique": "cmdi", "onset": 1791794910.081109, "ttd_s": 0.002605, "n_requests": 10}
+{"t": 1791794911.641, "event": "mitigation", "technique": "cmdi", "source": "reused", "rule": "aegis-cmdi-1", "ttm_s": 0.0027, "signature": "e54eb5401dbed207"}
+{"t": 1791794911.642, "event": "live_start", "rule": "aegis-cmdi-1", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791794972.411, "event": "live_stage", "rule": "aegis-cmdi-1", "stage": "shadow", "passed": true, "detail": "1371 live requests; suspected FPs 0/760 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 38 vs replay-predicted 38 (tol 2)", "numbers": {"window_requests": 1371, "live_matches": 198, "logged_matches": 38, "nonflagged_requests": 760, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 232, "sample_suspect_uris": [], "replay_predicted": 38, "tolerance": 2}}
+{"t": 1791794972.412, "event": "live_stage", "rule": "aegis-cmdi-1", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 10 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2115, "rule_blocks": 10, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 10, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791794972.412, "event": "enforced", "rule": "aegis-cmdi-1"}
+{"t": 1791794972.413, "event": "campaign_detected", "actor": "h:440897bdbe13824d", "technique": "traversal", "onset": 1791794910.081109, "ttd_s": 0.002605, "n_requests": 10}
+{"t": 1791794972.421, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.003, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794972.421, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794973.815, "event": "campaign_detected", "actor": "h:20abbe02b395c0c5", "technique": "cmdi", "onset": 1791794950.549836, "ttd_s": 0.014571, "n_requests": 14}
+{"t": 1791794973.815, "event": "rule_bypassed", "rule": "aegis-cmdi-1", "technique": "cmdi", "leaked": 3, "of": 10}
+{"t": 1791794985.131, "event": "mitigation", "technique": "cmdi", "source": "none", "rule": null, "ttm_s": 11.3071, "signature": "e54eb5401dbed207"}
+{"t": 1791794985.131, "event": "campaign_detected", "actor": "h:20abbe02b395c0c5", "technique": "traversal", "onset": 1791794950.549836, "ttd_s": 0.014571, "n_requests": 14}
+{"t": 1791794985.137, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.137, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.137, "event": "campaign_detected", "actor": "h:22ab52656723fbae", "technique": "cmdi", "onset": 1791794938.896478, "ttd_s": 0.0148, "n_requests": 14}
+{"t": 1791794985.137, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.137, "event": "campaign_detected", "actor": "h:22ab52656723fbae", "technique": "traversal", "onset": 1791794938.896478, "ttd_s": 0.0148, "n_requests": 14}
+{"t": 1791794985.146, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0019, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.148, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.148, "event": "campaign_detected", "actor": "h:4efd18f2b3e81e92", "technique": "idor_bola", "onset": 1791794122.419228, "ttd_s": 839.159594, "n_requests": 149}
+{"t": 1791794985.148, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794985.148, "event": "campaign_detected", "actor": "h:542950b0e99635c5", "technique": "idor_bola", "onset": 1791794400.038943, "ttd_s": 539.172033, "n_requests": 158}
+{"t": 1791794985.148, "event": "cooldown_skip", "technique": "idor_bola", "signature": "4e617f21a0cb695f"}
+{"t": 1791794985.148, "event": "campaign_detected", "actor": "h:55cba80f2f0d8119", "technique": "cmdi", "onset": 1791794916.034842, "ttd_s": 0.002641, "n_requests": 14}
+{"t": 1791794985.148, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.148, "event": "campaign_detected", "actor": "h:55cba80f2f0d8119", "technique": "traversal", "onset": 1791794916.034842, "ttd_s": 0.002641, "n_requests": 14}
+{"t": 1791794985.157, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0024, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.157, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.157, "event": "campaign_detected", "actor": "h:6fe54803083224d0", "technique": "idor_bola", "onset": 1791794166.362133, "ttd_s": 756.78941, "n_requests": 167}
+{"t": 1791794985.157, "event": "cooldown_skip", "technique": "idor_bola", "signature": "1e7bac1edd3d3259"}
+{"t": 1791794985.157, "event": "campaign_detected", "actor": "h:7ab39c828cd7ab3d", "technique": "cmdi", "onset": 1791794944.612686, "ttd_s": 0.022133, "n_requests": 14}
+{"t": 1791794985.157, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.157, "event": "campaign_detected", "actor": "h:7ab39c828cd7ab3d", "technique": "traversal", "onset": 1791794944.612686, "ttd_s": 0.022133, "n_requests": 14}
+{"t": 1791794985.164, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.164, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.164, "event": "campaign_detected", "actor": "h:8a76ca5fe62754f0", "technique": "cmdi", "onset": 1791794961.985113, "ttd_s": 0.002624, "n_requests": 14}
+{"t": 1791794985.164, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.164, "event": "campaign_detected", "actor": "h:8a76ca5fe62754f0", "technique": "traversal", "onset": 1791794961.985113, "ttd_s": 0.002624, "n_requests": 14}
+{"t": 1791794985.168, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0018, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.174, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.174, "event": "campaign_detected", "actor": "h:99917b1512f7a96c", "technique": "cmdi", "onset": 1791794967.776656, "ttd_s": 0.003434, "n_requests": 14}
+{"t": 1791794985.175, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.176, "event": "campaign_detected", "actor": "h:99917b1512f7a96c", "technique": "traversal", "onset": 1791794967.776656, "ttd_s": 0.003434, "n_requests": 14}
+{"t": 1791794985.179, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0023, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.179, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.184, "event": "campaign_detected", "actor": "h:b2cb3cff6878beae", "technique": "idor_bola", "onset": 1791794315.86745, "ttd_s": 374.988604, "n_requests": 159}
+{"t": 1791794985.189, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/539", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794985.213, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/539", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794985.213, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0301, "signature": "d4e3e99d070cbba4"}
+{"t": 1791794985.217, "event": "campaign_detected", "actor": "h:c72ca27219db2b10", "technique": "idor_bola", "onset": 1791794233.345764, "ttd_s": 472.241522, "n_requests": 151}
+{"t": 1791794985.217, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794985.217, "event": "campaign_detected", "actor": "h:c8127ce5b155cdbe", "technique": "cmdi", "onset": 1791794933.155134, "ttd_s": 0.014977, "n_requests": 14}
+{"t": 1791794985.217, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.217, "event": "campaign_detected", "actor": "h:c8127ce5b155cdbe", "technique": "traversal", "onset": 1791794933.155134, "ttd_s": 0.014977, "n_requests": 14}
+{"t": 1791794985.222, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.226, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.226, "event": "campaign_detected", "actor": "h:da6955ce70e533c2", "technique": "idor_bola", "onset": 1791794177.687995, "ttd_s": 759.14304, "n_requests": 160}
+{"t": 1791794985.226, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794985.226, "event": "campaign_detected", "actor": "h:dbdd528ea824ab12", "technique": "idor_bola", "onset": 1791794597.545115, "ttd_s": 328.767943, "n_requests": 134}
+{"t": 1791794985.226, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794985.226, "event": "campaign_detected", "actor": "h:de9d3c4a2259c1ad", "technique": "cmdi", "onset": 1791794927.458678, "ttd_s": 0.003806, "n_requests": 14}
+{"t": 1791794985.226, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.228, "event": "campaign_detected", "actor": "h:de9d3c4a2259c1ad", "technique": "traversal", "onset": 1791794927.458678, "ttd_s": 0.003806, "n_requests": 14}
+{"t": 1791794985.234, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0021, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.235, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.235, "event": "campaign_detected", "actor": "h:e5d9cd8f19e1ea49", "technique": "cmdi", "onset": 1791794921.731453, "ttd_s": 0.003152, "n_requests": 14}
+{"t": 1791794985.235, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.235, "event": "campaign_detected", "actor": "h:e5d9cd8f19e1ea49", "technique": "traversal", "onset": 1791794921.731453, "ttd_s": 0.003152, "n_requests": 14}
+{"t": 1791794985.242, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0017, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.243, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.243, "event": "campaign_detected", "actor": "h:e85b5c08c62ff92c", "technique": "cmdi", "onset": 1791794956.220557, "ttd_s": 0.027669, "n_requests": 14}
+{"t": 1791794985.243, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794985.243, "event": "campaign_detected", "actor": "h:e85b5c08c62ff92c", "technique": "traversal", "onset": 1791794956.220557, "ttd_s": 0.027669, "n_requests": 14}
+{"t": 1791794985.252, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794985.252, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794985.253, "event": "campaign_detected", "actor": "h:e89d2f643affc19e", "technique": "idor_bola", "onset": 1791794144.48033, "ttd_s": 780.630961, "n_requests": 151}
+{"t": 1791794985.253, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794985.253, "event": "campaign_detected", "actor": "h:f963943042a81de5", "technique": "idor_bola", "onset": 1791794358.909207, "ttd_s": 572.498319, "n_requests": 179}
+{"t": 1791794985.253, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791794986.607, "event": "campaign_detected", "actor": "h:482ac1dd5ea34868", "technique": "cmdi", "onset": 1791794979.078689, "ttd_s": 0.002586, "n_requests": 14}
+{"t": 1791794986.608, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794986.608, "event": "campaign_detected", "actor": "h:482ac1dd5ea34868", "technique": "traversal", "onset": 1791794979.078689, "ttd_s": 0.002586, "n_requests": 14}
+{"t": 1791794986.618, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.002, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794986.619, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794986.62, "event": "campaign_detected", "actor": "h:5b15128207289084", "technique": "cmdi", "onset": 1791794973.439556, "ttd_s": 0.003227, "n_requests": 14}
+{"t": 1791794986.62, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794986.62, "event": "campaign_detected", "actor": "h:5b15128207289084", "technique": "traversal", "onset": 1791794973.439556, "ttd_s": 0.003227, "n_requests": 14}
+{"t": 1791794986.627, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0022, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794986.628, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794986.628, "event": "campaign_detected", "actor": "h:6b345322c2453b2a", "technique": "idor_bola", "onset": 1791794435.768333, "ttd_s": 497.950454, "n_requests": 171}
+{"t": 1791794986.629, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791794986.63, "event": "campaign_detected", "actor": "h:8521b2382922922f", "technique": "cmdi", "onset": 1791794984.749621, "ttd_s": 0.003306, "n_requests": 12}
+{"t": 1791794986.63, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794986.631, "event": "campaign_detected", "actor": "h:8521b2382922922f", "technique": "traversal", "onset": 1791794984.749621, "ttd_s": 0.003306, "n_requests": 12}
+{"t": 1791794986.639, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0028, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794986.64, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794990.909, "event": "campaign_detected", "actor": "h:90756eac34bc84ff", "technique": "cmdi", "onset": 1791794990.424991, "ttd_s": 0.015687, "n_requests": 4}
+{"t": 1791794990.909, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794990.909, "event": "campaign_detected", "actor": "h:90756eac34bc84ff", "technique": "traversal", "onset": 1791794990.424991, "ttd_s": 0.015687, "n_requests": 4}
+{"t": 1791794990.925, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0017, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794990.926, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794991.982, "event": "campaign_detected", "actor": "h:5ebd95463f15d536", "technique": "idor_bola", "onset": 1791794116.951563, "ttd_s": 874.317655, "n_requests": 156}
+{"t": 1791794991.983, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794994.102, "event": "campaign_detected", "actor": "h:bb94dfc2bc4495ca", "technique": "idor_bola", "onset": 1791794156.732875, "ttd_s": 836.122702, "n_requests": 140}
+{"t": 1791794994.103, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791794995.199, "event": "campaign_detected", "actor": "h:b2ac360db9d7f23d", "technique": "idor_bola", "onset": 1791794405.431274, "ttd_s": 588.36919, "n_requests": 153}
+{"t": 1791794995.226, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/531", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794995.247, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/531", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791794995.252, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0475, "signature": "e161fc1e71e55d8f"}
+{"t": 1791794997.393, "event": "campaign_detected", "actor": "h:00e64cd5495a6163", "technique": "cmdi", "onset": 1791794996.271075, "ttd_s": 0.02074, "n_requests": 9}
+{"t": 1791794997.393, "event": "cooldown_skip", "technique": "cmdi", "signature": "e54eb5401dbed207"}
+{"t": 1791794997.393, "event": "campaign_detected", "actor": "h:00e64cd5495a6163", "technique": "traversal", "onset": 1791794996.271075, "ttd_s": 0.02074, "n_requests": 9}
+{"t": 1791794997.404, "event": "mitigation", "technique": "traversal", "source": "reused", "rule": "aegis-traversal-1", "ttm_s": 0.0023, "signature": "2ccfb3e76f1eceb0"}
+{"t": 1791794997.404, "event": "already_enforcing", "rule": "aegis-traversal-1"}
+{"t": 1791794998.453, "event": "campaign_detected", "actor": "h:9ccc10a43ab4d4ff", "technique": "idor_bola", "onset": 1791794172.547832, "ttd_s": 264.894671, "n_requests": 159}
+{"t": 1791794998.454, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795000.57, "event": "campaign_detected", "actor": "h:bfd480895cb813f6", "technique": "idor_bola", "onset": 1791794201.969041, "ttd_s": 797.732686, "n_requests": 162}
+{"t": 1791795000.571, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795002.734, "event": "campaign_detected", "actor": "h:88ea3eed0ecd46ed", "technique": "credential_stuffing", "onset": 1791795000.966216, "ttd_s": 0.85593, "n_requests": 12}
+{"t": 1791795002.741, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0055, "signature": "87ac366fab484cfb"}
+{"t": 1791795002.741, "event": "live_start", "rule": "aegis-credential_stuffing-4", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791795060.544, "event": "live_stage", "rule": "aegis-credential_stuffing-4", "stage": "shadow", "passed": true, "detail": "1879 live requests; suspected FPs 0/1376 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); n/a (rate rule)", "numbers": {"window_requests": 1879, "live_matches": 33, "logged_matches": 5, "nonflagged_requests": 1376, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 228, "sample_suspect_uris": []}}
+{"t": 1791795060.544, "event": "live_stage", "rule": "aegis-credential_stuffing-4", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 16 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2118, "rule_blocks": 16, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 16, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791795060.544, "event": "enforced", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795060.544, "event": "campaign_detected", "actor": "h:88ea3eed0ecd46ed", "technique": "user_enumeration", "onset": 1791795000.966216, "ttd_s": 0.546879, "n_requests": 12}
+{"t": 1791795060.561, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/531", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791795060.575, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/531", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791795060.578, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0309, "signature": "6205c942f2fff687"}
+{"t": 1791795062.2, "event": "campaign_detected", "actor": "h:55e46c6959cc0d90", "technique": "credential_stuffing", "onset": 1791795032.033159, "ttd_s": 0.890716, "n_requests": 12}
+{"t": 1791795062.21, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0041, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.21, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.21, "event": "campaign_detected", "actor": "h:55e46c6959cc0d90", "technique": "user_enumeration", "onset": 1791795032.033159, "ttd_s": 0.735768, "n_requests": 12}
+{"t": 1791795062.21, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.21, "event": "campaign_detected", "actor": "h:5ea6bc1c97e1757d", "technique": "credential_stuffing", "onset": 1791795049.229989, "ttd_s": 1.040122, "n_requests": 12}
+{"t": 1791795062.217, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0043, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.217, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.217, "event": "campaign_detected", "actor": "h:5ea6bc1c97e1757d", "technique": "user_enumeration", "onset": 1791795049.229989, "ttd_s": 0.771782, "n_requests": 12}
+{"t": 1791795062.217, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.217, "event": "campaign_detected", "actor": "h:676296149978ccb8", "technique": "credential_stuffing", "onset": 1791795026.418277, "ttd_s": 0.772331, "n_requests": 12}
+{"t": 1791795062.227, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0046, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.228, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.228, "event": "campaign_detected", "actor": "h:676296149978ccb8", "technique": "user_enumeration", "onset": 1791795026.418277, "ttd_s": 0.606485, "n_requests": 12}
+{"t": 1791795062.228, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.228, "event": "campaign_detected", "actor": "h:689395ab07ec71c9", "technique": "credential_stuffing", "onset": 1791795043.245584, "ttd_s": 0.728786, "n_requests": 12}
+{"t": 1791795062.234, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0049, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.234, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.234, "event": "campaign_detected", "actor": "h:689395ab07ec71c9", "technique": "user_enumeration", "onset": 1791795043.245584, "ttd_s": 0.589574, "n_requests": 12}
+{"t": 1791795062.234, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.234, "event": "campaign_detected", "actor": "h:6c32f6034a629440", "technique": "credential_stuffing", "onset": 1791795018.815712, "ttd_s": 1.461329, "n_requests": 12}
+{"t": 1791795062.234, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.004, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.234, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.234, "event": "campaign_detected", "actor": "h:6c32f6034a629440", "technique": "user_enumeration", "onset": 1791795018.815712, "ttd_s": 1.036808, "n_requests": 12}
+{"t": 1791795062.234, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.234, "event": "campaign_detected", "actor": "h:85567d92b3781530", "technique": "idor_bola", "onset": 1791794568.448163, "ttd_s": 434.925577, "n_requests": 171}
+{"t": 1791795062.245, "event": "cooldown_skip", "technique": "idor_bola", "signature": "4e617f21a0cb695f"}
+{"t": 1791795062.245, "event": "campaign_detected", "actor": "h:8cd37b0f3f402bd2", "technique": "idor_bola", "onset": 1791794158.182518, "ttd_s": 850.614738, "n_requests": 172}
+{"t": 1791795062.245, "event": "cooldown_skip", "technique": "idor_bola", "signature": "a2095478c6dfbe91"}
+{"t": 1791795062.245, "event": "campaign_detected", "actor": "h:9a84fdfd52068dcb", "technique": "idor_bola", "onset": 1791794416.355704, "ttd_s": 594.016493, "n_requests": 176}
+{"t": 1791795062.245, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795062.245, "event": "campaign_detected", "actor": "h:9bb8d2bd7aee6937", "technique": "credential_stuffing", "onset": 1791795037.738053, "ttd_s": 0.7156, "n_requests": 12}
+{"t": 1791795062.254, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0047, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.254, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.254, "event": "campaign_detected", "actor": "h:9bb8d2bd7aee6937", "technique": "user_enumeration", "onset": 1791795037.738053, "ttd_s": 0.576489, "n_requests": 12}
+{"t": 1791795062.254, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.254, "event": "campaign_detected", "actor": "h:c0ba8fb8c5555645", "technique": "credential_stuffing", "onset": 1791795055.239795, "ttd_s": 0.708243, "n_requests": 12}
+{"t": 1791795062.263, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.005, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.263, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.263, "event": "campaign_detected", "actor": "h:c0ba8fb8c5555645", "technique": "user_enumeration", "onset": 1791795055.239795, "ttd_s": 0.570336, "n_requests": 12}
+{"t": 1791795062.263, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.265, "event": "campaign_detected", "actor": "h:cf46fe6d39a4324c", "technique": "idor_bola", "onset": 1791794233.994268, "ttd_s": 799.206738, "n_requests": 195}
+{"t": 1791795062.265, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791795062.265, "event": "campaign_detected", "actor": "h:dfcd9052e166b2cd", "technique": "credential_stuffing", "onset": 1791795012.828053, "ttd_s": 0.986692, "n_requests": 12}
+{"t": 1791795062.273, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0037, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.273, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.273, "event": "campaign_detected", "actor": "h:dfcd9052e166b2cd", "technique": "user_enumeration", "onset": 1791795012.828053, "ttd_s": 0.659559, "n_requests": 12}
+{"t": 1791795062.275, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.275, "event": "campaign_detected", "actor": "h:e4df8a7ff76867d8", "technique": "credential_stuffing", "onset": 1791795006.760323, "ttd_s": 0.88837, "n_requests": 12}
+{"t": 1791795062.28, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0063, "signature": "87ac366fab484cfb"}
+{"t": 1791795062.28, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795062.28, "event": "campaign_detected", "actor": "h:e4df8a7ff76867d8", "technique": "user_enumeration", "onset": 1791795006.760323, "ttd_s": 0.591725, "n_requests": 12}
+{"t": 1791795062.28, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795062.28, "event": "campaign_detected", "actor": "h:fefdc2188a41adeb", "technique": "idor_bola", "onset": 1791794242.550011, "ttd_s": 784.83738, "n_requests": 192}
+{"t": 1791795062.28, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791795063.403, "event": "campaign_detected", "actor": "h:9a3d2f8253a8b147", "technique": "credential_stuffing", "onset": 1791795060.757519, "ttd_s": 0.691201, "n_requests": 12}
+{"t": 1791795063.414, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0073, "signature": "87ac366fab484cfb"}
+{"t": 1791795063.415, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795063.415, "event": "campaign_detected", "actor": "h:9a3d2f8253a8b147", "technique": "user_enumeration", "onset": 1791795060.757519, "ttd_s": 0.554024, "n_requests": 12}
+{"t": 1791795063.415, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795064.501, "event": "campaign_detected", "actor": "h:52e65c763fb4b920", "technique": "idor_bola", "onset": 1791794176.960429, "ttd_s": 675.52789, "n_requests": 189}
+{"t": 1791795064.502, "event": "cooldown_skip", "technique": "idor_bola", "signature": "1e7bac1edd3d3259"}
+{"t": 1791795067.777, "event": "campaign_detected", "actor": "h:bb8f3b7f680426d2", "technique": "credential_stuffing", "onset": 1791795066.274506, "ttd_s": 0.65964, "n_requests": 12}
+{"t": 1791795067.786, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0054, "signature": "87ac366fab484cfb"}
+{"t": 1791795067.787, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795067.788, "event": "campaign_detected", "actor": "h:bb8f3b7f680426d2", "technique": "user_enumeration", "onset": 1791795066.274506, "ttd_s": 0.526737, "n_requests": 12}
+{"t": 1791795067.788, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795073.131, "event": "campaign_detected", "actor": "h:fedbb09252059ab0", "technique": "credential_stuffing", "onset": 1791795071.662178, "ttd_s": 0.694439, "n_requests": 9}
+{"t": 1791795073.14, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0049, "signature": "87ac366fab484cfb"}
+{"t": 1791795073.141, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795073.141, "event": "campaign_detected", "actor": "h:fedbb09252059ab0", "technique": "user_enumeration", "onset": 1791795071.662178, "ttd_s": 0.565855, "n_requests": 9}
+{"t": 1791795073.141, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795078.519, "event": "campaign_detected", "actor": "h:969767179e1ba177", "technique": "credential_stuffing", "onset": 1791795077.208419, "ttd_s": 0.654287, "n_requests": 9}
+{"t": 1791795078.526, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.005, "signature": "87ac366fab484cfb"}
+{"t": 1791795078.526, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795078.526, "event": "campaign_detected", "actor": "h:969767179e1ba177", "technique": "user_enumeration", "onset": 1791795077.208419, "ttd_s": 0.524602, "n_requests": 9}
+{"t": 1791795078.528, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795079.595, "event": "campaign_detected", "actor": "h:6ab51b42ea38d555", "technique": "idor_bola", "onset": 1791794366.846737, "ttd_s": 675.017308, "n_requests": 194}
+{"t": 1791795079.597, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795083.865, "event": "campaign_detected", "actor": "h:591a87f0185952e5", "technique": "credential_stuffing", "onset": 1791795082.640925, "ttd_s": 0.680478, "n_requests": 10}
+{"t": 1791795083.878, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.004, "signature": "87ac366fab484cfb"}
+{"t": 1791795083.878, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795083.878, "event": "campaign_detected", "actor": "h:591a87f0185952e5", "technique": "user_enumeration", "onset": 1791795082.640925, "ttd_s": 0.536798, "n_requests": 10}
+{"t": 1791795083.878, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795087.086, "event": "campaign_detected", "actor": "h:9ab385274d73b3fd", "technique": "idor_bola", "onset": 1791794363.787924, "ttd_s": 648.993205, "n_requests": 199}
+{"t": 1791795087.086, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791795089.232, "event": "campaign_detected", "actor": "h:c22041199306328b", "technique": "credential_stuffing", "onset": 1791795088.050641, "ttd_s": 0.66459, "n_requests": 10}
+{"t": 1791795089.246, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0058, "signature": "87ac366fab484cfb"}
+{"t": 1791795089.248, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795089.248, "event": "campaign_detected", "actor": "h:c22041199306328b", "technique": "user_enumeration", "onset": 1791795088.050641, "ttd_s": 0.535604, "n_requests": 10}
+{"t": 1791795089.248, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795094.605, "event": "campaign_detected", "actor": "h:c9a87f1ad532ccd6", "technique": "user_enumeration", "onset": 1791795093.460673, "ttd_s": 0.530002, "n_requests": 7}
+{"t": 1791795094.605, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795095.711, "event": "campaign_detected", "actor": "h:c9a87f1ad532ccd6", "technique": "credential_stuffing", "onset": 1791795093.460673, "ttd_s": 0.659416, "n_requests": 12}
+{"t": 1791795095.719, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0053, "signature": "87ac366fab484cfb"}
+{"t": 1791795095.719, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795100.038, "event": "campaign_detected", "actor": "h:b340d19b8c7681df", "technique": "credential_stuffing", "onset": 1791795098.856093, "ttd_s": 0.698679, "n_requests": 8}
+{"t": 1791795100.038, "event": "mitigation", "technique": "credential_stuffing", "source": "reused", "rule": "aegis-credential_stuffing-4", "ttm_s": 0.0053, "signature": "87ac366fab484cfb"}
+{"t": 1791795100.038, "event": "already_enforcing", "rule": "aegis-credential_stuffing-4"}
+{"t": 1791795100.038, "event": "campaign_detected", "actor": "h:b340d19b8c7681df", "technique": "user_enumeration", "onset": 1791795098.856093, "ttd_s": 0.555687, "n_requests": 8}
+{"t": 1791795100.038, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795101.113, "event": "campaign_detected", "actor": "h:39a1075f5543c58d", "technique": "idor_bola", "onset": 1791794187.676899, "ttd_s": 856.732357, "n_requests": 160}
+{"t": 1791795101.113, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791795105.44, "event": "campaign_detected", "actor": "h:78d91cbd682e53c0", "technique": "sqli", "onset": 1791795104.350598, "ttd_s": 0.278286, "n_requests": 5}
+{"t": 1791795105.446, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795105.446, "event": "live_start", "rule": "aegis-sqli-3", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1791795163.633, "event": "live_stage", "rule": "aegis-sqli-3", "stage": "shadow", "passed": true, "detail": "1899 live requests; suspected FPs 0/1394 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 25 vs replay-predicted 25 (tol 2)", "numbers": {"window_requests": 1899, "live_matches": 146, "logged_matches": 25, "nonflagged_requests": 1394, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 227, "sample_suspect_uris": [], "replay_predicted": 25, "tolerance": 2}}
+{"t": 1791795163.633, "event": "live_stage", "rule": "aegis-sqli-3", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 2 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 2142, "rule_blocks": 2, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 2, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1791795163.633, "event": "enforced", "rule": "aegis-sqli-3"}
+{"t": 1791795165.075, "event": "campaign_detected", "actor": "h:081b069d7e125692", "technique": "idor_bola", "onset": 1791794258.005791, "ttd_s": 633.836505, "n_requests": 209}
+{"t": 1791795165.093, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/532", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791795165.107, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/532", "campaign actor would have 0 request(s) limited"]}
+{"t": 1791795165.107, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0297, "signature": "b856c0b4e4c6119f"}
+{"t": 1791795165.107, "event": "campaign_detected", "actor": "h:0fdfcc5dc3954b58", "technique": "idor_bola", "onset": 1791794113.640778, "ttd_s": 1028.107077, "n_requests": 200}
+{"t": 1791795165.107, "event": "cooldown_skip", "technique": "idor_bola", "signature": "e161fc1e71e55d8f"}
+{"t": 1791795165.107, "event": "campaign_detected", "actor": "h:1ae792295ca8019d", "technique": "sqli", "onset": 1791795148.214336, "ttd_s": 0.253725, "n_requests": 10}
+{"t": 1791795165.115, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.115, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.115, "event": "campaign_detected", "actor": "h:1ae792295ca8019d", "technique": "user_enumeration", "onset": 1791795148.214336, "ttd_s": 0.764196, "n_requests": 10}
+{"t": 1791795165.115, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.115, "event": "campaign_detected", "actor": "h:291b9cab4ecccfd6", "technique": "idor_bola", "onset": 1791794869.592631, "ttd_s": 294.756702, "n_requests": 164}
+{"t": 1791795165.115, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795165.115, "event": "campaign_detected", "actor": "h:44bd567833b70644", "technique": "sqli", "onset": 1791795129.168705, "ttd_s": 0.25347, "n_requests": 10}
+{"t": 1791795165.12, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.12, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.12, "event": "campaign_detected", "actor": "h:44bd567833b70644", "technique": "user_enumeration", "onset": 1791795129.168705, "ttd_s": 0.783209, "n_requests": 10}
+{"t": 1791795165.12, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.12, "event": "campaign_detected", "actor": "h:4d109003719dc522", "technique": "sqli", "onset": 1791795123.017034, "ttd_s": 0.271857, "n_requests": 10}
+{"t": 1791795165.134, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.134, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.134, "event": "campaign_detected", "actor": "h:4d109003719dc522", "technique": "user_enumeration", "onset": 1791795123.017034, "ttd_s": 0.781095, "n_requests": 10}
+{"t": 1791795165.134, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.134, "event": "campaign_detected", "actor": "h:4f5b2d67184f6410", "technique": "sqli", "onset": 1791795141.887153, "ttd_s": 0.267675, "n_requests": 10}
+{"t": 1791795165.141, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0021, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.141, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.141, "event": "campaign_detected", "actor": "h:4f5b2d67184f6410", "technique": "user_enumeration", "onset": 1791795141.887153, "ttd_s": 0.812084, "n_requests": 10}
+{"t": 1791795165.141, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.141, "event": "campaign_detected", "actor": "h:78d91cbd682e53c0", "technique": "user_enumeration", "onset": 1791795104.350598, "ttd_s": 0.801313, "n_requests": 10}
+{"t": 1791795165.141, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.141, "event": "campaign_detected", "actor": "h:a3184d6a61321a8d", "technique": "sqli", "onset": 1791795160.517448, "ttd_s": 0.269483, "n_requests": 10}
+{"t": 1791795165.151, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.151, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.152, "event": "campaign_detected", "actor": "h:a3184d6a61321a8d", "technique": "user_enumeration", "onset": 1791795160.517448, "ttd_s": 0.801288, "n_requests": 10}
+{"t": 1791795165.152, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.153, "event": "campaign_detected", "actor": "h:ac4ddf6dcba356f1", "technique": "sqli", "onset": 1791795135.331681, "ttd_s": 0.253756, "n_requests": 10}
+{"t": 1791795165.157, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0026, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.157, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.157, "event": "campaign_detected", "actor": "h:ac4ddf6dcba356f1", "technique": "user_enumeration", "onset": 1791795135.331681, "ttd_s": 0.805763, "n_requests": 10}
+{"t": 1791795165.157, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.157, "event": "campaign_detected", "actor": "h:c8d0eb2e1f005c43", "technique": "sqli", "onset": 1791795154.355074, "ttd_s": 0.26531, "n_requests": 10}
+{"t": 1791795165.157, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0017, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.157, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.157, "event": "campaign_detected", "actor": "h:c8d0eb2e1f005c43", "technique": "user_enumeration", "onset": 1791795154.355074, "ttd_s": 0.799426, "n_requests": 10}
+{"t": 1791795165.157, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795165.157, "event": "campaign_detected", "actor": "h:e8e6ec337940d123", "technique": "idor_bola", "onset": 1791794210.359338, "ttd_s": 903.756025, "n_requests": 196}
+{"t": 1791795165.157, "event": "cooldown_skip", "technique": "idor_bola", "signature": "4e617f21a0cb695f"}
+{"t": 1791795165.17, "event": "campaign_detected", "actor": "h:f5cb6f491b2a0b53", "technique": "sqli", "onset": 1791795110.560252, "ttd_s": 0.254333, "n_requests": 10}
+{"t": 1791795165.177, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0017, "signature": "6997d6acecfa5647"}
+{"t": 1791795165.177, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795165.177, "event": "campaign_detected", "actor": "h:f5cb6f491b2a0b53", "technique": "user_enumeration", "onset": 1791795110.560252, "ttd_s": 0.763399, "n_requests": 10}
+{"t": 1791795165.177, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795167.357, "event": "campaign_detected", "actor": "h:575b992653b7d987", "technique": "sqli", "onset": 1791795166.65351, "ttd_s": 0.253877, "n_requests": 4}
+{"t": 1791795167.366, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0026, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795167.367, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795168.44, "event": "campaign_detected", "actor": "h:575b992653b7d987", "technique": "user_enumeration", "onset": 1791795166.65351, "ttd_s": 0.783241, "n_requests": 8}
+{"t": 1791795168.44, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795173.862, "event": "campaign_detected", "actor": "h:72e26dc8f15ff54b", "technique": "sqli", "onset": 1791795172.835758, "ttd_s": 0.255638, "n_requests": 5}
+{"t": 1791795173.872, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795173.873, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795174.941, "event": "campaign_detected", "actor": "h:72e26dc8f15ff54b", "technique": "user_enumeration", "onset": 1791795172.835758, "ttd_s": 0.788756, "n_requests": 9}
+{"t": 1791795174.941, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795178.213, "event": "campaign_detected", "actor": "h:b8e6d78ab87508c6", "technique": "idor_bola", "onset": 1791794426.730106, "ttd_s": 751.168678, "n_requests": 217}
+{"t": 1791795178.213, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791795179.294, "event": "campaign_detected", "actor": "h:b8a4d03faa0fc27a", "technique": "idor_bola", "onset": 1791794265.976709, "ttd_s": 912.33245, "n_requests": 188}
+{"t": 1791795179.294, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795180.389, "event": "campaign_detected", "actor": "h:d910eca98fbaa79d", "technique": "sqli", "onset": 1791795178.964453, "ttd_s": 0.266532, "n_requests": 7}
+{"t": 1791795180.398, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0025, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795180.398, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795180.398, "event": "campaign_detected", "actor": "h:d910eca98fbaa79d", "technique": "user_enumeration", "onset": 1791795178.964453, "ttd_s": 0.802207, "n_requests": 7}
+{"t": 1791795180.398, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795182.622, "event": "campaign_detected", "actor": "h:b8915d908bb5bebc", "technique": "idor_bola", "onset": 1791794733.2232, "ttd_s": 448.143283, "n_requests": 183}
+{"t": 1791795182.623, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795185.89, "event": "campaign_detected", "actor": "h:3933538c491d7790", "technique": "sqli", "onset": 1791795185.175311, "ttd_s": 0.253573, "n_requests": 4}
+{"t": 1791795185.896, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795185.896, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795185.896, "event": "campaign_detected", "actor": "h:78d4d0bee6348c15", "technique": "idor_bola", "onset": 1791794540.723555, "ttd_s": 234.259653, "n_requests": 216}
+{"t": 1791795185.896, "event": "cooldown_skip", "technique": "idor_bola", "signature": "b856c0b4e4c6119f"}
+{"t": 1791795186.977, "event": "campaign_detected", "actor": "h:3933538c491d7790", "technique": "user_enumeration", "onset": 1791795185.175311, "ttd_s": 0.778946, "n_requests": 8}
+{"t": 1791795186.977, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795189.163, "event": "campaign_detected", "actor": "h:c2b6e7a5f6b1090f", "technique": "idor_bola", "onset": 1791794338.692961, "ttd_s": 373.054461, "n_requests": 206}
+{"t": 1791795189.164, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791795192.392, "event": "campaign_detected", "actor": "h:67c00d813bb45dc0", "technique": "sqli", "onset": 1791795191.350826, "ttd_s": 0.25307, "n_requests": 5}
+{"t": 1791795192.398, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.002, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795192.404, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795193.477, "event": "campaign_detected", "actor": "h:67c00d813bb45dc0", "technique": "user_enumeration", "onset": 1791795191.350826, "ttd_s": 0.779672, "n_requests": 9}
+{"t": 1791795193.477, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795198.903, "event": "campaign_detected", "actor": "h:7248276ea91f5574", "technique": "sqli", "onset": 1791795197.493006, "ttd_s": 0.266247, "n_requests": 7}
+{"t": 1791795198.907, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0027, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795198.907, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795198.907, "event": "campaign_detected", "actor": "h:7248276ea91f5574", "technique": "user_enumeration", "onset": 1791795197.493006, "ttd_s": 0.795555, "n_requests": 7}
+{"t": 1791795198.915, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795203.27, "event": "campaign_detected", "actor": "h:501cae65f7ac14b7", "technique": "idor_bola", "onset": 1791794384.377234, "ttd_s": 818.088895, "n_requests": 211}
+{"t": 1791795203.27, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4"}
+{"t": 1791795204.361, "event": "campaign_detected", "actor": "h:b7d4a6fec33b3680", "technique": "sqli", "onset": 1791795203.676904, "ttd_s": 0.269712, "n_requests": 4}
+{"t": 1791795204.372, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0026, "signature": "eeaf1f34048c7b8b"}
+{"t": 1791795204.373, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1791795205.443, "event": "campaign_detected", "actor": "h:b7d4a6fec33b3680", "technique": "user_enumeration", "onset": 1791795203.676904, "ttd_s": 0.777787, "n_requests": 8}
+{"t": 1791795205.443, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687"}
+{"t": 1791795206.445, "event": "controller_stop", "memory": {"llm_fraction_of_campaigns": 0.0, "llm_calls": 0, "llm_tokens_in": 0, "llm_tokens_out": 0, "llm_seconds": 0, "campaigns": 195, "candidates": 40, "active_rules": 5, "outcomes_by_source": {"fresh": 5, "generalised": 1, "none": 16, "reused": 173}}}
