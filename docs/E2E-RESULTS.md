@@ -126,3 +126,48 @@ every later attacker identity of an already-handled campaign was recognised in 3
 * Single run per cell; no confidence intervals. Times depend on the stage windows chosen.
 * Not exercised here: signed manifest/admin token (`HARDENING.md`), the LLM path, slow-and-low
   or identity-rotation evasion, a second target app.
+
+---
+
+# Run 2 (2026-10-12): all fixes in, **signed manifest and admin token ON**
+
+Same experiment (`eval/e2e_live.py`), after the fixes listed above plus the SQLi template fix,
+the live-FP-judge fix and the account-keyed rate rule. The gateway log shows
+`rule store: signed manifest true, admin token true`; every hot load, shadow/canary mode change
+and rollback in the run went through the signed manifest and the bearer-token admin API.
+Data: `docs/data/e2e_signed_summary.json`, `docs/data/e2e_signed_events.jsonl`. No log gaps.
+
+| | command injection | credential stuffing | SQLi |
+|---|---|---|---|
+| detected after onset | 7.9 s | 16.0 s | 7.4 s |
+| **rule enforcing after onset** | **70.2 s** | **71.7 s** | **82.6 s** |
+| synthesis + offline gate | 6.9 s | 0.014 s | 18.1 s |
+| attacker requests before enforcement (AEGIS-blocked / CRS-blocked / reached app) | 29 (10 / 10 / 9) | 29 (0 / 0 / 29) | 32 (0 / 24 / 8) |
+| after enforcement | 27 (20 / 4 / 3) | 19 (10 / 0 / 9) | 18 (16 / 0 / 2) |
+| attacker runs that found a valid login (before / after) | n/a | 2 / 1 | n/a |
+
+(Pre-enforcement AEGIS blocks on command injection are the canary slice: 25 % of identities
+are blocked while the rule is being tested.)
+
+* **Benign:** 85,462 requests, **0 blocked by an AEGIS rule**; CRS blocked 4,548 (5.3 %); 821
+  journeys, 44 broken by the defence (all CRS, since AEGIS blocked nothing).
+* **Controller:** 265 detections, 193 false triggers, **all `idor_bola` on synthetic replay
+  users, none on a real journey**; none produced a rule. 19 `already_enforcing` repeats absorbed
+  in milliseconds.
+* **Cold repeat (rule store wiped, memory kept):** command injection 63.2 s and SQLi 64.1 s,
+  reused in 1.8 / 1.9 ms: about 15-25 % faster than the first exposure here, the saving being
+  the offline gate. **Credential stuffing was NOT enforced in this phase.** Cause: the
+  controller saw a second identity run the stuffing campaign, escalated to an account-keyed
+  rate rule, the gate rejected both account-keyed candidates (7/103 and 1/103 *other* accounts
+  would have been limited: the replayed benign logins reuse a handful of recorded accounts, so
+  they hammer the same accounts), and the escalation then **refused to fall back** to the
+  identity-keyed rule that had worked. The attacker found valid logins in 15 runs. This was a
+  regression I introduced with the escalation; it is fixed (account-keyed first, identity-keyed
+  as fallback; unit-tested) but this exact cold-repeat phase has not been re-run in the full flow.
+  The adaptive-stuffing run in `M4-RESULTS.md` exercises the fixed path.
+* Signing cost: none observable at this timescale; hot reloads took the same time.
+
+Honest comparison with run 1: enforcement times are lower (70-83 s vs 80-130 s) mostly because
+the command-injection and SQLi offline gates are faster (6.9 s and 18.1 s vs 18.1 s and 63.8 s):
+the SQLi template change removed a benign-corpus false-positive family and the machine was less
+loaded. Differences of this size between single runs should not be over-read.

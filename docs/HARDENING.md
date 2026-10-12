@@ -1,7 +1,8 @@
 # Rule-store hardening: signed manifest and authenticated admin API
 
-Status: implemented and unit-tested (Go + Python). **Not yet exercised in a full live range
-run** (see "What was and was not tested"). Off by default; switched on by setting a key.
+Status: implemented, unit-tested (Go + Python) and **exercised in one full live end-to-end run**
+(2026-10-12, `docs/E2E-RESULTS.md` run 2: all rule changes went through the signed manifest and
+the token-guarded admin API). Off by default; switched on by setting a key.
 
 ## Why
 
@@ -80,6 +81,8 @@ Covered:
 * Python unit tests: envelope shape and round trip, tamper and unsigned refusal, unsigned mode
   unchanged, key from a file, the token is sent on POST only, no key in source.
 * Cross-language HMAC vector.
-* **Not done:** a live range run with signing switched on (the e2e experiment ran unsigned).
-  The next run that boots the range should do one boot with both variables set and confirm
-  the controller still enforces end to end.
+* One full live run with signing and the token on (see the status line). Not tested live: a
+  tampered manifest or a replayed old one against a running gateway (covered by the unit
+  tests of `reload()` only), and key rotation.
+* Found while doing it: `rulestore.clear()` crashed over a leftover *unsigned* manifest once a
+  key was set; fixed and tested.
