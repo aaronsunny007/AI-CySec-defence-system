@@ -51,6 +51,10 @@ type ManifestRule struct {
 	Methods        []string `json:"methods,omitempty"`
 	Count          int      `json:"count,omitempty"`
 	WindowS        int      `json:"window_s,omitempty"`
+	// Key: what a rate rule counts per. "" / "actor" = the visitor identity (default);
+	// "account" = the account named in the request body (defeats identity rotation for
+	// credential stuffing; does not help against one password sprayed over many accounts).
+	Key string `json:"key,omitempty"`
 }
 
 type Manifest struct {
@@ -182,6 +186,9 @@ func buildRuleSet(m Manifest, staticInclude string) (*ruleSet, error) {
 		case "rate":
 			if r.Count < 1 || r.WindowS < 1 || r.EndpointPrefix == "" {
 				return nil, fmt.Errorf("rule %s: bad rate spec", r.ID)
+			}
+			if r.Key != "" && r.Key != "actor" && r.Key != "account" {
+				return nil, fmt.Errorf("rule %s: bad rate key %q", r.ID, r.Key)
 			}
 			rs.rate = append(rs.rate, r)
 			rs.rateByID[r.ID] = r
@@ -323,7 +330,7 @@ func newRateLimiter() *rateLimiter { return &rateLimiter{hits: map[string][]time
 // check records this request against every matching rate rule and returns the
 // ids of rules whose window is exceeded: the (count+1)-th and later in-scope
 // request within the trailing window_s. Same logic as gate/ratelimit.py.
-func (rl *rateLimiter) check(rules []ManifestRule, actor, method, path string) []string {
+func (rl *rateLimiter) check(rules []ManifestRule, actor, account, method, path string) []string {
 	if rl == nil || len(rules) == 0 {
 		return nil
 	}
@@ -335,7 +342,14 @@ func (rl *rateLimiter) check(rules []ManifestRule, actor, method, path string) [
 		if !rr.matches(method, path) {
 			continue
 		}
-		key := actor + "\x00" + rr.ID
+		subject := actor
+		if rr.Key == "account" {
+			if account == "" {
+				continue // nothing to key on: this request is not about an account
+			}
+			subject = "acct:" + account
+		}
+		key := subject + "\x00" + rr.ID
 		win := append(rl.hits[key], now)
 		cutoff := now.Add(-time.Duration(rr.WindowS) * time.Second)
 		j := 0

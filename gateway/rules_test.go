@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestValidateSecRule(t *testing.T) {
 	good := `SecRule ARGS "@rx foo" "id:100001,phase:2,pass,log,msg:'AEGIS sqli rule aegis-x-1',tag:'aegis',tag:'aegis-rule:aegis-x-1',t:none"`
@@ -65,17 +68,59 @@ func TestRateLimiterWindow(t *testing.T) {
 	rl := newRateLimiter()
 	rules := []ManifestRule{{ID: "r", Type: "rate", Mode: "enforce", EndpointPrefix: "/login", Methods: []string{"POST"}, Count: 3, WindowS: 60}}
 	for i := 1; i <= 3; i++ {
-		if len(rl.check(rules, "a", "POST", "/login")) != 0 {
+		if len(rl.check(rules, "a", "", "POST", "/login")) != 0 {
 			t.Fatalf("request %d should be within the limit", i)
 		}
 	}
-	if len(rl.check(rules, "a", "POST", "/login")) != 1 {
+	if len(rl.check(rules, "a", "", "POST", "/login")) != 1 {
 		t.Error("4th request must exceed")
 	}
-	if len(rl.check(rules, "b", "POST", "/login")) != 0 {
+	if len(rl.check(rules, "b", "", "POST", "/login")) != 0 {
 		t.Error("a different actor must have its own window")
 	}
-	if len(rl.check(rules, "a", "GET", "/login")) != 0 {
+	if len(rl.check(rules, "a", "", "GET", "/login")) != 0 {
 		t.Error("out-of-scope method must not count")
+	}
+}
+
+func TestAccountKeyedRateLimitIgnoresIdentityRotation(t *testing.T) {
+	rl := newRateLimiter()
+	rules := []ManifestRule{{ID: "acct", Type: "rate", Mode: "enforce", Count: 3, WindowS: 60,
+		EndpointPrefix: "/login", Methods: []string{"POST"}, Key: "account"}}
+	// one target account, a fresh attacker identity for every guess
+	exceeded := 0
+	for i := 0; i < 6; i++ {
+		exceeded += len(rl.check(rules, "identity-"+string(rune('a'+i)), "victim@x.test", "POST", "/login"))
+	}
+	if exceeded != 3 {
+		t.Errorf("rotating identities against ONE account should be limited after 3 guesses, got %d limited", exceeded)
+	}
+	// other accounts are unaffected
+	if len(rl.check(rules, "z", "someone-else@x.test", "POST", "/login")) != 0 {
+		t.Error("a different account was limited")
+	}
+	// a request that names no account is not counted at all
+	for i := 0; i < 10; i++ {
+		if len(rl.check(rules, "q", "", "POST", "/login")) != 0 {
+			t.Fatal("account-keyed rule fired on a request with no account")
+		}
+	}
+}
+
+func TestAccountOf(t *testing.T) {
+	cases := map[string]string{
+		`{"email":"  Jim@Juice-sh.op "}`: "jim@juice-sh.op",
+		`{"username":"bob"}`:             "bob",
+		`{"email":5}`:                    "",
+		`not json`:                       "",
+		``:                               "",
+	}
+	for in, want := range cases {
+		if got := accountOf([]byte(in)); got != want {
+			t.Errorf("accountOf(%q)=%q want %q", in, got, want)
+		}
+	}
+	if accountOf([]byte(`{"email":"`+strings.Repeat("a", 5000)+`"}`)) != "" {
+		t.Error("oversized body should yield no account")
 	}
 }

@@ -58,8 +58,25 @@ RATE = {"credential_stuffing", "user_enumeration", "idor_bola"}
 # 'scan' is detected but has no mitigation template; it is reported, not acted on.
 
 BYPASS_MIN = 3              # unblocked evidence requests that make an enforcing rule 'bypassed'
+ESCALATE_WINDOW_S = 600.0     # a 2nd identity running the same stuffing campaign within this => rotation
 COOLDOWN_S = 600.0          # a campaign signature that yielded no rule is not retried for this long
 MIN_BENIGN_ACTORS = 20      # the rate gate refuses to judge on less benign evidence
+
+
+def account_of(body: str) -> str:
+    """Same rule as the gateway's accountOf(): the e-mail/username a request is about."""
+    if not body or len(body) > 4096:
+        return ""
+    try:
+        d = json.loads(body)
+    except (json.JSONDecodeError, ValueError):
+        return ""
+    if isinstance(d, dict):
+        for k in ("email", "username", "user"):
+            v = d.get(k)
+            if isinstance(v, str) and v:
+                return v.strip().lower()[:120]
+    return ""
 
 
 def _enum_req(r) -> bool:
@@ -149,6 +166,8 @@ class Controller:
         self.handled: set[tuple[str, str]] = set()
         self.failed_live: set[str] = set()
         self.retried: set[str] = set()
+        self.sig_actors: dict[str, dict[str, float]] = {}   # campaign signature -> {identity: t}
+        self.escalated: set[str] = set()
         self.handled_times: collections.deque = collections.deque()
         self.newest_ts = 0.0
         LS.GATEWAY_LOG = cfg.log          # the live stages read the same log the controller tails
@@ -249,6 +268,8 @@ class Controller:
                            "detail": f"only {len(benign)} non-campaign actors observed "
                                      f"(need {MIN_BENIGN_ACTORS}); cannot show the rule is safe"})
             return False, stages
+        if spec.get("key") == "account":
+            return self._account_gate(spec, benign, attacker, stages)
         hit = [a for a in benign if blocked_count(a.requests, spec) > 0]
         stages.append({"stage": "benign_actors", "passed": not hit,
                        "detail": f"non-campaign actors rate-limited: {len(hit)}/{len(benign)}"})
@@ -258,6 +279,45 @@ class Controller:
         stages.append({"stage": "attack_actor", "passed": n_atk > 0,
                        "detail": f"campaign actor would have {n_atk} request(s) limited"})
         return n_atk > 0, stages
+
+    @staticmethod
+    def _by_account(actors: list[Actor]) -> dict[str, list]:
+        streams: dict[str, list] = {}
+        for a in actors:
+            for r in a.requests:
+                acct = account_of(r.body)
+                if acct:
+                    streams.setdefault(acct, []).append(r)
+        for rs in streams.values():
+            rs.sort(key=lambda r: r.ts)
+        return streams
+
+    def _account_gate(self, spec: dict, benign: list[Actor], attacker: Actor, stages: list[dict]):
+        """Account-keyed rule: counts attempts per TARGET account across all identities.
+
+        An attacker who rotates identity produces many short sessions the observer never
+        flags, so "non-campaign" evidence cannot be trusted for the accounts under attack.
+        Hence: the accounts the flagged campaign targets are judged on ALL requests naming them
+        (every identity), and are expected to be limited -- that is the rule's purpose, and
+        also its cost: the victim can be locked out too (docs/M4-RESULTS.md). Safe iff NO
+        OTHER account would be limited; effective iff an attacked account would be."""
+        pool = [a for k, a in self.actors.items() if k in self.flagged]
+        if attacker not in pool:
+            pool.append(attacker)
+        attacked = set(self._by_account(pool))
+        every = self._by_account(list(self.actors.values()))
+        ben = {a: rs for a, rs in self._by_account(benign).items() if a not in attacked}
+        hit = [a for a, rs in ben.items() if blocked_count(rs, spec) > 0]
+        stages.append({"stage": "benign_accounts", "passed": not hit,
+                       "detail": f"accounts outside the campaign that would be rate-limited: "
+                                 f"{len(hit)}/{len(ben)}"})
+        if hit:
+            return False, stages
+        limited = [a for a in attacked if blocked_count(every.get(a, []), spec) > 0]
+        stages.append({"stage": "attack_accounts", "passed": bool(limited),
+                       "detail": f"attacked accounts that would be limited: {len(limited)}/{len(attacked)} "
+                                 f"(victim lock-out is the accepted cost)"})
+        return bool(limited), stages
 
     # --- mitigation ----------------------------------------------------------------
     def _dossier(self, actor: Actor, tech: str, findings) -> tuple[dict, list[dict], list]:
@@ -280,7 +340,8 @@ class Controller:
         t0 = time.perf_counter()
         cid, sig = self.mem.record_campaign(dossier)
         exact = self.mem.rule_for_signature(sig)
-        if exact and exact["id"] not in self.failed_live:
+        esc = sig in self.escalated
+        if exact and exact["id"] not in self.failed_live and not (esc and exact.get("key", "actor") != "account"):
             self.mem.touch_rule(exact["id"])
             ttm = time.perf_counter() - t0
             self.mem.record_outcome(cid, "reused", exact["id"], ttm)
@@ -292,6 +353,8 @@ class Controller:
         for ir in deliberator.candidates_for(cls, dossier):
             if ir.get("mechanism") != "rate_limit" or ir["id"] in self.failed_live:
                 continue
+            if esc and ir.get("key", "actor") != "account":
+                continue        # identity rotation seen: an identity-keyed limit is already beaten
             ok, stages = self.rate_gate(ir, attacker)
             rej = next((s["stage"] for s in stages if not s["passed"]), None)
             self.mem.record_candidate(cid, ir, "passed_offline" if ok else "rejected", rej,
@@ -383,6 +446,18 @@ class Controller:
         # attacker rotating identities must not be able to exhaust the budget for real work.
         known = self.mem.rule_for_signature(sig)
         exclude = set(self.failed_live)
+        if tech == "credential_stuffing":
+            # A second identity running the same campaign inside 10 minutes means the attacker
+            # rotates identity: an identity-keyed limit is beaten by construction, so escalate
+            # to an account-keyed one (counts guesses per TARGET account).
+            seen = self.sig_actors.setdefault(sig, {})
+            seen[key] = time.time()
+            recent = [k for k, t in seen.items() if time.time() - t < ESCALATE_WINDOW_S]
+            if len(recent) >= 2 and sig not in self.escalated:
+                self.escalated.add(sig)
+                self.emit("identity_rotation_detected", technique=tech, identities=len(recent))
+            if sig in self.escalated and known and known.get("key", "actor") != "account":
+                known = None
         if (known and known["id"] not in exclude and tech in INJECTION
                 and self._mode_of(known["id"]) == "enforce"):
             # The rule that should stop this campaign is enforcing, yet the campaign's

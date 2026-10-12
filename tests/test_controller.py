@@ -57,6 +57,8 @@ class Fake:
 
 
 class Base(unittest.TestCase):
+    window = 0.0       # identity-rotation escalation off by default; its own tests turn it on
+
     def setUp(self):
         self.td = tempfile.TemporaryDirectory()
         d = Path(self.td.name)
@@ -66,7 +68,8 @@ class Base(unittest.TestCase):
                                benign_corpus=d / "none.jsonl", from_start=True)
         self.mem = Memory(self.cfg.db)
         # never touch the real manifest / a real gateway
-        self.p = [mock.patch.object(loop.rulestore, "load", return_value={"version": 1, "rules": []}),
+        self.p = [mock.patch.object(loop, "ESCALATE_WINDOW_S", self.window),
+                  mock.patch.object(loop.rulestore, "load", return_value={"version": 1, "rules": []}),
                   mock.patch.object(loop.rulestore, "set_mode", return_value="ok")]
         for p in self.p:
             p.start()
@@ -289,6 +292,69 @@ class BypassDetection(Base):
         self.feed(benign_users() + atk)
         c.step()
         self.assertNotIn("rule_bypassed", self.names())
+
+
+def stuffing_accounts(session, start, accounts, per_account):
+    """An identity-rotating attacker: each request names one of a few accounts."""
+    out, t = [], start
+    for i in range(per_account):
+        for a in accounts:
+            out.append(rec(t, session, "POST", "/rest/user/login",
+                           json.dumps({"email": a, "password": f"p{i}"}), 401))
+            t += 1.0
+    return out
+
+
+class AccountKeyedEscalation(Base):
+    window = 600.0
+
+    def test_rotating_identities_escalate_to_an_account_keyed_rule(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        self.feed(benign_users())
+        # first identity: a normal stuffing run -> identity-keyed rule
+        self.feed(stuffing("atk-1"))
+        c.step()
+        # a second identity hammers two accounts: the attacker rotates
+        self.feed(stuffing_accounts("atk-2", 100, ["admin@x.test", "jim@x.test"], 4)
+                  + stuffing_accounts("atk-3", 140, ["admin@x.test", "jim@x.test"], 4))
+        c.step()
+        self.assertIn("identity_rotation_detected", self.names())
+        cands = [e["id"] for e in self.events() if e["event"] == "candidate" and e["ok"]]
+        self.assertTrue(any(i in ("aegis-credential_stuffing-3", "aegis-credential_stuffing-4") for i in cands), cands)
+
+    def test_account_gate_counts_across_identities_and_protects_benign_accounts(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        # 25 ordinary users, each logging in once or twice to their OWN account
+        ben = []
+        for u in range(25):
+            ben += [rec(u * 5 + i, f"benign-{u}", "POST", "/rest/user/login",
+                        json.dumps({"email": f"user{u}@x.test", "password": "pw"}), 200) for i in range(2)]
+            ben += [rec(u * 5 + 3, f"benign-{u}", "GET", "/rest/products/search?q=a")]
+        self.feed(ben)
+        c.step()
+        # 4 attacker identities, 3 guesses each, all against the SAME two accounts
+        atk_reqs = []
+        for n in range(4):
+            atk_reqs += stuffing_accounts(f"atk-{n}", 130 + n * 20, ["admin@x.test", "jim@x.test"], 2)
+        self.feed(atk_reqs)
+        c.step()
+        ir = next(x for x in loop.deliberator.candidates_for("credential_stuffing", {})
+                  if x["id"] == "aegis-credential_stuffing-3")
+        attacker = loop.Actor(key="atk-0", requests=[loop.to_request(r) for r in atk_reqs[:4]])
+        ok, stages = c.rate_gate(ir, attacker)
+        self.assertTrue(ok, stages)
+        names = [s["stage"] for s in stages]
+        self.assertIn("benign_accounts", names)
+        self.assertIn("attack_accounts", names)
+        # an identity-keyed 5/60 rule would NOT have stopped 3-guess identities
+        ir1 = next(x for x in loop.deliberator.candidates_for("credential_stuffing", {})
+                   if x["id"] == "aegis-credential_stuffing-1")
+        self.assertEqual(loop.blocked_count(attacker.requests, loop.irc.compile_rate(ir1)), 0)
+
+    def test_account_extraction_matches_gateway_rule(self):
+        self.assertEqual(loop.account_of('{"email":"  Jim@X.Test "}'), "jim@x.test")
+        self.assertEqual(loop.account_of('{"email":5}'), "")
+        self.assertEqual(loop.account_of("not json"), "")
 
 
 class Boundaries(unittest.TestCase):

@@ -161,6 +161,19 @@ def _rate_ir(cls: str, dossier: dict) -> list[dict]:
             "scope": {"endpoint_prefix": endpoint, "methods": methods},
             "rate": {"count": n, "window_s": w},
         })
+    if cls == "credential_stuffing":
+        # Account-keyed variants: count guesses per TARGET account, so an attacker who rotates
+        # identity cannot reset the counter. Tried only after the identity-keyed ones (smaller
+        # blast radius: an attacker can deliberately lock a victim account out of logins).
+        for j, (n, w) in enumerate([(5, 60), (10, 60)], len(rates) + 1):
+            out.append({
+                "id": f"aegis-{cls}-{j}",
+                "description": f"rate-limit {cls} per ACCOUNT: >{n} attempts/{w}s on one account",
+                "attack_class": cls, "mechanism": "rate_limit", "action": "block",
+                "ttl_s": 86400, "key": "account",
+                "scope": {"endpoint_prefix": endpoint, "methods": methods},
+                "rate": {"count": n, "window_s": w},
+            })
     return out
 
 

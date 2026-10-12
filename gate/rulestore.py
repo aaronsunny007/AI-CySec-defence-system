@@ -88,7 +88,7 @@ def entry_from_ir(ir: dict, mode: str = "shadow", canary_pct: int = 0) -> dict:
         return {"id": ir["id"], "type": "rate", "mode": mode, "canary_pct": canary_pct,
                 "attack_class": ir["attack_class"],
                 "endpoint_prefix": spec["endpoint_prefix"], "methods": spec["methods"],
-                "count": spec["count"], "window_s": spec["window_s"]}
+                "count": spec["count"], "window_s": spec["window_s"], "key": spec["key"]}
     return {"id": ir["id"], "type": "sec", "mode": mode, "canary_pct": canary_pct,
             "attack_class": ir["attack_class"],
             "secrule": irc.compile_rule(ir, deny=False)}

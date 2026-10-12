@@ -154,7 +154,8 @@
     },
     "key": {
       "enum": [
-        "actor"
+        "actor",
+        "account"
       ]
     }
   }

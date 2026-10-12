@@ -370,7 +370,7 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// down: guard and fail open.
 	func() {
 		defer func() { _ = recover() }()
-		for _, id := range g.rl.check(rs.rate, rec.Session, r.Method, r.URL.Path) {
+		for _, id := range g.rl.check(rs.rate, rec.Session, accountOf(body), r.Method, r.URL.Path) {
 			if rec.RateRule == "" {
 				rec.RateRule = id
 			}
