@@ -350,11 +350,15 @@ class Controller:
             ttm = time.perf_counter() - t0
             self.mem.record_outcome(cid, "governor_blocked", None, ttm)
             return {"source": "governor_blocked", "rule": None, "ttm_s": ttm, "signature": sig}
-        for ir in deliberator.candidates_for(cls, dossier):
-            if ir.get("mechanism") != "rate_limit" or ir["id"] in self.failed_live:
-                continue
-            if esc and ir.get("key", "actor") != "account":
-                continue        # identity rotation seen: an identity-keyed limit is already beaten
+        cands = [ir for ir in deliberator.candidates_for(cls, dossier)
+                 if ir.get("mechanism") == "rate_limit" and ir["id"] not in self.failed_live]
+        if esc:
+            # Identity rotation seen: try the account-keyed limits first. If none is safe,
+            # FALL BACK to the identity-keyed ones rather than leave the campaign unprotected
+            # (a live run left stuffing unmitigated for a whole phase before this fallback).
+            cands = ([c for c in cands if c.get("key", "actor") == "account"]
+                     + [c for c in cands if c.get("key", "actor") != "account"])
+        for ir in cands:
             ok, stages = self.rate_gate(ir, attacker)
             rej = next((s["stage"] for s in stages if not s["passed"]), None)
             self.mem.record_candidate(cid, ir, "passed_offline" if ok else "rejected", rej,

@@ -322,6 +322,27 @@ class AccountKeyedEscalation(Base):
         cands = [e["id"] for e in self.events() if e["event"] == "candidate" and e["ok"]]
         self.assertTrue(any(i in ("aegis-credential_stuffing-3", "aegis-credential_stuffing-4") for i in cands), cands)
 
+    def test_falls_back_to_identity_keyed_rule_when_no_account_rule_is_safe(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        self.feed(benign_users())
+        self.feed(stuffing("atk-1"))
+        c.step()
+        # 2nd identity -> escalation; make every account-keyed candidate fail the gate
+        real = c.rate_gate
+
+        def gate(ir, attacker):
+            if ir.get("key") == "account":
+                return False, [{"stage": "benign_accounts", "passed": False, "detail": "x"}]
+            return real(ir, attacker)
+        c.rate_gate = gate
+        self.mem.set_rule_status("aegis-credential_stuffing-1", "retired")   # force a fresh search
+        c.failed_live.clear()
+        self.feed(stuffing("atk-2", start=100))
+        c.step()
+        self.assertIn("identity_rotation_detected", self.names())
+        enforced = [e["rule"] for e in self.events() if e["event"] == "enforced"]
+        self.assertGreaterEqual(len(enforced), 2, self.names())     # the fallback got deployed
+
     def test_account_gate_counts_across_identities_and_protects_benign_accounts(self):
         c = loop.Controller(self.cfg, self.mem, live=Fake())
         # 25 ordinary users, each logging in once or twice to their OWN account
