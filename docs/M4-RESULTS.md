@@ -2,6 +2,15 @@
 
 The highest-research-value milestone. Two experiments.
 
+
+> **Correction found 2026-10-12 (affects every attacker-side count in this file's first
+> run and in M4's adaptive section):** the attacker clients connected to `localhost`, which on
+> this Windows laptop costs ~2 s per new connection (IPv6 refused, then fallback). Attackers
+> therefore ran at roughly 0.4 requests/s, far slower than their configured pace, so "attacker
+> requests that reached the app" and "requests before enforcement" are **lower bounds** for a
+> real attacker. Time-to-detect and time-to-enforce are much less affected (they depend on
+> windows and gate time). Clients now use `127.0.0.1` with a browser `Host` header; the runs
+> labelled "fast clients" below were redone that way.
 ## 1. Induced self-DoS (the headline, open question 5)
 
 *Can an adversary craft traffic that looks malicious but resembles real user
