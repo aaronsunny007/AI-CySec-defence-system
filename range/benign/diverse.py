@@ -45,24 +45,29 @@ bottle glass pack box gift order delivery shipping price cheap expensive quality
 good great bad awful love hate recommend again never always maybe really very quite almost nearly
 quick slow late early today tomorrow yesterday morning evening weekend holiday birthday party family
 friend mother father sister brother child kids dog cat office home garden kitchen market store shop
-select best choice union state drop line table update delete insert create alter grant order group
-having where from join left right inner outer null true false and or not like between exists limit
-echo print cat ls id whoami ping sleep curl wget bash sh cmd exec system eval include require import
-script alert prompt onclick onload image video audio frame object embed link style class div span
-admin user root test guest demo sample example password secret token session cookie login logout
+best choice state line table update create group right left inner outer true false between limit
 fruit vegetable vitamin protein sugar water milk coffee tea beer wine soda lemon orange grape mango
-thanks please sorry hello hi bye welcome cheers congrats wow nice cool awesome amazing terrible ok""".split()
+thanks please sorry hello hi bye welcome cheers congrats wow nice cool awesome amazing terrible ok
+the a an and or but if then so because while when where which who what why how this that these those
+is are was were be been have has had do does did will would can could should may might must""".split()
+# words that are also SQL / shell / HTML / script vocabulary; real prose uses them, but rarely and
+# almost never two of them side by side, so they enter the word stream at a low, independent rate
+SENSITIVE = """select union drop delete insert alter grant having echo print ls id whoami ping sleep curl wget
+bash sh cmd exec system eval include require import script alert prompt onclick onload image video frame
+object embed link style class admin root test guest password secret token session cookie login logout""".split()
 NAMES = ["O'Brien", "D'Angelo", "McDonald", "Müller", "Nguyễn", "García", "Åsa", "Zoë", "François", "Søren",
          "Łukasz", "Иван", "Мария", "李雷", "田中", "김민수", "محمد", "Σοφία", "Jean-Luc", "Anne-Marie", "St. John",
          "van der Berg", "de la Cruz", "O’Neil", "N'Golo", "Bobby Tables"]
-PIECES = ["100% organic", "50% off", "$(10) off", "$9.99", "€5,00", "#bestjuice", "@support", "a && b", "a || b",
-          "x > y", "x < y", "<3", ":-)", "1=1 perfect", "2 + 2 = 4", "it's", "don't", "can't", "\"quoted\"",
-          "'single'", "`code`", "**bold**", "[link](http://example.com)", "https://example.com/a?b=c&d=e",
-          "see ../docs", "C:\\temp\\file.txt", "/usr/bin/env", "{braces}", "[brackets]", "(parens)", "50-60%",
-          "2026-10-15", "10/15/2026", "12:30", "re: order #1234", "a;b;c", "a|b|c", "foo--bar", "--help", "#!/bin/sh",
-          "SELECT the best", "drop me a line", "union of states", "or else", "and then", "union station",
-          "1 or 2", "this and that", "' and '", "select * from happiness", "<b>bold</b>", "<i>it</i>", "&amp;", "😀", "🍎🍌",
-          "naïve café", "über", "señor", "ß", "ñ", "…", "—", "–", "“smart quotes”", "\u00a0nbsp"]
+PIECES = ["100% organic", "50% off", "$9.99", "EUR 5,00", "#bestjuice", "@support", "x > y", "x < y", ":-)",
+          "2 + 2 = 4", "it's", "don't", "can't", "\"quoted\"", "'single'", "**bold**", "[link](http://example.com)",
+          "https://example.com/a?b=c&d=e", "50-60%", "2026-10-15", "10/15/2026", "12:30", "re: order #1234",
+          "foo--bar", "naive cafe", "uber", "senor", "...", "smart \u201cquotes\u201d", "(parens)", "[brackets]",
+          "<3", "\U0001F600", "\U0001F34E\U0001F34C", "\u00fcber", "caf\u00e9", "\u00df", "\u00f1", "\u2014", "\u2013"]
+# legitimate-but-awkward strings: the ones naive signatures trip over. Rate: ~1% of tokens.
+EDGY = ["SELECT the best", "drop me a line", "union of states", "union station", "or else", "this and that",
+        "1 or 2", "1=1 perfect", "select * from happiness", "$(10) off", "`code`", "a && b", "a || b", "see ../docs",
+        "C:\\temp\\file.txt", "/usr/bin/env", "{braces}", "a;b;c", "a|b|c", "--help", "#!/bin/sh", "re: <b>bold</b>",
+        "&amp;", "<i>it</i>", "' and '", "O'Brien's"]
 PUNCT = string.punctuation
 ALNUM = string.ascii_letters + string.digits
 SECURITY = ["name of your first pet", "mother's maiden name", "favourite teacher", "city of birth"]
@@ -72,13 +77,17 @@ def text(r: random.Random, lo: int = 2, hi: int = 14) -> str:
     out = []
     for _ in range(r.randint(lo, hi)):
         k = r.random()
-        if k < 0.62:
+        if k < 0.78:
             out.append(r.choice(WORDS))
-        elif k < 0.72:
+        elif k < 0.84:
             out.append(r.choice(NAMES))
-        elif k < 0.90:
+        elif k < 0.92:
             out.append(r.choice(PIECES))
-        elif k < 0.95:
+        elif k < 0.935:
+            out.append(r.choice(SENSITIVE))          # 1.5%: SQL/shell/HTML words used as plain words
+        elif k < 0.945:
+            out.append(r.choice(EDGY))               # 1.0%: deliberately awkward but legitimate
+        elif k < 0.975:
             out.append(str(r.randint(0, 99999)))
         else:
             out.append("".join(r.choice(ALNUM + " .,!?'-") for _ in range(r.randint(2, 12))))

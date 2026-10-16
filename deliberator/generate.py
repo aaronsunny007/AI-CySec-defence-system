@@ -61,7 +61,7 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         ws = r"(?:\s|/\*.*?\*/)"
         cmp_ = (r"(?:\d+" + ws + r"*[=<>]|'[^']*'" + ws + r"*[=<>]|\(|\bnot\b|\btrue\b|\bfalse\b|\bnull\b|\w+" + ws + r"*=)")
         c.append(_ir("sqli", 3, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(union(?:\s|/\*.*?\*/)+(?:all(?:\s|/\*.*?\*/)+)?select|('|%27)(?:\s|/\*.*?\*/|\)|%29)*--"
+                     r"(?i)(union(?:\s|/\*.*?\*/)+(?:all(?:\s|/\*.*?\*/)+)?select|('|%27)(?:\s|/\*.*?\*/|\)|%29)*--(?:[^a-z]|$)"
                      r"|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and)\b" + ws + r"*" + cmp_ +
                      r"|\bor\b" + ws + r"+\d+" + ws + r"*=" + ws + r"*\d+)",
                      ["urlDecodeUni", "urlDecodeUni"],
@@ -84,7 +84,12 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # so the very pattern we want to match is gone (found in the M4 arms race).
         # The payload is in the PATH, so the target is the URI, not args/body.
         # `.{2,}` followed by a slash also catches `....//` (a ../ filter bypass).
-        trav = r"(?i)(\.{2,}(/|%2f|%5c|\\)+|%2e%2e|%252e|/etc/passwd|%00|%2500)"
+        # A single "../" is ordinary text ("see ../docs": 0.22% of a diverse benign corpus). Attacks
+        # chain several, name a sensitive file, use a null byte, or climb one level straight into
+        # a system directory.
+        trav = (r"(?i)((\.{2,}(/|%2f|%5c|\\)+){2,}|(%2e%2e(/|%2f|%5c|\\)+){2,}|/etc/(passwd|shadow)"
+                r"|win\.ini|boot\.ini|/proc/self|%00|%2500|\x00"
+                r"|\.{2,}(/|%2f|%5c|\\)+(etc|windows|winnt|proc|boot|root|var)\b)")
         c.append(_ir("traversal", 1, "input_constraint", "uri", "rx", trav,
                      ["urlDecodeUni", "urlDecodeUni"], desc="traversal sequences / null byte / /etc/passwd in URI"))
         if ep:
@@ -100,16 +105,21 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # turns ';' into a space, so a regex that looks for ';' can never match after it
         # (found by the first live end-to-end run: all three templates blocked 0% of
         # '; cat /etc/passwd'). Match the raw decoded text instead.
+        ws = r"(?:\s|/\*.*?\*/)"
+        cmd = r"(cat|id|whoami|ls|ping|sleep|uname|wget|curl|nc|bash|sh)\b"
+        # $( and backticks count only when a command word follows ("$(10) off" and `code` are
+        # ordinary text); HTML entities are decoded first so "&amp; ping" is not read as "; ping".
         c.append(_ir("cmdi", 1, "input_constraint", "args_and_body", "rx",
-                     r"(?i)((;|&&|\|\|?)(?:\s|/\*.*?\*/)*(cat|id|whoami|ls|ping|sleep|uname|wget|curl|nc|bash|sh)\b|\$\(|`[^`]+`)",
-                     ["urlDecodeUni", "urlDecodeUni"],
-                     desc="shell metacharacter followed by a command, $( ), backticks (comment/double-encoding tolerant)"))
+                     r"(?i)((;|&&|\|\|?)" + ws + r"*" + cmd + r"|\$\(" + ws + r"*" + cmd + r"|`" + ws + r"*" + cmd + r"[^`]*`)",
+                     ["urlDecodeUni", "urlDecodeUni", "htmlEntityDecode"],
+                     desc="shell separator + command, $(command), `command` (entity-decoded, comment/double-encoding tolerant)"))
         c.append(_ir("cmdi", 2, "input_constraint", "args_and_body", "rx",
                      r"(?i)(&&|\|\||;|\$\(|`).*(cat|id|whoami|ls|ping|sleep)",
                      ["urlDecodeUni", "urlDecodeUni"], desc="command chaining then command (broad)"))
         c.append(_ir("cmdi", 3, "input_constraint", "args_and_body", "rx",
-                     r"[;&|`$]{1,}(?:\s|/\*.*?\*/)*(cat|id|whoami|ping|sleep)\b",
-                     ["urlDecodeUni", "urlDecodeUni"], desc="metachar directly before command"))
+                     r"(?i)[;&|]{1,2}" + ws + r"*" + cmd + r"(?:" + ws + r"+[^\s]|$)",
+                     ["urlDecodeUni", "urlDecodeUni", "htmlEntityDecode"],
+                     desc="separator directly before a command that has an argument or ends the value"))
 
     elif attack_class == "ssrf":
         c.append(_ir("ssrf", 1, "input_constraint", "args_and_body", "rx",

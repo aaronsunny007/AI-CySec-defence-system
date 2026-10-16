@@ -1,0 +1,236 @@
+{
+ "benign_stress_detect.jsonl": [
+  {
+   "rule": "aegis-sqli-1",
+   "rows_matched": 436,
+   "rate_rows": 0.0072526448865526645,
+   "distinct_matched": 429,
+   "examples": [
+    [
+     "GET",
+     "/rest/products/search?q=%27%20and%20%27",
+     "",
+     8
+    ],
+    [
+     "PUT",
+     "/rest/products/24/reviews",
+     "{\"message\": \"Flavour example glass cmd 1=1 perfect late good where lat",
+     1
+    ],
+    [
+     "PUT",
+     "/rest/products/3/reviews",
+     "{\"message\": \"\u20ac5,00 \u00fcber alert this and that select 39724 left ' and ' ",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-sqli-2",
+   "rows_matched": 170,
+   "rate_rows": 0.002827866125490718,
+   "distinct_matched": 163,
+   "examples": [
+    [
+     "GET",
+     "/rest/products/search?q=%27%20and%20%27",
+     "",
+     8
+    ],
+    [
+     "GET",
+     "/rest/products/search?q=banana%20select%20%2A%20from%20happiness%20St.",
+     "",
+     1
+    ],
+    [
+     "GET",
+     "/rest/products/search?q=ok%20%27%20and%20%27%20recommend%20%2Fusr%2Fbi",
+     "",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-sqli-3",
+   "rows_matched": 13,
+   "rate_rows": 0.00021624858606693724,
+   "distinct_matched": 13,
+   "examples": [
+    [
+     "POST",
+     "/api/Feedbacks/",
+     "{\"comment\": \"family friend state mother \u00fcber grant select * from happi",
+     1
+    ],
+    [
+     "PUT",
+     "/rest/products/10/reviews",
+     "{\"message\": \"grant late root ' and ' embed #bestjuice good Bobby Table",
+     1
+    ],
+    [
+     "POST",
+     "/api/Users/",
+     "{\"email\": \"test.user77335@example.com\", \"password\": \"IL8Xm:Awt/c=gfWg{",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-xss-1",
+   "rows_matched": 4,
+   "rate_rows": 6.653802648213454e-05,
+   "distinct_matched": 4,
+   "examples": [
+    [
+     "POST",
+     "/api/Users/",
+     "{\"email\": \"o.brien788820@example.com\", \"password\": \"LB{:)t~\\\"/cj+kwI<!",
+     1
+    ],
+    [
+     "POST",
+     "/rest/user/login",
+     "{\"email\": \"o.brien788820@example.com\", \"password\": \"LB{:)t~\\\"/cj+kwI<!",
+     1
+    ],
+    [
+     "POST",
+     "/api/Users/",
+     "{\"email\": \"d'angelo150915@example.com\", \"password\": \"c\\\\QzM[C$>T5L<!Z}",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-xss-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-xss-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-cmdi-1",
+   "rows_matched": 2,
+   "rate_rows": 3.326901324106727e-05,
+   "distinct_matched": 2,
+   "examples": [
+    [
+     "POST",
+     "/api/Feedbacks/",
+     "{\"comment\": \"`code` bash null 93501 (parens) and state pack protein mo",
+     1
+    ],
+    [
+     "PUT",
+     "/rest/products/6/reviews",
+     "{\"message\": \"drop ok box join 48765 party kitchen always a;b;c `code` ",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-cmdi-2",
+   "rows_matched": 970,
+   "rate_rows": 0.016135471421917624,
+   "distinct_matched": 970,
+   "examples": [
+    [
+     "PUT",
+     "/rest/products/30/reviews",
+     "{\"message\": \"qD2i70vA46q ON ZCcas57S9e4 glass \u674e\u96f7 pack a;b;c @support s",
+     1
+    ],
+    [
+     "POST",
+     "/api/Feedbacks/",
+     "{\"comment\": \"video beer a || b mother ok \u7530\u4e2d example garden --help vita",
+     1
+    ],
+    [
+     "POST",
+     "/api/Feedbacks/",
+     "{\"comment\": \"Test import object 7929 object between 2026-10-15 \uae40\ubbfc\uc218 o'b",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-cmdi-3",
+   "rows_matched": 23,
+   "rate_rows": 0.0003825936522722736,
+   "distinct_matched": 23,
+   "examples": [
+    [
+     "PUT",
+     "/rest/products/1/reviews",
+     "{\"message\": \"coffee organic a && b &amp; curl @support BTHhLGbtFce hel",
+     1
+    ],
+    [
+     "POST",
+     "/api/Feedbacks/",
+     "{\"comment\": \"\u041c\u0430\u0440\u0438\u044f &amp; ping a || b o'brien delivery box having #best",
+     1
+    ],
+    [
+     "PUT",
+     "/rest/products/7/reviews",
+     "{\"message\": \"29016 state wget x > y guest birthday flavour having obje",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-ssrf-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  }
+ ]
+}
