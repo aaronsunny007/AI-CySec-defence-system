@@ -1,5 +1,227 @@
 {
- "benign_stress_detect.jsonl": [
+ "benign_00_combined_detect.jsonl": [
+  {
+   "rule": "aegis-sqli-1",
+   "rows_matched": 45,
+   "rate_rows": 0.002220906129700918,
+   "distinct_matched": 44,
+   "examples": [
+    [
+     "POST",
+     "/rest/user/login",
+     "{\"email\":\"d'arcymcallister+92278511@example.com\",\"password\":\"@B)~Y~S9J",
+     2
+    ],
+    [
+     "POST",
+     "/api/Users/",
+     "{\"email\":\"d'arcymcallister+92278511@example.com\",\"password\":\"@B)~Y~S9J",
+     1
+    ],
+    [
+     "POST",
+     "/api/Users/",
+     "{\"email\":\"sadegrd+shop1689@example.com\",\"password\":\"eZ)&&(Ng?}v.Uv-x8\"",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-sqli-2",
+   "rows_matched": 11,
+   "rate_rows": 0.0005428881650380022,
+   "distinct_matched": 11,
+   "examples": [
+    [
+     "GET",
+     "/rest/products/search?q=88690%20or%20%28parens%29%20left",
+     "",
+     1
+    ],
+    [
+     "GET",
+     "/rest/products/search?q=%27%20and%20%27%20why%20what%201vopm%3F-Irt%3F",
+     "",
+     1
+    ],
+    [
+     "GET",
+     "/rest/products/search?q=The%20awesome%2043818%20%27%20and%20%27%20tea",
+     "",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-sqli-3",
+   "rows_matched": 1,
+   "rate_rows": 4.935346954890929e-05,
+   "distinct_matched": 1,
+   "examples": [
+    [
+     "PUT",
+     "/rest/products/9/reviews",
+     "{\"message\": \"smoothie awesome weekend and so ' and ' --\", \"author\": \"a",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-xss-1",
+   "rows_matched": 22,
+   "rate_rows": 0.0010857763300760044,
+   "distinct_matched": 14,
+   "examples": [
+    [
+     "PUT",
+     "/rest/products/24/reviews",
+     "{\"message\":\"My daughter's school report literally said <script> was he",
+     4
+    ],
+    [
+     "PUT",
+     "/rest/products/52/reviews",
+     "{\"message\":\"My daughter's school report literally said <script> was he",
+     2
+    ],
+    [
+     "PUT",
+     "/rest/products/6/reviews",
+     "{\"message\":\"My daughter's school report literally said <script> was he",
+     2
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-xss-2",
+   "rows_matched": 18,
+   "rate_rows": 0.0008883624518803672,
+   "distinct_matched": 10,
+   "examples": [
+    [
+     "PUT",
+     "/rest/products/24/reviews",
+     "{\"message\":\"My daughter's school report literally said <script> was he",
+     4
+    ],
+    [
+     "PUT",
+     "/rest/products/52/reviews",
+     "{\"message\":\"My daughter's school report literally said <script> was he",
+     2
+    ],
+    [
+     "PUT",
+     "/rest/products/6/reviews",
+     "{\"message\":\"My daughter's school report literally said <script> was he",
+     2
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-xss-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-cmdi-1",
+   "rows_matched": 2,
+   "rate_rows": 9.870693909781858e-05,
+   "distinct_matched": 2,
+   "examples": [
+    [
+     "POST",
+     "/api/Users/",
+     "{\"email\":\"ngoziokonkwo-smith.work90877@example.com\",\"password\":\"/7ej6}",
+     1
+    ],
+    [
+     "POST",
+     "/rest/user/login",
+     "{\"email\":\"ngoziokonkwo-smith.work90877@example.com\",\"password\":\"/7ej6}",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-cmdi-2",
+   "rows_matched": 69,
+   "rate_rows": 0.003405389398874741,
+   "distinct_matched": 69,
+   "examples": [
+    [
+     "PUT",
+     "/rest/products/7/reviews",
+     "{\"message\": \"'single' could shop false kitchen \u00fcber do $(10) off might",
+     1
+    ],
+    [
+     "POST",
+     "/api/Feedbacks/",
+     "{\"comment\": \"because market milk maybe best update update 58418 awesom",
+     1
+    ],
+    [
+     "PUT",
+     "/rest/products/29/reviews",
+     "{\"message\": \"bye will early a;b;c had sugar cold best **bold** mango s",
+     1
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-cmdi-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  }
+ ],
+ "stress_benign_detect.jsonl": [
   {
    "rule": "aegis-sqli-1",
    "rows_matched": 436,
