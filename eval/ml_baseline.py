@@ -67,7 +67,7 @@ class LR:
             return self.b
         return float(self.w[x].sum() / np.sqrt(x.size) + self.b)
 
-    def fit(self, X: list[np.ndarray], y: np.ndarray, epochs: int = 6, lr: float = 0.5, l2: float = 1e-6, seed: int = 1):
+    def fit(self, X: list[np.ndarray], y: np.ndarray, sw: np.ndarray, epochs: int = 6, lr: float = 0.5, l2: float = 1e-6, seed: int = 1):
         rng = np.random.default_rng(seed)
         order = np.arange(len(X))
         for _ in range(epochs):
@@ -80,7 +80,7 @@ class LR:
                     x = X[i]
                     z = self.score(x)
                     p = 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
-                    g = (p - y[i])
+                    g = (p - y[i]) * sw[i]
                     if x.size:
                         np.add.at(gw, x, g / np.sqrt(x.size))
                     gb += g
@@ -161,8 +161,9 @@ def split_of(rec: dict) -> int:
 
 
 def load_benign(path: Path):
-    parts = ([], [], [])
-    seen = set()
+    """Distinct non-socket.io benign requests with their raw multiplicity (the corpus has 443k rows
+    but only ~4.1k distinct non-socket.io requests; 58k socket.io polls are unique session noise)."""
+    counts: dict[tuple, int] = {}
     with path.open(encoding="utf-8") as f:
         for line in f:
             try:
@@ -172,12 +173,12 @@ def load_benign(path: Path):
             uri = r.get("uri") or ""
             if not uri.startswith("/") or uri.startswith("/socket.io"):
                 continue
-            rec = {"method": r.get("method") or "GET", "uri": uri, "body": r.get("body") or ""}
-            k = (rec["method"], rec["uri"], rec["body"])
-            if k in seen:
-                continue                                  # distinct requests only
-            seen.add(k)
-            parts[split_of(rec)].append(rec)
+            k = (r.get("method") or "GET", uri, r.get("body") or "")
+            counts[k] = counts.get(k, 0) + 1
+    parts = ([], [], [])
+    for (m, u, b), n in counts.items():
+        rec = {"method": m, "uri": u, "body": b, "w": n}
+        parts[split_of(rec)].append(rec)
     return parts
 
 
@@ -193,34 +194,43 @@ def campaign_requests(path: Path):
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--benign-train", type=int, default=60000)
-    ap.add_argument("--attack-train", type=int, default=3000, help="generated variants per class")
+    ap.add_argument("--attack-train", type=int, default=800, help="generated variants per class")
     ap.add_argument("--epochs", type=int, default=6)
     args = ap.parse_args()
     random.seed(1)
 
     benign_path = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
     tr, va, te = load_benign(benign_path)
-    rng = random.Random(3)
-    rng.shuffle(tr)
-    tr = tr[:args.benign_train]
-    print(f"benign distinct requests: train pool {len(tr)}, validation {len(va)}, test {len(te)}", flush=True)
+    print(f"benign distinct non-socket.io requests: train {len(tr)}, validation {len(va)}, test {len(te)} "
+          f"(raw rows: {sum(r['w'] for r in tr)}, {sum(r['w'] for r in va)}, {sum(r['w'] for r in te)})", flush=True)
 
     atk = gen_attacks(args.attack_train, 11)
     held = gen_attacks(400, 99)                       # different seed: held-out variants of the same families
     X = featurize(tr) + featurize([a for _, a in atk])
     y = np.array([0] * len(tr) + [1] * len(atk), dtype=np.float32)
-    model = LR().fit(X, y, epochs=args.epochs)
+    # benign examples weighted by (capped) multiplicity; attacks so total attack weight ~ total benign weight
+    wb = np.array([min(r["w"], 20) for r in tr], dtype=np.float32)
+    sw = np.concatenate([wb, np.full(len(atk), max(1.0, float(wb.sum()) / len(atk)), dtype=np.float32)])
+    model = LR().fit(X, y, sw, epochs=args.epochs)
 
     def scores(recs):
         return np.array([model.score(f) for f in featurize(recs)])
-    sv = np.sort(scores(va))
-    allowed = max(1, int(1e-4 * len(sv)))
-    thr = sv[-allowed - 1]
-    thr_lax = np.sort(scores(va))[-max(1, int(1e-3 * len(sv))) - 1]
+    sva = scores(va)
+    wva = np.array([r["w"] for r in va], dtype=np.float64)
+
+    def wthr(budget: float) -> float:
+        order = np.argsort(-sva)
+        cum = np.cumsum(wva[order]) / wva.sum()
+        k = int(np.searchsorted(cum, budget, side="right"))        # how many top-scored rows fit in the budget
+        return float(sva[order][k]) if k < len(order) else float(sva.min())
+    thr, thr_lax = wthr(1e-4), wthr(1e-3)
     st = scores(te)
-    fp, fp_lax = float((st > thr).mean()), float((st > thr_lax).mean())
-    print(f"threshold {thr:.2f} (valid FP budget 0.01%): test benign FP = {fp*100:.4f}% of {len(st)}"
-          f"  | lax threshold {thr_lax:.2f}: FP {fp_lax*100:.3f}%")
+    wte = np.array([r["w"] for r in te], dtype=np.float64)
+    fp = float(wte[st > thr].sum() / wte.sum())
+    fp_lax = float(wte[st > thr_lax].sum() / wte.sum())
+    fp_distinct = float((st > thr).mean())
+    print(f"threshold {thr:.2f} (validation FP budget 0.01% of raw rows): test benign FP = {fp*100:.4f}% of raw rows "
+          f"({fp_distinct*100:.2f}% of distinct requests) | lax threshold {thr_lax:.2f}: FP {fp_lax*100:.3f}% of raw rows")
 
     def rate(recs):
         if not recs:
@@ -243,7 +253,8 @@ def main() -> int:
     for c in ("credential_stuffing", "idor_bola", "user_enumeration"):
         rows.append((f"behavioural campaign, per request: {c}", *rate(camps.get(c, []))))
     print(f"\n{'what':54s} {'det@FP0.01%':>12s} {'det@FP0.1%':>11s}")
-    out = {"fp_test_0.01pct_threshold": fp, "fp_test_lax": fp_lax, "rows": []}
+    out = {"fp_test_raw_rows_at_0.01pct_threshold": fp, "fp_test_distinct": fp_distinct, "fp_test_raw_rows_lax": fp_lax,
+           "benign_distinct": {"train": len(tr), "validation": len(va), "test": len(te)}, "rows": []}
     for w, a, b in rows:
         print(f"{w:54s} {a*100:11.1f}% {b*100:10.1f}%")
         out["rows"].append({"what": w, "detect_at_fp_0.01pct": a, "detect_at_fp_0.1pct": b})

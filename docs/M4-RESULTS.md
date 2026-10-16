@@ -167,3 +167,42 @@ compromise. Command injection has no sink in Juice Shop.
   boundary) would likely do better. These numbers are a floor on attacker capability.
 * The controller took the same stage windows as in `E2E-RESULTS.md` (20 s shadow + 30 s canary).
 * Slow-and-low was part of the ladder (pace doubled up to a 20 s cap). The stuffing run slowed five times (to ~16 s between attempts) and still harvested all three logins, but a stuffing attacker that starts slow instead of being forced there is the M1 evasion and was not run here.
+
+
+---
+
+# Adaptive attacker at real speed, closed loop vs CRS alone (2026-10-15)
+
+Supersedes the slowed-client numbers above. Same red agent (`range/attacks/adaptive.py`: mutate,
+rotate identity, slow down up to 5 s, learn the rate quota), now connecting by `127.0.0.1`, with a
+400-request budget and a ~500-pair guess list for stuffing, run against (a) CRS alone and (b) CRS +
+the autonomous controller (signed manifest and admin token on, benign Playwright journeys and corpus
+replay at 8 req/s throughout). **One run per cell, same seed in both arms; no confidence intervals.**
+Data: `docs/data/rep/adaptive_*.json`.
+
+| goal | arm | requests reaching the app | requests blocked by an AEGIS rule | identities used | valid logins harvested |
+|---|---|---|---|---|---|
+| credential stuffing | CRS only | 400 / 400 | 0 | 1 | **2** |
+| | closed loop | 257 / 400 | 143 | 40 | **0** |
+| SQLi | CRS only | 380 / 400 (20 blocked by CRS) | 0 | 4 | n/a (never met) |
+| | closed loop | 25 / 400 | 355 (+20 by CRS) | 63 | n/a (never met) |
+| command injection | CRS only | 323 / 400 (77 by CRS) | 0 | 3 | n/a (no sink) |
+| | closed loop | 40 / 400 | 293 (+67 by CRS) | 59 | n/a (no sink) |
+
+* The observer flagged 40/40 (stuffing), 63/63 (SQLi) and 48/58 (command injection) of the attacker's
+  identities. The first AEGIS block came at request 26, 46 and 32 of 400, i.e. within roughly the
+  first 10 % of the attack: the rule lands during a persistent campaign.
+* **This reverses the earlier negative result for credential stuffing, with caveats.** With a
+  persistent, real-speed attacker the loop denied the credential harvest in this run (0 valid logins
+  vs 2 with CRS alone), after the attacker had rotated identity 39 times. But this is one run; the
+  outcome could differ with another guess order; the stuffing rate limit still only throttles; and a
+  *short* attack still beats the loop: in an earlier 78-guess variant the attacker finished in 44 s,
+  before any rule existed, in both arms.
+* Time to protection is the limit: about 60-160 s from first detection (`E2E-RESULTS.md`). Anything
+  the attacker can finish in that window is unmitigated by construction.
+* **Safety under a live adaptive attacker:** 0 benign requests blocked by an AEGIS rule across about
+  300,000 benign requests in the six runs (the earlier lock-out of one user's password does not recur
+  after the SQLi template fix and the hard-negatives gate stage).
+* Account-keyed rate rules were exercised: they were proposed once the controller saw a second
+  identity but rejected by the gate (benign accounts that would have been limited), so the
+  identity-keyed rule did the work.

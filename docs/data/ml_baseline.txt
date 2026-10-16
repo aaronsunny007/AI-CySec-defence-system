@@ -1,0 +1,26 @@
+benign distinct non-socket.io requests: train 1262, validation 1132, test 1707 (raw rows: 147906, 69030, 168481)
+threshold 0.84 (validation FP budget 0.01% of raw rows): test benign FP = 0.0059% of raw rows (0.06% of distinct requests) | lax threshold 0.84: FP 0.006% of raw rows
+
+what                                                    det@FP0.01%  det@FP0.1%
+held-out generated sqli                                       68.2%       68.2%
+held-out generated xss                                        85.5%       85.5%
+held-out generated cmdi                                       84.5%       84.5%
+held-out generated traversal                                  98.5%       98.5%
+held-out generated ssrf                                       87.5%       87.5%
+REAL campaign requests: sqli                                   0.0%        0.0%
+  ...their mutants: sqli                                       0.0%        0.0%
+REAL campaign requests: xss                                    0.0%        0.0%
+  ...their mutants: xss                                        0.0%        0.0%
+REAL campaign requests: path_traversal                        80.0%       80.0%
+  ...their mutants: path_traversal                           100.0%      100.0%
+REAL campaign requests: command_injection                     50.0%       50.0%
+  ...their mutants: command_injection                         50.0%       50.0%
+REAL campaign requests: ssrf                                 100.0%      100.0%
+  ...their mutants: ssrf                                      93.3%       93.3%
+NOVEL family (never trained): ssti                            33.3%       33.3%
+NOVEL family (never trained): nosqli                           0.0%        0.0%
+NOVEL family (never trained): xxe                             66.7%       66.7%
+NOVEL family (never trained): jndi                            50.0%       50.0%
+behavioural campaign, per request: credential_stuffing         0.0%        0.0%
+behavioural campaign, per request: idor_bola                   0.0%        0.0%
+behavioural campaign, per request: user_enumeration            0.0%        0.0%

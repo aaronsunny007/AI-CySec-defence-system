@@ -180,3 +180,65 @@ Honest comparison with run 1: enforcement times are lower (70-83 s vs 80-130 s) 
 the command-injection and SQLi offline gates are faster (6.9 s and 18.1 s vs 18.1 s and 63.8 s):
 the SQLi template change removed a benign-corpus false-positive family and the machine was less
 loaded. Differences of this size between single runs should not be over-read.
+
+
+---
+
+# Replicates on two apps, real-speed attackers (2026-10-15)
+
+This supersedes the single-run tables above for any claim about timing. Setup as in run 2 (signed
+manifest and admin token ON, controller in its own process, benign load throughout), but: attackers
+connect by `127.0.0.1` (the `localhost` delay is gone), the live stages ignore requests that arrived
+before the rule was loaded, the SQLi template needs a real comparison after `and`/`or`, bypass
+detection ignores pre-enforcement history, and the campaigns-per-hour budget is per technique. One
+replicate = one range boot with the three classes in sequence (no cold repeat). Raw per-run data:
+`docs/data/rep/`. Intervals are Student-t on the runs that enforced; with n = 5 and n = 3 they are
+wide and should be read as rough.
+
+### Juice Shop (signed, fast clients): 5 replicate runs
+
+| class | enforced | detect (s) | time to enforce (s) | synthesis (s) | attacker reached app, before / after |
+|---|---|---|---|---|---|
+| command_injection | 5/5 | 4.0 (95% CI 1.3-6.7; range 1.0-7.1; n=5) | 84.5 (95% CI 72.4-96.5; range 74.1-99.4; n=5) | 16.3 (95% CI 8.3-24.4; range 7.4-24.2; n=5) | 49.8 / 10.6 |
+| credential_stuffing | 5/5 | 39.0 (95% CI 34.6-43.4; range 33.6-42.2; n=5) | 96.6 (95% CI 91.3-101.8; range 89.7-100.9; n=5) | 0.0 (95% CI -0.0-0.1; range 0.0-0.1; n=5) | 64.6 / 20.8 |
+| sqli | 5/5 | 15.6 (95% CI 9.1-22.2; range 9.4-19.9; n=5) | 137.1 (95% CI 120.3-153.9; range 125.3-158.8; n=5) | 63.0 (95% CI 43.6-82.4; range 48.9-89.8; n=5) | 34.8 / 10.4 |
+
+benign requests 94640, blocked by an AEGIS rule: 0; live-stage rejections: 0; false triggers per run: [13, 3, 14, 5, 22]; log gaps: [[], [], [], [], []]
+
+
+### BookNook (second app): 3 replicate runs
+
+| class | enforced | detect (s) | time to enforce (s) | synthesis (s) | attacker reached app, before / after |
+|---|---|---|---|---|---|
+| sqli | 3/3 | 1.1 (95% CI -0.2-2.3; range 0.6-1.6; n=3) | 62.9 (95% CI 57.7-68.0; range 60.6-64.7; n=3) | 4.3 (95% CI 0.2-8.4; range 3.3-6.2; n=3) | 10.7 / 6.7 |
+| command_injection | 3/3 | 1.3 (95% CI 0.6-2.0; range 1.0-1.5; n=3) | 64.0 (95% CI 59.9-68.1; range 62.4-65.7; n=3) | 2.3 (95% CI 0.1-4.4; range 1.3-3.0; n=3) | 31.3 / 7 |
+| credential_stuffing | 3/3 | 1.5 (95% CI 1.2-1.8; range 1.4-1.6; n=3) | 64.1 (95% CI 62.2-66.0; range 63.2-64.6; n=3) | 0.0 (95% CI -0.0-0.1; range 0.0-0.1; n=3) | 120.3 / 48 |
+
+benign requests 145454, blocked by an AEGIS rule: 0; live-stage rejections: 3; false triggers per run: [41, 48, 44]; log gaps: [[], [], []]
+
+
+**Reading these.**
+
+* Every class was mitigated in every replicate on **both** apps (Juice Shop 15/15, BookNook 9/9
+  class-runs) with **0 benign requests blocked by an AEGIS rule** (94,640 and 145,454 benign
+  requests). Time to a rule enforcing is ~60-160 s, dominated by the gate, the fixed 20 s shadow +
+  30 s canary windows and the queue, not by detection (1-40 s).
+* **Credential stuffing detection is slowest on Juice Shop (~39 s)** because the detector needs six
+  logins inside 60 s and the attacker's first login attempts are spread by its recon steps.
+* **The second app needed two fixes first.** The detector hard-coded Juice Shop's login URL (blind on
+  `/api/login`), and the SQLi template flagged a benign review `'quoted' and "double"` (0.60 % of
+  BookNook's corpus) until its boolean branch required a real comparison. Both were found by running
+  on the second app. BookNook is my own small app (stdlib Python, simulated command sink), so this
+  is evidence of some generalisation, not of generalisation to real applications.
+* On BookNook the account-keyed stuffing candidate was rejected by the live stages in 3/3 runs and
+  the identity-keyed rule was enforced instead.
+* **Benign-corpus diversity caveat (important).** The 443,507-row Juice Shop corpus contains only
+  62,162 distinct `(method, URI, body)` triples, and 58k of those are `/socket.io` polls with unique
+  session ids. Excluding them there are **4,101 distinct requests**, and the 100 most common distinct
+  requests make up 83 % of all rows. A false-positive rate over the raw rows is therefore dominated by
+  repeats; the corpus supports "no false positives on these 4.1k request shapes", a weaker claim than
+  its row count suggests. Generating more diverse benign traffic is the first thing to do before
+  claiming a production-grade false-positive rate.
+* False triggers per run (detections on non-attacker actors) were 3-22 on Juice Shop and 41-48 on
+  BookNook, all handled by the gate and cooldown without producing a rule, but they cost controller
+  time and, before the per-technique budget, starved real work.
