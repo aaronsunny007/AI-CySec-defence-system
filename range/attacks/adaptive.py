@@ -15,7 +15,7 @@ the defence's internals.
 
 Goals:  credential_stuffing | sqli | command_injection
   credential_stuffing  objective = harvest valid credential pairs from one shuffled pass over a
-                       ~80-pair guess list (the 3 valid pairs of the range are hidden in it)
+                       ~500-pair guess list (the 3 valid pairs of the range are hidden in it)
   sqli                 objective = authentication bypass via SQL injection login
   command_injection    Juice Shop has no OS-command sink, so there is no objective to meet;
                        what is measured is EVASION: payload requests that reach the app.
@@ -47,7 +47,7 @@ LADDER = {
     "sqli": ["mutate", "rotate", "slow"],
     "command_injection": ["mutate", "rotate", "slow"],
 }
-MAX_PACE = 20.0
+MAX_PACE = 5.0       # was 20 s: with a fast client the slow-down alone made one run take 80 minutes
 
 
 @dataclass
@@ -99,9 +99,14 @@ class RedAgent:
     # --- payload stream ----------------------------------------------------------------
     def _payloads(self):
         if self.goal == "credential_stuffing":
-            emails = list(dict.fromkeys(e for e, _ in C.CRED_LIST))
-            pws = ["123456", "password", "qwerty", "letmein", "welcome", "iloveyou",
-                   "abc123", "monkey", "dragon", "football", "sunshine", "master"]
+            emails = list(dict.fromkeys([e for e, _ in C.CRED_LIST]
+                                        + [f"user{i}@juice-sh.op" for i in range(1, 7)]))
+            pws = ["123456", "password", "qwerty", "letmein", "welcome", "iloveyou", "abc123",
+                   "monkey", "dragon", "football", "sunshine", "master", "123456789", "12345678",
+                   "111111", "1234567", "admin", "passw0rd", "trustno1", "batman", "superman",
+                   "princess", "shadow", "login", "starwars", "hello", "freedom", "whatever",
+                   "qazwsx", "zaq12wsx", "michael", "jordan", "harley", "ranger", "buster",
+                   "thomas", "tigger", "robert", "soccer", "hockey"]
             pairs = list(dict.fromkeys(list(C.CRED_LIST) + [(e, p) for e in emails for p in pws]))
             self.rng.shuffle(pairs)
             yield from pairs                       # ONE pass: no re-trying the same guess
