@@ -236,7 +236,7 @@ class BudgetFairness(Base):
         c.step()
         skipped = [e for e in self.events() if e["event"] == "budget_skip" and e.get("technique") == "idor_bola"]
         self.assertTrue(skipped)                                  # idor was throttled ...
-        self.feed(stuffing("atk-1", start=1000))
+        self.feed(stuffing("atk-1", start=520))
         c.step()                                                  # ... but stuffing still gets handled
         self.assertIn("enforced", self.names())
 
