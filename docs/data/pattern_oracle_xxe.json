@@ -1,0 +1,9 @@
+{
+ "prefilter_survivors": 1734,
+ "gate_outcomes": {
+  "benign_replay": 823,
+  "attack_replay": 911
+ },
+ "passing": [],
+ "n_passing": 0
+}

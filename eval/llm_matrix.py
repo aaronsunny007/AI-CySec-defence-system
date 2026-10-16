@@ -34,25 +34,25 @@ CAMPAIGNS = ["ssti", "nosqli", "xxe", "jndi"]
 def done_keys() -> set[tuple]:
     if not RESULTS.exists():
         return set()
-    return {(r["model"], r["rounds"], r["campaign"])
+    return {(r.get("interface", "free"), r["model"], r["rounds"], r["campaign"])
             for r in map(json.loads, RESULTS.read_text(encoding="utf-8").splitlines() if RESULTS.exists() else [])
             if r.get("completed")}
 
 
-def run_one(model: str, rounds: int, campaign: str, benign: Path) -> dict:
+def run_one(model: str, rounds: int, campaign: str, benign: Path, interface: str = "free") -> dict:
     d = json.loads((ROOT / "data" / "attack_corpus" / f"novel_{campaign}.json").read_text(encoding="utf-8"))
     db = ROOT / "memory" / "_matrix.db"
     db.unlink(missing_ok=True)                      # fresh memory per run
     mem = Memory(db)
     t0 = time.time()
     res = mitigate(d["dossier"], d["requests"], benign, mem,
-                   llm=llm_mod.OllamaBackend(model), llm_rounds=rounds, max_llm_per_hour=99)
+                   llm=llm_mod.OllamaBackend(model), llm_rounds=rounds, max_llm_per_hour=99, llm_interface=interface)
     info = res.get("llm") or {}
     stages: dict[str, int] = {}
     for g in info.get("gate", []):
         if not g["ok"]:
             stages[g["rejected_at"]] = stages.get(g["rejected_at"], 0) + 1
-    out = {"model": model, "rounds": rounds, "campaign": campaign,
+    out = {"interface": interface, "model": model, "rounds": rounds, "campaign": campaign,
            "promoted": res["source"] == "llm", "rule": res.get("rule"),
            "promoted_in_round": info.get("promoted_in_round"),
            "candidates_gated": len(info.get("gate", [])), "rejected_at": stages,
@@ -75,14 +75,16 @@ def summarise() -> None:
     rows = [json.loads(l) for l in RESULTS.read_text(encoding="utf-8").splitlines() if l.strip()]
     rows = [r for r in rows if r.get("completed")]
     print("\n=== LLM ablation (one sample per cell; a rule is 'promoted' only if the gate passed it) ===")
-    combos = sorted({(r["model"], r["rounds"]) for r in rows})
+    for r in rows:
+        r.setdefault("interface", "free")
+    combos = sorted({(r["interface"], r["model"], r["rounds"]) for r in rows})
     camps = sorted({r["campaign"] for r in rows})
-    head = f"{'model':24s} {'mode':10s} " + " ".join(f"{c:>8s}" for c in camps) + "   promoted  llm_s  tokens"
+    head = f"{'interface':9s} {'model':24s} {'mode':10s} " + " ".join(f"{c:>8s}" for c in camps) + "   promoted  llm_s  tokens"
     print(head)
-    for m, rd in combos:
+    for itf, m, rd in combos:
         cells, ok, secs, toks = [], 0, 0.0, 0
         for c in camps:
-            r = next((x for x in rows if (x["model"], x["rounds"], x["campaign"]) == (m, rd, c)), None)
+            r = next((x for x in rows if (x["interface"], x["model"], x["rounds"], x["campaign"]) == (itf, m, rd, c)), None)
             if r is None:
                 cells.append("       -")
                 continue
@@ -91,7 +93,7 @@ def summarise() -> None:
             toks += r["tokens_in"] + r["tokens_out"]
             cells.append(f"{('R' + str(r['promoted_in_round'])) if r['promoted'] else 'no':>8s}")
         mode = "one-shot" if rd == 1 else f"repair x{rd}"
-        print(f"{m:24s} {mode:10s} " + " ".join(cells) + f"   {ok}/{len(camps)}     {secs:5.0f}  {toks}")
+        print(f"{itf:9s} {m:24s} {mode:10s} " + " ".join(cells) + f"   {ok}/{len(camps)}     {secs:5.0f}  {toks}")
     print("\n(R1/R2/R3 = promoted in that round; 'no' = nothing passed the gate)")
 
 
@@ -100,6 +102,8 @@ def main() -> int:
     ap.add_argument("--models", nargs="+", default=["mistral:latest"])
     ap.add_argument("--rounds", nargs="+", type=int, default=[1, 3])
     ap.add_argument("--campaigns", nargs="+", default=CAMPAIGNS)
+    ap.add_argument("--interface", choices=["free", "patterns"], default="free",
+                    help="free: model writes the regex; patterns: model chooses token classes")
     args = ap.parse_args()
     benign = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
     RESULTS.parent.mkdir(exist_ok=True)
@@ -107,11 +111,11 @@ def main() -> int:
     for model in args.models:
         for rounds in args.rounds:
             for camp in args.campaigns:
-                if (model, rounds, camp) in seen:
+                if (args.interface, model, rounds, camp) in seen:
                     print(f"skip (done): {model} rounds={rounds} {camp}")
                     continue
                 print(f"run: {model} rounds={rounds} {camp} ...", flush=True)
-                r = run_one(model, rounds, camp, benign)
+                r = run_one(model, rounds, camp, benign, args.interface)
                 with RESULTS.open("a", encoding="utf-8") as f:
                     f.write(json.dumps(r) + chr(10))
                 print(f"   promoted={r['promoted']} (round {r['promoted_in_round']}) "

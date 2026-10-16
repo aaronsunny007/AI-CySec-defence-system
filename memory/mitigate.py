@@ -79,7 +79,8 @@ MAX_LLM_CALLS_PER_HOUR = 6
 def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
              mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR,
              llm=None, max_llm_per_hour: int = MAX_LLM_CALLS_PER_HOUR,
-             llm_rounds: int = 1, exclude: frozenset | set = frozenset()) -> dict:
+             llm_rounds: int = 1, exclude: frozenset | set = frozenset(),
+             llm_interface: str = "free") -> dict:
     """`exclude`: rule ids that already failed the LIVE stages; never offered again."""
     cls = (dossier.get("techniques") or [dossier.get("attack_class", "")])[0]
     campaign_id, sig = mem.record_campaign(dossier)
@@ -151,8 +152,12 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
                     return {"source": "llm_budget_blocked", "rule": None, "ttm_s": ttm,
                             "signature": sig, "llm": llm_info,
                             "detail": f"LLM call cap {max_llm_per_hour}/h reached"}
-                prop = llm_mod.propose(dossier, campaign_requests, llm,
-                                       feedback=feedback or None)
+                proposer = llm_mod.propose
+                if llm_interface == "patterns":
+                    import patterns as patterns_mod
+                    proposer = patterns_mod.propose
+                prop = proposer(dossier, campaign_requests, llm,
+                                feedback=feedback or None)
                 r = prop.response
                 mem.record_llm_call(campaign_id, r.model if r else "?", r.tokens_in if r else 0,
                                     r.tokens_out if r else 0, r.seconds if r else 0.0,

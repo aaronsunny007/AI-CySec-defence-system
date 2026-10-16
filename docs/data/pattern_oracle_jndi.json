@@ -1,0 +1,86 @@
+{
+ "prefilter_survivors": 903,
+ "gate_outcomes": {
+  "mutation": 272,
+  "attack_replay": 277,
+  "benign_replay": 246,
+  "PASS": 108
+ },
+ "passing": [
+  [
+   [
+    "internal_host_url",
+    "template_dollar_brace"
+   ],
+   "query"
+  ],
+  [
+   [
+    "internal_host_url",
+    "template_dollar_brace"
+   ],
+   "any"
+  ],
+  [
+   [
+    "ldap_or_jndi_ref",
+    "template_dollar_brace"
+   ],
+   "query"
+  ],
+  [
+   [
+    "ldap_or_jndi_ref",
+    "template_dollar_brace"
+   ],
+   "any"
+  ],
+  [
+   [
+    "percent_encoding",
+    "template_dollar_brace"
+   ],
+   "query"
+  ],
+  [
+   [
+    "percent_encoding",
+    "template_dollar_brace"
+   ],
+   "any"
+  ],
+  [
+   [
+    "command_substitution",
+    "internal_host_url",
+    "template_dollar_brace"
+   ],
+   "query"
+  ],
+  [
+   [
+    "command_substitution",
+    "internal_host_url",
+    "template_dollar_brace"
+   ],
+   "any"
+  ],
+  [
+   [
+    "command_substitution",
+    "ldap_or_jndi_ref",
+    "template_dollar_brace"
+   ],
+   "query"
+  ],
+  [
+   [
+    "command_substitution",
+    "ldap_or_jndi_ref",
+    "template_dollar_brace"
+   ],
+   "any"
+  ]
+ ],
+ "n_passing": 108
+}
