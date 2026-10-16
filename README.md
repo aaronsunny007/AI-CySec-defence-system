@@ -23,10 +23,11 @@ application it defends.
 | M2 rule synthesis + 6-stage gate | done | [docs/M2-RESULTS.md](docs/M2-RESULTS.md), [docs/M2-LIVE-STAGES.md](docs/M2-LIVE-STAGES.md) |
 | M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
 | M3 LLM last-resort path | **0/16** ablation cells promoted a rule (Mistral 7B and Qwen2.5-Coder 7B, one-shot and repair loop, 4 novel campaigns); the gate absorbed all 124 candidates | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
-| M2/M3 closed loop (the whole thing, no human) | **done**: `controller/loop.py` detected, gated, shadowed, canaried and enforced rules for command injection (82 s), credential stuffing (80 s) and SQLi (130 s) with 0 benign requests blocked in that run; memory makes the synthesis step ~1000x faster on a repeat but NOT end-to-end enforcement time (live stages dominate) | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
-| Rule-store hardening | HMAC-signed manifest + admin bearer token implemented and unit-tested; **not yet exercised in a live run** | [docs/HARDENING.md](docs/HARDENING.md) |
-| M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; arms race 5/5 (replay); adaptive red agent: signature rules held vs mutation + identity rotation, rate limit did NOT stop adaptive stuffing; one real user's password blocked by the SQLi rule | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
-| M5 write-up | **draft v0.1** (numbers all trace to the results files) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
+| M2/M3 closed loop (the whole thing, no human) | **done and replicated**: `controller/loop.py` enforced a rule 63-137 s after a campaign began in 24 of 24 class-runs (5 replicates on Juice Shop, 3 on a second small app), 0 benign requests blocked in ~240k; memory speeds the synthesis step by orders of magnitude but not end-to-end time; attacks shorter than the 60-160 s loop latency are not mitigated | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
+| Rule-store hardening | HMAC-signed manifest + admin bearer token implemented, unit-tested and **used in every end-to-end run since 2026-10-12**; tamper/replay against a live gateway untested | [docs/HARDENING.md](docs/HARDENING.md) |
+| M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; real-speed adaptive red agent: requests reaching the app 380 -> 25 of 400 (SQLi), 323 -> 40 (cmdi); one credential-harvest run denied (single run); a first adaptive run found one real password blocked by the SQLi rule, fixed | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
+| Baselines | CRS alone (above) and a crude static ML-WAF (`docs/ML-BASELINE.md`): 0% on the behavioural campaigns, partial on unseen families | [docs/ML-BASELINE.md](docs/ML-BASELINE.md) |
+| M5 write-up | **draft v0.3** (numbers trace to the results files; 15 methodology/engineering errors disclosed) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 
 Read the "Caveats" section of each results file before quoting a number. Early
 measurements that were later found to be flawed are corrected in place and the
