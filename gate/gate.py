@@ -166,7 +166,7 @@ def main() -> int:
     p.add_argument("--campaign", type=Path, required=True,
                    help="JSONL of the observed campaign's attack requests")
     p.add_argument("--benign", type=Path,
-                   default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                   default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     args = p.parse_args()
 
     if not REPLAY.exists():

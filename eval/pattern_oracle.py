@@ -25,7 +25,7 @@ CAMPAIGNS = sys.argv[1:] or ["ssti", "nosqli", "xxe", "jndi"]
 
 
 def main() -> int:
-    benign = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
+    benign = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
     names = patterns.library()
     out = {}
     for camp in CAMPAIGNS:

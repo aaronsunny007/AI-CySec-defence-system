@@ -213,7 +213,7 @@ def main() -> int:
     p.add_argument("--novel", type=Path,
                    help="JSON file holding both {dossier, requests} (e.g. data/attack_corpus/novel_ssti.json)")
     p.add_argument("--benign", type=Path,
-                   default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                   default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     p.add_argument("--db", type=Path, default=ROOT / "memory" / "aegis.db")
     p.add_argument("--repeats", type=int, default=2, help="how many times to see this campaign")
     p.add_argument("--llm", choices=["none", "ollama"], default="none",

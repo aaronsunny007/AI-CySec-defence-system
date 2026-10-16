@@ -230,7 +230,7 @@ def main() -> int:
     ap.add_argument("--journey-workers", type=int, default=3)
     args = ap.parse_args()
 
-    corpus = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
+    corpus = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
     m1 = ROOT / "logs" / "gateway" / "m1_episode.jsonl"
     for f in (LOG, EVENTS, DB, STOP):
         f.unlink(missing_ok=True)

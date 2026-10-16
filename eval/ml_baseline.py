@@ -199,7 +199,7 @@ def main() -> int:
     args = ap.parse_args()
     random.seed(1)
 
-    benign_path = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
+    benign_path = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
     tr, va, te = load_benign(benign_path)
     print(f"benign distinct non-socket.io requests: train {len(tr)}, validation {len(va)}, test {len(te)} "
           f"(raw rows: {sum(r['w'] for r in tr)}, {sum(r['w'] for r in va)}, {sum(r['w'] for r in te)})", flush=True)

@@ -80,7 +80,7 @@ def main() -> int:
     for f in (LOG, EVENTS, STOP, DB):
         f.unlink(missing_ok=True)
     rulestore.clear()
-    corpus = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
+    corpus = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
     m1 = ROOT / "logs" / "gateway" / "m1_episode.jsonl"
     run_start = time.time()
     procs = []

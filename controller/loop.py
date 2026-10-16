@@ -566,7 +566,7 @@ def main() -> int:
     ap.add_argument("--events", type=Path, default=Config.events)
     ap.add_argument("--db", type=Path, default=Config.db)
     ap.add_argument("--benign-corpus", type=Path,
-                    default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                    default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     ap.add_argument("--benign-actors", type=Path, default=None,
                     help="gateway-format log of real user sessions (for the rate gate)")
     ap.add_argument("--shadow-s", type=float, default=Config.shadow_s)

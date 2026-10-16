@@ -105,7 +105,7 @@ def main() -> int:
     ap.add_argument("--interface", choices=["free", "patterns"], default="free",
                     help="free: model writes the regex; patterns: model chooses token classes")
     args = ap.parse_args()
-    benign = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
+    benign = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
     RESULTS.parent.mkdir(exist_ok=True)
     seen = done_keys()
     for model in args.models:

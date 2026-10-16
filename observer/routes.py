@@ -37,7 +37,7 @@ def build(corpus: Path, min_count: int = 20) -> list[str]:
 def known_routes(corpus: Path | None = None, min_count: int = 20) -> set[str]:
     if CACHE.exists():
         return set(json.loads(CACHE.read_text(encoding="utf-8")))
-    corpus = corpus or next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None)
+    corpus = corpus or (sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0]
     if corpus is None:
         return set()
     routes = build(corpus, min_count)
