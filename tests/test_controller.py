@@ -224,6 +224,23 @@ class FailSafe(Base):
         self.assertIn("budget_skip", self.names())
 
 
+class BudgetFairness(Base):
+    def test_noise_in_one_technique_cannot_starve_another(self):
+        self.cfg.max_per_technique_per_hour = 2
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        # five distinct idor-looking benign walkers (each a distinct signature) ...
+        noise = []
+        for n in range(5):
+            noise += [rec(i + n * 100, f"walker-{n}", "GET", f"/api/thing{n}/{n * 10 + i}") for i in range(6)]
+        self.feed(benign_users() + noise)
+        c.step()
+        skipped = [e for e in self.events() if e["event"] == "budget_skip" and e.get("technique") == "idor_bola"]
+        self.assertTrue(skipped)                                  # idor was throttled ...
+        self.feed(stuffing("atk-1", start=1000))
+        c.step()                                                  # ... but stuffing still gets handled
+        self.assertIn("enforced", self.names())
+
+
 class OperationalErrorsAreNotVerdicts(Base):
     def test_live_error_does_not_blacklist_the_rule(self):
         c = loop.Controller(self.cfg, self.mem, live=Fake(boom=True))

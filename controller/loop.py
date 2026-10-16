@@ -109,6 +109,7 @@ class Config:
     canary_pct: int = 25
     max_new_rules_per_hour: int = mit.MAX_NEW_RULES_PER_HOUR
     max_campaigns_per_hour: int = 30
+    max_per_technique_per_hour: int = 8
     from_start: bool = False            # False: only look at traffic that arrives from now on
     llm: object = None
     llm_rounds: int = 1
@@ -485,13 +486,17 @@ class Controller:
             return
         if not (known and known["id"] not in exclude):
             now = time.time()
-            while self.handled_times and now - self.handled_times[0] > 3600:
+            while self.handled_times and now - self.handled_times[0][0] > 3600:
                 self.handled_times.popleft()
-            if len(self.handled_times) >= self.cfg.max_campaigns_per_hour:
-                self.emit("budget_skip", reason="campaigns/hour cap",
-                          cap=self.cfg.max_campaigns_per_hour)
+            per_tech = sum(1 for _, t in self.handled_times if t == tech)
+            # A total cap alone let noise starve real work: ~190 false idor_bola triggers on
+            # synthetic users used up the 30/hour budget before a SQLi campaign was handled
+            # (a live replicate never mitigated SQLi). Each technique now has its own share.
+            if len(self.handled_times) >= self.cfg.max_campaigns_per_hour or per_tech >= self.cfg.max_per_technique_per_hour:
+                self.emit("budget_skip", technique=tech, reason="campaigns/hour cap",
+                          cap=self.cfg.max_campaigns_per_hour, per_technique=per_tech)
                 return
-            self.handled_times.append(now)
+            self.handled_times.append((now, tech))
         if tech in RATE:
             res = self._mitigate_rate(dossier, cls, actor)
         else:
