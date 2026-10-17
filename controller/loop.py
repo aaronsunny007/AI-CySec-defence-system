@@ -108,11 +108,23 @@ class Config:
     canary_s: float = 45.0
     canary_pct: int = 25
     max_new_rules_per_hour: int = mit.MAX_NEW_RULES_PER_HOUR
-    max_campaigns_per_hour: int = 30
-    max_per_technique_per_hour: int = 8
+    max_campaigns_per_hour: int = 60
+    max_per_technique_per_hour: int = 20
     from_start: bool = False            # False: only look at traffic that arrives from now on
     llm: object = None
     llm_rounds: int = 1
+
+
+def _evidence_fp(ev) -> str:
+    """Fingerprint of WHAT the campaign sent (payload skeletons), not just where. The cooldown for a
+    failed search is keyed on this, so a benign actor falsely flagged on the same endpoints cannot put a
+    real attacker's campaign into cooldown (a replicate lost its SQLi campaign that way)."""
+    import hashlib
+    import re
+    import urllib.parse
+    sk = sorted({re.sub(r"\d+", "0", urllib.parse.unquote_plus((r.raw.get("uri") or "") + " " + (r.body or "")))[:120]
+                 for r in ev})
+    return hashlib.sha1("|".join(sk).encode("utf-8", "replace")).hexdigest()[:10]
 
 
 class LogTail:
@@ -480,7 +492,7 @@ class Controller:
                 exclude.add(known["id"])
                 known = None
                 bypass = True
-        ckey = sig + ("#bypass" if bypass else "")
+        ckey = sig + "#" + _evidence_fp(ev) + ("#bypass" if bypass else "")
         if time.time() - self.cooldown.get(ckey, 0.0) < COOLDOWN_S:
             self.emit("cooldown_skip", technique=tech, signature=sig, bypass=bypass)
             return

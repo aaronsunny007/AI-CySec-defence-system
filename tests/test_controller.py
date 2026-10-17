@@ -241,6 +241,23 @@ class BudgetFairness(Base):
         self.assertIn("enforced", self.names())
 
 
+class CooldownPoisoning(Base):
+    def test_a_failed_benign_lookalike_does_not_put_the_real_campaign_in_cooldown(self):
+        c = loop.Controller(self.cfg, self.mem, live=Fake())
+        # a benign actor whose two odd messages trip the observer's SQLi signature, same endpoint as the attack
+        odd = [rec(i, "benign-odd", "POST", "/rest/user/login",
+                   json.dumps({"email": "o'brien@x.test", "password": "it's or else " + str(i)}), 401) for i in range(2)]
+        self.feed(benign_users() + [rec(5, "benign-odd", "GET", "/rest/products/search?q=a")] + odd)
+        c.step()
+        attack = [rec(100 + i, "atk-1", "POST", "/rest/user/login",
+                      json.dumps({"email": p, "password": "x"}), 403)
+                  for i, p in enumerate(["' OR 1=1--", "' OR '1'='1'--", "admin'--"])]
+        self.feed(attack)
+        c.step()
+        skips = [e for e in self.events() if e["event"] == "cooldown_skip" and e.get("technique") == "sqli"]
+        self.assertEqual(skips, [])
+
+
 class OperationalErrorsAreNotVerdicts(Base):
     def test_live_error_does_not_blacklist_the_rule(self):
         c = loop.Controller(self.cfg, self.mem, live=Fake(boom=True))
