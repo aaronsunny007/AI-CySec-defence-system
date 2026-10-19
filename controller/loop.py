@@ -108,8 +108,8 @@ class Config:
     canary_s: float = 45.0
     canary_pct: int = 25
     max_new_rules_per_hour: int = mit.MAX_NEW_RULES_PER_HOUR
-    max_campaigns_per_hour: int = 60
-    max_per_technique_per_hour: int = 20
+    max_campaigns_per_hour: int = 600
+    max_per_technique_per_hour: int = 200
     from_start: bool = False            # False: only look at traffic that arrives from now on
     llm: object = None
     llm_rounds: int = 1
@@ -260,9 +260,12 @@ class Controller:
             for tech, fs in sorted(by_tech.items(), key=lambda kv: -weight(kv[0])):
                 if (k, tech) not in self.handled:
                     self.handled.add((k, tech))
-                    new.append((k, tech, fs))
+                    new.append((weight(tech), k, tech, fs))
         self.dirty.clear()
-        return new
+        # Strongest evidence first: with hundreds of look-alike false triggers queued, the campaign with
+        # the most evidence must not wait behind them (stable sort keeps arrival order within a weight).
+        new.sort(key=lambda x: -x[0])
+        return [(k, tech, fs) for _, k, tech, fs in new]
 
     # --- the benign evidence the rate gate judges against -----------------------
     def benign_actors(self) -> list[Actor]:

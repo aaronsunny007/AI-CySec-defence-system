@@ -90,7 +90,7 @@ def run_arm(arm: str, goals: list[str], args) -> dict:
     for f in (log, events_f, stop, db):
         f.unlink(missing_ok=True)
     rulestore.clear()
-    corpus = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
+    corpus = [f for f in sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) if not f.name.startswith("benign_00")][0]
     m1 = ROOT / "logs" / "gateway" / "m1_episode.jsonl"
     runs: list[dict] = []
     run_start = time.time()

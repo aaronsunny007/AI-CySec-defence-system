@@ -38,6 +38,9 @@ from actors import actor_key               # noqa: E402
 from client import Actor                   # noqa: E402
 from rangectl import Range                 # noqa: E402
 from traffic import ReplayDriver           # noqa: E402
+sys.path.insert(0, str(ROOT / "range" / "benign"))
+import diverse                             # noqa: E402
+import threading                           # noqa: E402
 
 PY = sys.executable
 LOG = ROOT / "logs" / "gateway" / "e2e.jsonl"
@@ -222,7 +225,7 @@ def main() -> int:
                     choices=list(RULE_PREFIX))
     ap.add_argument("--shadow-s", type=float, default=20)
     ap.add_argument("--canary-s", type=float, default=30)
-    ap.add_argument("--rps", type=float, default=40)
+    ap.add_argument("--rps", type=float, default=25)
     ap.add_argument("--warmup-s", type=float, default=75)
     ap.add_argument("--max-wait", type=float, default=420)
     ap.add_argument("--after-s", type=float, default=40)
@@ -230,7 +233,7 @@ def main() -> int:
     ap.add_argument("--journey-workers", type=int, default=3)
     args = ap.parse_args()
 
-    corpus = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
+    corpus = [f for f in sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) if not f.name.startswith("benign_00")][0]
     m1 = ROOT / "logs" / "gateway" / "m1_episode.jsonl"
     for f in (LOG, EVENTS, DB, STOP):
         f.unlink(missing_ok=True)
@@ -242,6 +245,8 @@ def main() -> int:
     procs: list[subprocess.Popen] = []
     with Range(mode="enforce", log=str(LOG.relative_to(ROOT))):
         replay = ReplayDriver(corpus, rps=args.rps).start()
+        stop_div = threading.Event()
+        diverse.run(0, 7200, 3, 21, stop_div)       # persistent sessions with varied, awkward-but-legitimate input
         journeys = subprocess.Popen(
             [PY, str(ROOT / "range" / "benign" / "generate.py"), "--workers", str(args.journey_workers),
              "--fast", "--duration", "120", "--seed", "900"], cwd=ROOT,
@@ -270,6 +275,7 @@ def main() -> int:
             STOP.write_text("stop")
             time.sleep(4)
             replay.stop()
+            stop_div.set()
             final_rules = rulestore.load()["rules"]
             for pr in procs:                         # only processes started here, by PID
                 subprocess.run(["taskkill", "/F", "/T", "/PID", str(pr.pid)],

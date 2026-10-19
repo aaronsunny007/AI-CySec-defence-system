@@ -56,14 +56,33 @@ class StageResult:
     numbers: dict = field(default_factory=dict)
 
 
+_REPLAY_CACHE: dict = {}
+
+
 def _replay(rule_file: Path, corpus_file: Path, limit: int = 0) -> dict:
+    """Run the real engine over a corpus. Results are cached in-process by (rule text, corpus file
+    identity): the answer is a pure function of those, and a controller that sees hundreds of
+    look-alike campaigns must not re-replay a 20k-request corpus for each one (the false-trigger
+    flood otherwise starved the real campaigns of controller time)."""
+    import hashlib
+    key = None
+    try:
+        st = corpus_file.stat()
+        key = (hashlib.sha1(rule_file.read_bytes()).hexdigest(), str(corpus_file), st.st_mtime_ns, st.st_size, limit)
+        if key in _REPLAY_CACHE:
+            return dict(_REPLAY_CACHE[key])
+    except OSError:
+        key = None
     cmd = [str(REPLAY), "-rule", str(rule_file), "-corpus", str(corpus_file)]
     if limit:
         cmd += ["-limit", str(limit)]
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode != 0:
         raise RuntimeError(f"replay failed: {p.stderr.strip()}")
-    return json.loads(p.stdout.strip().splitlines()[-1])
+    res = json.loads(p.stdout.strip().splitlines()[-1])
+    if key is not None and len(_REPLAY_CACHE) < 5000:
+        _REPLAY_CACHE[key] = dict(res)
+    return res
 
 
 def _write_corpus(records: list[dict], path: Path) -> None:
