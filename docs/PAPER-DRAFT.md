@@ -318,6 +318,28 @@ had it gone uncaught.
     `(method, URI, body)` triples, 58k of them unique `/socket.io` polls; excluding those, only
     4,101 distinct requests, with the top 100 making up 83% of rows. Every false-positive rate in
     this paper is measured on those request shapes. (Found while building the ML baseline.)
+16. **A more diverse benign corpus broke the templates, as it should.** We generated persistent
+    sessions with awkward-but-legitimate input (passwords with quotes and pipes, SQL words in
+    reviews, addresses, unicode, long text) and combined them with the original corpus into a gate
+    corpus of 20,262 *distinct* requests (a separate 33k-distinct stress corpus is kept apart,
+    because part of it is word-salad that a generator, not a user, would write). Measured on it,
+    the first-draft templates matched 0.2-0.3% of benign requests (SQLi-1, cmdi-2) and traversal,
+    command-injection and SQLi templates had to be rewritten (real traversal sequences, command
+    word lists, a comment branch, double URL-decoding). Rules that survive both corpora are the
+    ones the gate now admits; the audit is in `docs/data/fp_audit.txt`.
+17. **Making the cooldown smarter flooded the controller.** Keying the cooldown on payload
+    fingerprints stopped a false alarm from locking out a real campaign, but meant every
+    look-alike false alarm ran the whole gate again. With a login/registration-heavy replay as
+    background load, 450-600 false triggers per run starved the real campaigns: SQLi was enforced in
+    0 of 5 runs and stuffing in 1 of 5. Three fixes together: gate replay results are cached by
+    (rule text, corpus identity), campaigns are handled strongest-evidence-first, and the background
+    load is the original traffic mix plus diverse sessions rather than a replay of the
+    input-heavy corpus. The 3-replicate verification afterwards: 9/9 class-runs enforced, 0 of
+    59,869 benign requests blocked, 43-56 false triggers per run.
+18. **Throttles on a controller are part of the attack surface.** Budgets that were right for a
+    quiet system (60 campaigns/hour) were exhausted by false alarms alone; they are now a CPU safety
+    valve (600/hour, 200 per technique), not the throttle. Prioritising by evidence is what keeps
+    the real attack from waiting.
 
 ## 7. Threats to validity and limitations
 One main application (plus one small self-built second app), eight attack classes we wrote, one

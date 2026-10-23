@@ -59,6 +59,24 @@ ERR5XX_Z = 3.0             # ...AND the difference must be statistically real (o
 LAT_FACTOR, LAT_ABS_US = 3.0, 20_000
 
 
+LONG_POLL_MARKERS = ("/socket.io",)
+
+
+def _slice_latencies(window: list[dict]) -> tuple[list[int], list[int]]:
+    """total_us of canary-slice and control-slice requests, excluding held-open long-poll requests."""
+    c, k = [], []
+    for r in window:
+        if any(m in (r.get("uri") or "") for m in LONG_POLL_MARKERS) or r.get("total_us") is None:
+            continue
+        (c if r.get("canary") else k).append(int(r["total_us"]))
+    return c, k
+
+
+def _p99(vals: list[int]) -> int:
+    v = sorted(vals)
+    return v[min(len(v) - 1, int(len(v) * 0.99))] if v else 0
+
+
 @dataclass
 class LiveResult:
     stage: str
@@ -291,10 +309,16 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
             if ec - ek > ERR5XX_DELTA and z >= ERR5XX_Z:
                 trigger = (f"5xx regression: canary {ec*100:.1f}% vs control {ek*100:.1f}% "
                            f"(z={z:.1f})")
-        # (3) latency regression
+        # (3) latency regression, computed from the log with held-open long-poll requests excluded:
+        # the app holds /socket.io polls for ~25 s by design, so whichever slice happens to contain a
+        # few of those "regresses" (5 of 5 canaries in the adaptive runs were rolled back this way,
+        # blocking nothing).
         if not trigger and nc >= MIN_SAMPLES and nk >= MIN_SAMPLES:
-            if c["p99_us"] > LAT_FACTOR * k["p99_us"] + LAT_ABS_US:
-                trigger = f"p99 latency regression: canary {c['p99_us']}us vs control {k['p99_us']}us"
+            lc, lk = _slice_latencies(_read_from(off, t_start))
+            if len(lc) >= MIN_SAMPLES and len(lk) >= MIN_SAMPLES:
+                pc, pk = _p99(lc), _p99(lk)
+                if pc > LAT_FACTOR * pk + LAT_ABS_US:
+                    trigger = f"p99 latency regression: canary {pc}us vs control {pk}us"
         if trigger:
             t_trig = time.time()
             rulestore.rollback(rid)

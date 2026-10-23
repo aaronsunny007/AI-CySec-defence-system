@@ -70,3 +70,14 @@ class WindowStart(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CanaryLatencyIgnoresLongPolls(unittest.TestCase):
+    def test_held_open_socketio_polls_do_not_count_as_a_regression(self):
+        ls = LS
+        win = [{"uri": "/rest/products/search?q=a", "canary": i % 4 == 0, "total_us": 40_000} for i in range(400)]
+        # a few 25 s long-polls land in the canary slice
+        win += [{"uri": "/socket.io/?EIO=4&transport=polling", "canary": True, "total_us": 25_000_000} for _ in range(20)]
+        c, k = ls._slice_latencies(win)
+        self.assertEqual(len(c) + len(k), 400)
+        self.assertLessEqual(ls._p99(c), 3 * ls._p99(k) + ls.LAT_ABS_US)
