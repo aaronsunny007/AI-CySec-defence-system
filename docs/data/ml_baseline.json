@@ -1,37 +1,37 @@
 {
- "fp_test_raw_rows_at_0.01pct_threshold": 5.935387373056903e-05,
- "fp_test_distinct": 0.0005858230814294083,
- "fp_test_raw_rows_lax": 5.935387373056903e-05,
+ "fp_test_raw_rows_at_0.01pct_threshold": 0.00011988970147464332,
+ "fp_test_distinct": 0.00011988970147464332,
+ "fp_test_raw_rows_lax": 0.00215801462654358,
  "benign_distinct": {
-  "train": 1262,
-  "validation": 1132,
-  "test": 1707
+  "train": 6092,
+  "validation": 5829,
+  "test": 8341
  },
  "rows": [
   {
    "what": "held-out generated sqli",
-   "detect_at_fp_0.01pct": 0.6825,
-   "detect_at_fp_0.1pct": 0.6825
+   "detect_at_fp_0.01pct": 0.2875,
+   "detect_at_fp_0.1pct": 0.75
   },
   {
    "what": "held-out generated xss",
-   "detect_at_fp_0.01pct": 0.855,
-   "detect_at_fp_0.1pct": 0.855
+   "detect_at_fp_0.01pct": 0.715,
+   "detect_at_fp_0.1pct": 0.82
   },
   {
    "what": "held-out generated cmdi",
-   "detect_at_fp_0.01pct": 0.845,
-   "detect_at_fp_0.1pct": 0.845
+   "detect_at_fp_0.01pct": 0.635,
+   "detect_at_fp_0.1pct": 0.83
   },
   {
    "what": "held-out generated traversal",
-   "detect_at_fp_0.01pct": 0.985,
-   "detect_at_fp_0.1pct": 0.985
+   "detect_at_fp_0.01pct": 0.905,
+   "detect_at_fp_0.1pct": 0.9475
   },
   {
    "what": "held-out generated ssrf",
-   "detect_at_fp_0.01pct": 0.875,
-   "detect_at_fp_0.1pct": 0.875
+   "detect_at_fp_0.01pct": 0.725,
+   "detect_at_fp_0.1pct": 0.84
   },
   {
    "what": "REAL campaign requests: sqli",
@@ -56,7 +56,7 @@
   {
    "what": "REAL campaign requests: path_traversal",
    "detect_at_fp_0.01pct": 0.8,
-   "detect_at_fp_0.1pct": 0.8
+   "detect_at_fp_0.1pct": 1.0
   },
   {
    "what": "  ...their mutants: path_traversal",
@@ -65,28 +65,28 @@
   },
   {
    "what": "REAL campaign requests: command_injection",
-   "detect_at_fp_0.01pct": 0.5,
-   "detect_at_fp_0.1pct": 0.5
+   "detect_at_fp_0.01pct": 0.0,
+   "detect_at_fp_0.1pct": 0.08333333333333333
   },
   {
    "what": "  ...their mutants: command_injection",
-   "detect_at_fp_0.01pct": 0.5,
-   "detect_at_fp_0.1pct": 0.5
+   "detect_at_fp_0.01pct": 0.0,
+   "detect_at_fp_0.1pct": 0.12121212121212122
   },
   {
    "what": "REAL campaign requests: ssrf",
-   "detect_at_fp_0.01pct": 1.0,
+   "detect_at_fp_0.01pct": 0.8,
    "detect_at_fp_0.1pct": 1.0
   },
   {
    "what": "  ...their mutants: ssrf",
-   "detect_at_fp_0.01pct": 0.9333333333333333,
-   "detect_at_fp_0.1pct": 0.9333333333333333
+   "detect_at_fp_0.01pct": 0.6,
+   "detect_at_fp_0.1pct": 1.0
   },
   {
    "what": "NOVEL family (never trained): ssti",
-   "detect_at_fp_0.01pct": 0.3333333333333333,
-   "detect_at_fp_0.1pct": 0.3333333333333333
+   "detect_at_fp_0.01pct": 0.0,
+   "detect_at_fp_0.1pct": 0.0
   },
   {
    "what": "NOVEL family (never trained): nosqli",
@@ -95,13 +95,13 @@
   },
   {
    "what": "NOVEL family (never trained): xxe",
-   "detect_at_fp_0.01pct": 0.6666666666666666,
+   "detect_at_fp_0.01pct": 0.0,
    "detect_at_fp_0.1pct": 0.6666666666666666
   },
   {
    "what": "NOVEL family (never trained): jndi",
-   "detect_at_fp_0.01pct": 0.5,
-   "detect_at_fp_0.1pct": 0.5
+   "detect_at_fp_0.01pct": 0.0,
+   "detect_at_fp_0.1pct": 0.0
   },
   {
    "what": "behavioural campaign, per request: credential_stuffing",
@@ -111,7 +111,7 @@
   {
    "what": "behavioural campaign, per request: idor_bola",
    "detect_at_fp_0.01pct": 0.0,
-   "detect_at_fp_0.1pct": 0.0
+   "detect_at_fp_0.1pct": 0.4166666666666667
   },
   {
    "what": "behavioural campaign, per request: user_enumeration",

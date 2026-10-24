@@ -242,3 +242,70 @@ benign requests 145454, blocked by an AEGIS rule: 0; live-stage rejections: 3; f
 * False triggers per run (detections on non-attacker actors) were 3-22 on Juice Shop and 41-48 on
   BookNook, all handled by the gate and cooldown without producing a rule, but they cost controller
   time and, before the per-technique budget, starved real work.
+
+
+---
+
+# Diverse benign traffic, stricter gate corpus, final code (2026-10-23/24)
+
+This supersedes the replicate tables above. What changed since them: (1) the gate's benign corpus is now
+**20,262 distinct realistic requests** (original corpus plus generated persistent sessions with
+awkward-but-legitimate input: quotes and pipes in passwords, SQL words in reviews, addresses, unicode,
+long text), with a separate 33,294-distinct stress corpus kept for auditing; (2) the SQLi, traversal and
+command-injection templates were rewritten until they survived it (`docs/data/fp_audit.txt`); (3) gate
+replays are cached, campaigns are handled strongest-evidence-first and the cooldown is keyed on payload
+fingerprints; (4) the background load during the run is the original traffic mix at 25 req/s plus three
+diverse persistent sessions, on top of the Playwright journeys; (5) the canary's latency check ignores
+`/socket.io` long-polls (see below). Signed manifest and admin token on. Raw data: `docs/data/rep3/`
+(Juice Shop) and `docs/data/rep2/` (BookNook; that directory also holds the earlier Juice Shop batch run with the latency-check bug, kept for the record and superseded).
+
+### Juice Shop, diverse gate corpus, long-poll-safe canary: 5 replicate runs
+
+| class | enforced | detect (s) | time to enforce (s) | synthesis (s) | attacker reached app, before / after |
+|---|---|---|---|---|---|
+| command_injection | 5/5 | 1.8 (95% CI 1.0-2.6; range 1.0-2.8; n=5) | 58.8 (95% CI 57.4-60.2; range 58.1-60.8; n=5) | 0.1 (95% CI 0.1-0.1; range 0.1-0.1; n=5) | 53.2 / 14 |
+| credential_stuffing | 5/5 | 17.5 (95% CI 17.1-17.9; range 16.9-17.7; n=5) | 74.1 (95% CI 73.2-74.9; range 73.4-75.0; n=5) | 0.0 (95% CI 0.0-0.0; range 0.0-0.0; n=5) | 105.4 / 40.8 |
+| sqli | 5/5 | 12.5 (95% CI -0.2-25.2; range 1.1-22.3; n=5) | 81.6 (95% CI 60.7-102.5; range 61.0-107.7; n=5) | 2.1 (95% CI 2.0-2.2; range 1.9-2.1; n=5) | 26 / 12.4 |
+
+benign requests 138611, blocked by an AEGIS rule: 3; live-stage rejections: 2; false triggers per run: [114, 105, 105, 107, 111]; log gaps: [[], [], [], [], []]
+
+
+### BookNook, diverse gate corpus: 3 replicate runs
+
+| class | enforced | detect (s) | time to enforce (s) | synthesis (s) | attacker reached app, before / after |
+|---|---|---|---|---|---|
+| sqli | 3/3 | 1.1 (95% CI -0.2-2.4; range 0.5-1.4; n=3) | 59.2 (95% CI 58.1-60.3; range 58.7-59.5; n=3) | 0.7 (95% CI 0.6-0.7; range 0.6-0.7; n=3) | 10 / 7 |
+| command_injection | 3/3 | 1.0 (95% CI 0.1-1.9; range 0.6-1.2; n=3) | 59.5 (95% CI 55.8-63.2; range 57.9-60.8; n=3) | 0.6 (95% CI 0.5-0.6; range 0.6-0.6; n=3) | 29.7 / 7.3 |
+| credential_stuffing | 3/3 | 1.4 (95% CI 0.2-2.5; range 0.9-1.8; n=3) | 61.3 (95% CI 58.9-63.7; range 60.7-62.4; n=3) | 0.0 (95% CI 0.0-0.0; range 0.0-0.0; n=3) | 120 / 42 |
+
+benign requests 151995, blocked by an AEGIS rule: 0; live-stage rejections: 3; false triggers per run: [41, 41, 44]; log gaps: [[], [], []]
+
+
+**Reading these.**
+
+* All three classes were enforced in every run on both apps (Juice Shop 15/15, BookNook 9/9).
+  Mitigation takes about 1 minute on BookNook and 1-1.5 minutes on Juice Shop; the gate's fixed 20 s
+  shadow and 30 s canary windows account for most of it. SQLi detection is the most variable (1-22 s).
+* **Benign requests blocked by an AEGIS rule: 3 of 138,611 on Juice Shop (0.002%), 0 of 151,995 on
+  BookNook.** All three are the same generated search string, `may cool mango don't ' and ' --`
+  (a word-salad sentence from my diverse generator that contains a quote, `and`, a quote and a comment
+  marker), blocked by `aegis-sqli-3` in three of the five runs. It is inside the 0.01% budget but the
+  gate's zero-tolerance hard-negatives stage cannot catch what it has not been shown; a human is unlikely
+  to type that, but it is exactly the kind of input that a rule on SQL tautology syntax will block.
+  This is the first false positive on Juice Shop since the percentage-budget finding in the paper
+  (section 6, item 8) and I have not fixed it: the next template change needs another full re-run.
+* **False triggers** (campaigns raised on non-attackers) were 43-56 per run in the first verification
+  and 105-126 per run in the final runs. All were rejected by the gate or the cooldown with no rule
+  produced. They cost controller time, which is why the strongest-evidence-first queue matters.
+* **Two bugs found along the way, both of which would have made the numbers worse than the system:**
+  1. *The cooldown flood.* Keying the cooldown on payload fingerprints (so a false alarm could not lock
+     out a real campaign) made every look-alike false alarm run the full gate. With 450-600 false
+     triggers per run SQLi was enforced in 0 of 5 runs and stuffing in 1 of 5. Fixed with the replay cache,
+     the evidence-ordered queue and a realistic background load.
+  2. *The canary's latency check measured long-polls.* The check compared p99 latency between the canary
+     and control slices; Juice Shop holds `/socket.io` polling requests open for about 25 seconds by
+     design, so whichever slice contained a few of them "regressed" by 3-4x. Rules that blocked nothing
+     were rolled back five times in a row in the adaptive runs and command injection was not mitigated at
+     all in one. The check now computes p99 from the request log with long-poll requests excluded.
+* The earlier BookNook account-keyed stuffing candidate is still rejected by the live stages in 3/3 runs
+  and the identity-keyed rule is enforced instead.

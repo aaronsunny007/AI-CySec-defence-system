@@ -1,6 +1,6 @@
 # AEGIS: Gating Autonomous Web-Application Defence on Measured Harm
 
-*Draft v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
+*Draft v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
 repository (linked in section 9) and was produced by a script in `eval/`. Citations
 use the numbering of the PRD bibliography and **must be verified against the originals
 before submission** (PRD section 0).*
@@ -26,13 +26,14 @@ models, one-shot and with a feedback repair loop, four novel campaigns); the gat
 absorbed all 124 candidates, including one that would have blocked 17% of benign traffic
 and two that blocked a whole campaign but were stopped by the mutation stage for
 memorising the payload. Wired into one autonomous loop (detect, synthesise, gate, shadow,
-canary, enforce, with a signed rule store), AEGIS put a rule in force 63-137 s after a campaign
-began, in 24 of 24 class-runs over five replicates on Juice Shop and three on a second small app,
-with 0 benign requests blocked in about 240,000. Against a real-speed adaptive attacker that
-re-encodes payloads and rotates identity, requests reaching the app fell from 380 to 25 of 400
-(SQLi) and 323 to 40 (command injection), and one credential-harvest run was denied; a short
-attack that finishes inside the 60-160 s loop latency is not mitigated. We also report fifteen
-measurement and engineering errors we made and corrected, among them attack tools that announce
+canary, enforce, with a signed rule store), AEGIS put a rule in force 59-82 s on average after a
+campaign began, in 24 of 24 class-runs over five replicates on Juice Shop and three on a second small
+app, with 3 of 138,611 benign requests blocked on Juice Shop (all one generated string) and 0 of
+151,995 on the second app. Against a real-speed adaptive attacker that re-encodes payloads and rotates
+identity, requests reaching the app fell from 380 to 11 of 400 (SQLi) and 323 to 40 (command
+injection); credential stuffing was slowed (400 to 267 guesses reaching the app) but not prevented, and
+a short attack that finishes inside the ~1-1.5 minute loop latency is not mitigated. We also report
+nineteen measurement and engineering errors we made and corrected, among them attack tools that announce
 themselves (inflating a WAF baseline twofold), a `localhost` delay that slowed our own attackers
 tenfold, and a benign corpus whose 443,507 rows hold only about 4,100 distinct request shapes.
 
@@ -208,16 +209,19 @@ and connects at real speed. Five replicate range boots on Juice Shop, three on a
 
 | class | app | enforced | detected after onset | **rule enforcing after onset** (mean, 95% CI) |
 |---|---|---|---|---|
-| command injection (CRS stops 8/12) | Juice Shop | 5/5 | 4.0 s | **84.5 s** (72.4-96.5) |
-| credential stuffing (CRS stops 0) | Juice Shop | 5/5 | 39.0 s | **96.6 s** (91.3-101.8) |
-| SQLi | Juice Shop | 5/5 | 15.6 s | **137.1 s** (120.3-153.9) |
-| SQLi / command injection / stuffing | BookNook | 3/3 each | 1.1-1.5 s | **62.9 / 64.0 / 64.1 s** |
+| command injection (CRS stops 8/12) | Juice Shop | 5/5 | 1.8 s | **58.8 s** (57.4-60.2) |
+| credential stuffing (CRS stops 0) | Juice Shop | 5/5 | 17.5 s | **74.1 s** (73.2-74.9) |
+| SQLi | Juice Shop | 5/5 | 12.5 s | **81.6 s** (60.7-102.5) |
+| SQLi / command injection / stuffing | BookNook | 3/3 each | 1.0-1.4 s | **59.2 / 59.5 / 61.3 s** |
 
-Benign requests blocked by an AEGIS rule: **0 of 94,640** (Juice Shop) and **0 of 145,454**
-(BookNook). Memory made the synthesis step orders of magnitude faster on a repeat (e.g. 63 s to 3 ms
+Benign requests blocked by an AEGIS rule: **3 of 138,611** (0.002%; all the same generated string
+`may cool mango don't ' and ' --`, blocked by the SQLi rule) on Juice Shop and **0 of 151,995** on
+BookNook. This is with a gate corpus of 20,262 distinct benign requests (including generated
+awkward-but-legitimate sessions) and background load of the original traffic mix plus diverse sessions.
+Memory made the synthesis step orders of magnitude faster on a repeat (e.g. 63 s to 3 ms
 for SQLi) but **did not make end-to-end enforcement meaningfully faster**: a reused rule still passes
 shadow and canary (~57 s), and one live pipeline runs at a time, so campaigns queue. The loop needed
-five rounds of live debugging that offline experiments had not exposed (section 6, items 7-14).
+several rounds of live debugging that offline experiments had not exposed (section 6, items 7-14, 17, 19).
 
 ### 5.11 An adaptive attacker (`docs/M4-RESULTS.md`)
 A red agent that sees only HTTP status codes re-encodes payloads, rotates identity, slows down and
@@ -225,19 +229,19 @@ learns the rate-limit quota; budget 400 requests, one run per cell, same seed in
 
 | goal | requests reaching the app: CRS only | closed loop | identities used (closed) | valid logins harvested (CRS only / closed) |
 |---|---|---|---|---|
-| SQLi | 380 / 400 | **25 / 400** | 63 | n/a (never met in either arm) |
-| command injection | 323 / 400 | **40 / 400** | 59 | n/a (no sink) |
-| credential stuffing | 400 / 400 | 257 / 400 | 40 | **2 / 0** |
+| SQLi | 380 / 400 | **11 / 400** | 66 | n/a (never met in either arm) |
+| command injection | 323 / 400 | **40 / 400** | 58 | n/a (no sink) |
+| credential stuffing | 400 / 400 | 267 / 400 | 35 | **2 / 1** |
 
-The observer flagged every identity in the SQLi and stuffing runs (63/63, 40/40) and 48 of 58 in
-command injection; the first AEGIS block came within the first ~10% of the attack. The stuffing
-result needs care: it is one run, a per-identity rate limit only throttles, and an attack short
-enough to finish before the ~60-160 s loop latency is unmitigated in both arms (a 78-guess variant
-finished in 44 s). An earlier, slower-client version of this experiment reported the opposite for
-stuffing; that run's attacker was throttled to ~0.4 req/s by a `localhost` connection delay we had
-not noticed (section 6, item 13). Benign requests blocked by an AEGIS rule across the six runs:
-**0 of ~300,000**. A first adaptive run had found `aegis-sqli-3` blocking one real user's password
-(section 6, item 8); after the fix there is no recurrence.
+The observer flagged every identity in the stuffing run (35/35), 65 of 66 in SQLi and 48 of 58 in
+command injection; the first AEGIS block came at request 98, 32 and 49 of 400. SQLi and command
+injection are largely stopped (97% and 88% of requests did not reach the app). Stuffing is slowed, not
+stopped: the attacker still found one valid login before the rule landed, a per-identity rate limit
+only throttles, and an attack short enough to finish before the ~1-1.5 minute loop latency is
+unmitigated in both arms. An earlier, slower-client version of this experiment reported the opposite
+for stuffing (section 6, item 13), and a first closed-loop batch of these runs mitigated nothing in
+command injection because of a flawed canary check (item 19); those runs are superseded. Benign
+requests blocked by an AEGIS rule across the three closed-loop runs: **0 of 225,558**.
 
 ### 5.12 A second target app (`docs/E2E-RESULTS.md`)
 BookNook is a small deliberately vulnerable stdlib-Python app with different paths, parameter names
@@ -250,13 +254,14 @@ hard-wired to one app's URLs, not that it generalises to real ones (DVWA was not
 PHP/MySQL downloads).
 
 ### 5.13 A static ML-WAF baseline (`docs/ML-BASELINE.md`)
-A hashed n-gram logistic regression trained once offline on benign requests plus generated attack
-variants, thresholded to our 0.01% false-positive budget (measured 0.0059% of raw rows). It detects
-0% / 0% of the real SQLi / XSS campaign requests, 80% / 50% / 100% of traversal / command-injection /
-SSRF, 0-67% of four families it never saw, and **0% of the three behavioural campaigns** (each
-request looks normal). The baseline is crude (generated training data, one configuration, benign
-side of only ~4.1k distinct request shapes) and must not be read as a claim that AEGIS beats a good
-ML-WAF; it illustrates the structural gap that per-request models cannot see campaign-level attacks.
+A hashed n-gram logistic regression trained once offline on benign requests (20,262 distinct) plus
+generated attack variants, thresholded to our 0.01% false-positive budget (measured 0.012% of raw rows
+on the test split). It detects 0% / 0% of the real SQLi / XSS campaign requests, 80% / 0% / 80% of
+traversal / command-injection / SSRF, 0% of four families it never saw, and **0% of the three
+behavioural campaigns** (each request looks normal). The baseline is crude (generated training
+data, one configuration) and must not be read as a claim that AEGIS beats a good ML-WAF; it
+illustrates the structural gap that per-request models cannot see campaign-level attacks, and that a
+diverse benign corpus makes a fixed false-positive budget much stricter on them.
 
 ## 6. Methodology errors we made, and what they taught
 These are reported because each would have flattered the system, or hidden a weakness,
@@ -335,11 +340,20 @@ had it gone uncaught.
     (rule text, corpus identity), campaigns are handled strongest-evidence-first, and the background
     load is the original traffic mix plus diverse sessions rather than a replay of the
     input-heavy corpus. The 3-replicate verification afterwards: 9/9 class-runs enforced, 0 of
-    59,869 benign requests blocked, 43-56 false triggers per run.
+    59,869 benign requests blocked, 43-56 false triggers per run (105-126 in later runs).
 18. **Throttles on a controller are part of the attack surface.** Budgets that were right for a
     quiet system (60 campaigns/hour) were exhausted by false alarms alone; they are now a CPU safety
     valve (600/hour, 200 per technique), not the throttle. Prioritising by evidence is what keeps
     the real attack from waiting.
+19. **The canary's latency check measured the app's long-polls.** It compared p99 latency between the
+    canary and control slices from the gateway's counters. Juice Shop holds `/socket.io` polling
+    requests open for about 25 s by design, so whichever slice contained a few of them "regressed" by
+    3-4x. In the adaptive runs five canaries in a row rolled back rules that had blocked nothing, and
+    command injection was never mitigated in one run; the replicate runs had 196 s outliers for the
+    same reason. It was only visible once the background load contained enough browser clients.
+    The check now computes p99 from the request log with long-poll requests excluded, with a unit
+    test. A related harness lesson: a laptop suspend of ~15 h hid inside one adaptive run, caught only
+    because the harness reports log gaps; that run was repeated.
 
 ## 7. Threats to validity and limitations
 One main application (plus one small self-built second app), eight attack classes we wrote, one
@@ -348,10 +362,11 @@ a per-client cookie standing in for source IPs, so IP rotation is unhandled (the
 detector's thresholds are hand-set and evadable by pacing. Shadow and canary use the
 behavioural detector as the false-positive oracle, so a wrongly flagged benign actor would
 hide its false positives. Canary traffic is replayed corpus requests, 60 req/s, windows of
-45-60 s. Signing the manifest and authenticating the admin API are implemented but off by default
-(docs/HARDENING.md) and were not part of the main measurements. The controller runs one live
+45-60 s. Signing the manifest and authenticating the admin API are implemented and were on in the final
+measurements (docs/HARDENING.md). The controller runs one live
 pipeline at a time (~57 s each), so campaigns queue. The benign corpus predates actor
-separation. The adaptive attacker (5.11) is one simple ladder, one seed, one run per cell.
+separation; the gate corpus is 20,262 distinct requests, partly generated by us, so "no false positives"
+means on those shapes (3 of 138,611 live benign requests were still blocked, all one generated string). The adaptive attacker (5.11) is one simple ladder, one seed, one run per cell.
 
 ## 8. Future work
 A stronger adaptive adversary (probing rule boundaries; pacing under thresholds from the start); actor linkage beyond a cookie (IP/ASN/TLS fingerprint on a real deployment); held-out attack
