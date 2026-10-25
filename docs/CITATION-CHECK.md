@@ -42,13 +42,26 @@ checked every claim attributed to it.
    and reorders the rest.
 3. **[7] year.** Online 2025, in the print issue of January 2026 (vol. 58); cite as 2025 (online)
    or 2026 (print) consistently.
-4. **CETaS report (ref [6]).** The document exists at the given URL (2.1 MB PDF) and is
-   *Autonomous Cyber Defence: A roadmap from lab to ops* (Lohn, Knack, Burke, Jackson; CSET +
-   CETaS, June 2023). I could not machine-read the PDF, and a web search did not surface the
-   two statements the spec attributes to it ("turning all of the systems off" as the failure of
-   a badly specified goal; action-reward computation "roughly 150x" a neural-network update).
-   **Those two attributions are unverified; check them in the PDF before quoting.** The PRD
-   also omits the authors.
+4. **CETaS report (ref [6]): both attributions VERIFIED against the PDF (2026-10-25).** The report is
+   *Autonomous Cyber Defence: A roadmap from lab to ops* (Andrew Lohn, Anna Knack, Ant Burke, Krystal
+   Jackson; CSET Georgetown + CETaS; June 2023); the PRD omits the authors. I extracted the text of the
+   PDF at the given URL with `pdftotext` and found:
+   * **"turning all of the systems off"** - section 2.4 "Defining rewards" (PDF p. 24, printed p. 23):
+     "If the agent's goal is simply to 'keep malware off of all systems,' the agent may achieve this
+     goal by turning all of the systems off." It is the report's own hypothetical example of the
+     alignment problem, not a measured result. The spec's wording is a fair paraphrase, but it is the
+     example goal that matters: say "an agent told to keep malware off all systems", not "a badly
+     specified objective" in general.
+   * **"roughly 150x"** - section 2.3 "Computational requirements" (same page): "computing action-reward
+     pairs was about 150 times as expensive as updating the neural network." Scope: the authors adapted
+     the CAGE 2 winning agents' code (CybORG) and measured it themselves: reward calculation 3.15 ms on
+     the CPU against 0.97 ms and 232 ms on the GPU for action choice and network update, with updates
+     only every 20,000 steps; total cost was about the same on CPU and GPU (footnote 37: Xeon 2.3 GHz
+     vs a Tesla V100). So it is one measurement on one simulator, and the report itself adds that more
+     advanced agents "will certainly need much larger neural networks". It supports "the environment
+     simulation, not the network update, dominates cost for CAGE-style agents"; it does not show that no
+     GPU could ever be useful, and the spec's "cite that if anyone claims this needs a GPU budget"
+     should be read that narrowly.
 
 ## Not checked
 

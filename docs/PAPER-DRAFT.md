@@ -71,6 +71,14 @@ the idea of penalising the defender for harming legitimate ("green") users, whic
 measure with real user journeys rather than simulated ones; C-MADF [26] as the closest
 gated-execution design (gating on a computed score rather than empirical replay); Cloudflare's
 inline ML [16] for the latency budget.
+The CSET/CETaS assessment of autonomous cyber defence [6] gives two points we rely on, both checked
+against the report: a badly specified goal can be satisfied destructively (its example: an agent told to
+keep malware off all systems "may achieve this goal by turning all of the systems off"), the same
+concern behind weighing harm to legitimate users equally with security and gating every rule on
+measured harm; and, for CAGE-style agents, computing action-reward pairs cost about 150 times as much as
+updating the network in the authors' own measurement. We make no claim from that about our system,
+which runs entirely on CPU because no learned model sits in its enforcement path (its cost is the
+gate's replays).
 
 ## 3. System
 
