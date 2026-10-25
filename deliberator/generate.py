@@ -55,13 +55,16 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # A bare quote followed by '#' is NOT matched: a real user's password
         # (7ggq|;]3,p'#) contained it and was locked out of login in a live run
         # (docs/M4-RESULTS.md). "' OR 1=1#" is still caught by the quote+or branch.
+        # The comment branch needs the quote attached to a value (admin'--, 1') --) or at the very start,
+        # not a lone quote after a space: the generated review "don't ' and ' --" was blocked live (3 of
+        # 138,611 benign requests in the final Juice Shop runs).
         # The boolean branch demands an actual COMPARISON after or/and (1=1, '1'='1', a call,
         # not/true/false/null). A bare "quote then and" matched the review text 'quoted' and
         # "double" on a second app (0.60% of its benign corpus) and was rightly rejected.
         ws = r"(?:\s|/\*.*?\*/)"
         cmp_ = (r"(?:\d+" + ws + r"*[=<>]|'[^']*'" + ws + r"*[=<>]|\(|\bnot\b|\btrue\b|\bfalse\b|\bnull\b|\w+" + ws + r"*=)")
         c.append(_ir("sqli", 3, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(union(?:\s|/\*.*?\*/)+(?:all(?:\s|/\*.*?\*/)+)?select|('|%27)(?:\s|/\*.*?\*/|\)|%29)*--(?:[^a-z]|$)"
+                     r"(?i)(union(?:\s|/\*.*?\*/)+(?:all(?:\s|/\*.*?\*/)+)?select|(?:^|[\w)%])('|%27)(?:\s|/\*.*?\*/|\)|%29)*--(?:[^a-z]|$)"
                      r"|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and)\b" + ws + r"*" + cmp_ +
                      r"|\bor\b" + ws + r"+\d+" + ws + r"*=" + ws + r"*\d+)",
                      ["urlDecodeUni", "urlDecodeUni"],
