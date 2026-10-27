@@ -142,6 +142,13 @@ def _mutate_body(body: str, mut: Callable[[str], str]) -> str:
             return json.dumps({k: (mut(v) if isinstance(v, str) else v) for k, v in d.items()})
     except (ValueError, TypeError):
         pass
+    # HTML form body (urlencoded): mutate each VALUE and keep the keys and separators, exactly as for a
+    # query string. Treating it as one opaque string encoded the "=" and "&" too, which breaks the form
+    # (the app no longer sees the parameter), so the "mutant" was not an attack at all; found on DVWA.
+    if "=" in body and chr(10) not in body.strip() and not body.lstrip().startswith(("{", "[", "<")):
+        q = _mutate_query(body, mut)
+        if q != body:
+            return q
     return mut(body)
 
 

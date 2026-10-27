@@ -65,18 +65,13 @@ MIN_BENIGN_ACTORS = 20      # the rate gate refuses to judge on less benign evid
 
 
 def account_of(body: str) -> str:
-    """Same rule as the gateway's accountOf(): the e-mail/username a request is about."""
-    if not body or len(body) > 4096:
-        return ""
-    try:
-        d = json.loads(body)
-    except (json.JSONDecodeError, ValueError):
-        return ""
-    if isinstance(d, dict):
-        for k in ("email", "username", "user"):
-            v = d.get(k)
-            if isinstance(v, str) and v:
-                return v.strip().lower()[:120]
+    """Same rule as the gateway's accountOf(): the e-mail/username a request is about (JSON or form body)."""
+    from detector import body_fields
+    d = body_fields(body)
+    for k in ("email", "username", "user"):
+        v = d.get(k)
+        if isinstance(v, str) and v:
+            return v.strip().lower()[:120]
     return ""
 
 

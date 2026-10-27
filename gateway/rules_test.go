@@ -113,6 +113,8 @@ func TestAccountOf(t *testing.T) {
 		`{"username":"bob"}`:             "bob",
 		`{"email":5}`:                    "",
 		`not json`:                       "",
+		`username=Admin&password=x&Login=Login&user_token=ab12`: "admin",
+		`password=only`:                  "",
 		``:                               "",
 	}
 	for in, want := range cases {

@@ -100,17 +100,33 @@ def _decoded(r: Request) -> str:
     return urllib.parse.unquote_plus(r.query + " " + r.body)
 
 
+def body_fields(body: str | None) -> dict:
+    """The fields of a small request body, from JSON or from an HTML form (urlencoded). Anything else,
+    or anything over 4 KB, yields {}. (DVWA logs in with a plain form post; a detector that only
+    understood JSON bodies was blind to credential stuffing there.)"""
+    if not body or len(body) > 4096:
+        return {}
+    b = body.lstrip()
+    if b.startswith("{"):
+        try:
+            d = json.loads(b)
+        except (json.JSONDecodeError, ValueError):
+            return {}
+        return d if isinstance(d, dict) else {}
+    if "=" in b and "\n" not in b.strip():
+        q = urllib.parse.parse_qs(b, keep_blank_values=True)
+        return {k.lower(): v[0] for k, v in q.items() if v}
+    return {}
+
+
 def is_login_attempt(r: Request) -> bool:
-    """A credential attempt on ANY endpoint: a POST whose JSON body carries a password and an
+    """A credential attempt on ANY endpoint: a POST whose body (JSON or form) carries a password and an
     identifier. (Hard-coding Juice Shop's /rest/user/login made the detector blind on any
-    other app; found by running it against a second target.)"""
-    if r.method != "POST" or not r.body or len(r.body) > 4096 or "password" not in r.body.lower():
+    other app; found by running it against a second target. Form bodies: found on the third.)"""
+    if r.method != "POST" or not r.body or "password" not in r.body.lower():
         return False
-    try:
-        d = json.loads(r.body)
-    except (json.JSONDecodeError, ValueError):
-        return False
-    return (isinstance(d, dict) and isinstance(d.get("password"), str)
+    d = body_fields(r.body)
+    return (isinstance(d.get("password"), str)
             and any(isinstance(d.get(k), str) for k in ("email", "username", "user")))
 
 
@@ -196,13 +212,10 @@ def evidence(actor: Actor, technique: str) -> list[Request]:
 
 
 def _email_of(r: Request) -> str | None:
-    try:
-        if r.body:
-            d = json.loads(r.body)
-            if isinstance(d, dict) and d.get("email"):
-                return str(d["email"]).lower()
-    except json.JSONDecodeError:
-        pass
+    d = body_fields(r.body)
+    for k in ("email", "username"):
+        if isinstance(d.get(k), str) and d[k]:
+            return d[k].lower()
     q = urllib.parse.parse_qs(r.query)
     return (q.get("email") or [None])[0]
 

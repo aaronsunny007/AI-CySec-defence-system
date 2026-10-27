@@ -59,11 +59,46 @@ def stop_recorded() -> None:
         PIDFILE.unlink(missing_ok=True)
 
 
+def _reset_dvwa_state() -> None:
+    """DVWA locks an account for 15 minutes after 3 failed logins and keeps every guestbook post; a
+    stuffing run in one replicate must not lock accounts for the next, so each range starts clean."""
+    mysql = Path.home() / "tools" / "mariadb" / "bin" / "mysql.exe"
+    subprocess.run([str(mysql), "-u", "root", "-h", "127.0.0.1", "-P", "3307", "-e",
+                    "UPDATE dvwa.users SET failed_login=0, last_login=NULL; "
+                    "DELETE FROM dvwa.guestbook WHERE comment_id>1;"], capture_output=True, check=False,
+                   creationflags=0x08000000)
+
+
+def _ensure_mariadb(logs: Path) -> None:
+    """DVWA's database: ~/tools/mariadb on 127.0.0.1:3307 (data in ~/tools/mariadb_data). Left running between
+    ranges; it is ours, bound to loopback, and holds nothing but DVWA's seed data."""
+    import socket
+    try:
+        socket.create_connection(("127.0.0.1", 3307), timeout=1).close()
+        return
+    except OSError:
+        pass
+    tools = Path.home() / "tools"
+    subprocess.Popen([str(tools / "mariadb" / "bin" / "mysqld.exe"), f"--datadir={tools / 'mariadb_data'}",
+                      "--port=3307", "--bind-address=127.0.0.1", "--console"], cwd=ROOT,
+                     creationflags=0x08000000, stdout=open(logs / "mariadb.out.log", "w"),
+                     stderr=subprocess.STDOUT)
+    for _ in range(60):
+        time.sleep(1)
+        try:
+            socket.create_connection(("127.0.0.1", 3307), timeout=1).close()
+            return
+        except OSError:
+            continue
+    raise RuntimeError("MariaDB did not come up (see logs/mariadb.out.log)")
+
+
 class Range:
     def __init__(self, mode: str = "enforce", log: str = "logs/gateway/requests.jsonl",
                  manifest: str = "rules/active/manifest.json", extra_args: list[str] | None = None,
                  app: str = "juiceshop"):
-        """app='juiceshop' (default) or 'booknook' (range/app2/server.py, the second target)."""
+        """app='juiceshop' (default), 'booknook' (range/app2/server.py, the second target) or 'dvwa'
+        (the third: PHP built-in server + MariaDB from ~/tools, security level low)."""
         self.app = app
         self.mode, self.log, self.manifest = mode, log, manifest
         self.extra = extra_args or []
@@ -82,6 +117,15 @@ class Range:
             js = subprocess.Popen(
                 [sys.executable, str(ROOT / "range" / "app2" / "server.py"), "--port", "3000"],
                 cwd=ROOT, creationflags=flags,
+                stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
+        elif self.app == "dvwa":
+            _ensure_mariadb(logs)
+            _reset_dvwa_state()
+            env = dict(os.environ, DB_PORT="3307", DEFAULT_SECURITY_LEVEL="low")
+            tools = Path.home() / "tools"
+            js = subprocess.Popen(
+                [str(tools / "php" / "php.exe"), "-c", str(tools / "php" / "php.ini"), "-S", "127.0.0.1:3000",
+                 "-t", str(tools / "dvwa")], cwd=ROOT, env=env, creationflags=flags,
                 stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
         else:
             js = subprocess.Popen(
