@@ -46,5 +46,5 @@ class FormMutants(unittest.TestCase):
         for m in ms:
             # the parameter names and the separator survive; only values are rewritten
             self.assertIn("ip=", m["body"])
-            self.assertIn("&Submit=Submit", m["body"])
+            self.assertIn("&Submit=", m["body"])
             self.assertNotIn("%253D", m["body"])
