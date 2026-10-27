@@ -315,3 +315,60 @@ benign requests 155444, blocked by an AEGIS rule: 0; live-stage rejections: 3; f
   3. *A lone quote before `--`.* See above.
 * On BookNook the account-keyed stuffing candidate is still rejected by the live stages in 3/3 runs and
   the identity-keyed rule is enforced instead.
+
+
+---
+
+# A third target: DVWA (2026-10-27)
+
+DVWA 2.5 (PHP 8.3 built-in server + MariaDB 10.11, security level "low", all on loopback; setup in
+`range/dvwa/setup_dvwa.py`) is a real, widely used, deliberately vulnerable PHP/MySQL application with
+HTML-form logins and a CSRF token, nothing like Juice Shop (Node, JSON) or BookNook (Python, JSON).
+Its benign corpus is 26,166 requests (4,552 distinct) from a generator that logs in with the form and
+uses the SQLi, XSS, command-execution, brute-force and guestbook pages with awkward-but-legitimate input
+(`range/dvwa/benign.py`). Nothing in the detector, the templates or the gate was tuned for it, but running
+it exposed four things that had to be fixed first (below). Raw data: `docs/data/rep5/`.
+
+### DVWA (third app), final code: 3 replicate runs
+
+| class | enforced | detect (s) | time to enforce (s) | synthesis (s) | attacker reached app, before / after |
+|---|---|---|---|---|---|
+| sqli | 3/3 | 1.0 (95% CI 0.9-1.2; range 1.0-1.1; n=3) | 57.4 (95% CI 56.6-58.1; range 57.1-57.7; n=3) | 0.6 (95% CI 0.6-0.7; range 0.6-0.6; n=3) | 27 / 18 |
+| command_injection | 3/3 | 1.9 (95% CI 1.2-2.7; range 1.6-2.1; n=3) | 69.1 (95% CI 26.6-111.5; range 59.0-88.8; n=3) | 0.6 (95% CI 0.6-0.7; range 0.6-0.6; n=3) | 54.3 / 25.3 |
+| credential_stuffing | 3/3 | 2.9 (95% CI 2.1-3.7; range 2.7-3.3; n=3) | 59.5 (95% CI 56.6-62.4; range 58.5-60.8; n=3) | 0.0 (95% CI 0.0-0.0; range 0.0-0.0; n=3) | 241.3 / 121.3 |
+
+benign requests 40828, blocked by an AEGIS rule: 0; live-stage rejections: 4; false triggers per run: [2, 2, 2]; log gaps: [[], [], []]
+
+
+**Reading this.**
+
+* All three classes were enforced in every run (9/9), with **0 of 40,828 benign requests blocked** by an
+  AEGIS rule (and CRS blocked none of the benign traffic either). Time to a rule enforcing: SQLi 57 s,
+  credential stuffing 60 s, command injection 59, 59 and 89 s. With this the pipeline has produced a rule
+  in **33 of 33 class-runs on three different applications**.
+* The 89 s command-injection run is the live shadow stage rejecting `aegis-cmdi-1` because two matches were
+  on an observer-unflagged identity with three or more requests; the ground truth shows all 15 shadow
+  matches were the attacker's own requests (a rotating identity that had not been flagged yet), so this
+  was a conservative false alarm of the live judge, not a real false positive. The loop fell back to
+  `aegis-cmdi-3` and enforced it about 30 s later. Credential stuffing candidate `-3` (account-keyed) was
+  rejected in shadow in all three runs, as on BookNook, and the identity-keyed rule was enforced.
+* **Four things DVWA exposed, all in my code and not in DVWA:**
+  1. *The login detector only understood JSON bodies.* DVWA logs in with a urlencoded form, so credential
+     stuffing was invisible to the observer; `is_login_attempt`, the enumeration detector, the
+     controller's `account_of` and the gateway's `accountOf` now parse form bodies too (with tests).
+  2. *The mutation engine broke form bodies.* It URL-encoded a whole `ip=...&Submit=Submit` body as one
+     string, encoding the `=` and `&`, so the "mutant" was not an attack the app would interpret. The
+     command-injection rule scored 67% on those mutants, below the 80% threshold, and was rightly
+     refused: the first DVWA command-injection run enforced nothing in 420 s. The engine now mutates form
+     values the way it mutates query-string and JSON values; the threshold is unchanged and the rule
+     passes with 12 of 12 mutants (the earlier apps send JSON and query strings, so their results are
+     unaffected).
+  3. *The cookie jar dropped DVWA's session cookie.* DVWA sets it for `domain=localhost` while our
+     clients connect to `127.0.0.1` (the `localhost` delay, paper section 6 item 13), so the attacker
+     silently never logged in. Fixed in the DVWA attack client with a permissive cookie policy.
+  4. *DVWA is single-threaded and locks accounts.* PHP's built-in server stalls on any slow request (an
+     unresolvable host in the ping page takes 2+ s), so benign and attack payloads use an invalid IP that
+     fails at once, and DVWA's 3-failures-in-15-minutes lockout is reset at every range start.
+* Caveats: the attacks and the benign generator are mine; the corpus is only 4,552 distinct requests;
+  the command-injection payloads are read-only commands (`whoami`, `echo`, `dir`, `type` of win.ini,
+  `ipconfig`) that would run on the host if not blocked; and DVWA at level "low" is easy.

@@ -34,3 +34,17 @@ class FormBodies(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FormMutants(unittest.TestCase):
+    def test_form_body_mutants_keep_the_form_structure(self):
+        sys.path.insert(0, str(ROOT / "range" / "mutate"))
+        import mutate as mut
+        rec = {"method": "POST", "uri": "/vulnerabilities/exec/", "body": "ip=1.1.1.1+%26+whoami&Submit=Submit"}
+        ms = mut.mutate_request(rec)
+        self.assertTrue(ms)
+        for m in ms:
+            # the parameter names and the separator survive; only values are rewritten
+            self.assertIn("ip=", m["body"])
+            self.assertIn("&Submit=Submit", m["body"])
+            self.assertNotIn("%253D", m["body"])

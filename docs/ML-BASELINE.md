@@ -1,4 +1,53 @@
-# Static ML-WAF baseline (spec baseline 3)
+# Static ML-WAF baselines (spec baseline 3)
+
+Two baselines. **v2 (below) is the one to cite**; v1 (further down) was trained on attacks from my own
+generator and is kept for the record.
+
+## v2: trained on real public attack data (2026-10-27)
+
+Script `eval/ml_baseline2.py`, output `docs/data/ml_baseline2.txt` / `.json`. Training data:
+
+* the public **HttpParamsDataset** (github.com/Morzeux/HttpParamsDataset, 31,067 labelled parameter values:
+  19,304 benign from CSIC-2010; 10,852 SQLi from sqlmap, 532 XSS from XSSYA/FuzzDB, 89 command injection and
+  290 path traversal from Vega/FuzzDB), wrapped as ordinary requests, 60% for training and 40% held out;
+* the benign requests of **all four of our corpora** (Juice Shop, diverse sessions, BookNook, DVWA; 7,549
+  / 7,257 / 10,321 distinct requests in train / validation / test, hash-split);
+* models: character TF-IDF (2-5-grams) + logistic regression, gradient-boosted trees over engineered
+  payload features (sklearn HistGradientBoosting), and the max of the two. The threshold of each is set on
+  the validation benign requests so at most **0.01 % of raw benign rows** are flagged (AEGIS's own budget).
+
+Measured benign false positives at that threshold on the test split: 0.0029 % (TF-IDF+LR), 0 % (GBDT).
+
+| what is tested (n = requests) | TF-IDF + LR | GBDT | max of both |
+|---|---|---|---|
+| held-out public dataset: SQLi / XSS / path traversal / command injection | 100 / 99 / 100 / 79 % | 100 / 93 / 86 / 44 % | 100 / 96 / 95 / 56 % |
+| REAL campaign requests our scripts send: SQLi (n=16) | **37.5 %** | 0 % | 0 % |
+| ...XSS (n=12) / path traversal (n=10) / SSRF (n=10) | 100 / 80 / 100 % | 50 / 0 / 0 % | 50 / 80 / 0 % |
+| ...command injection (n=24) | **0 %** (33 % at 0.1 % FP) | 8 % | 8 % |
+| their mutants: SQLi / XSS / traversal / cmdi / SSRF | 35 / 88 / 100 / 0 / 100 % | 0 / 50 / 0 / 9 / 0 % | 0 / 50 / 93 / 9 / 0 % |
+| four families never trained: SSTI / NoSQL / XXE / JNDI | 0 / 0 / 83 / 0 % | 17 / 0 / 8 / 33 % | 17 / 0 / 8 / 33 % |
+| behavioural campaigns, per request: stuffing / IDOR / enumeration | **0 / 0 / 0 %** | 0 / 0 / 0 % | 0 / 0 / 0 % |
+
+**Reading it honestly.**
+
+* Training on real public data makes the baseline much better than v1 on classic single-request
+  payloads: TF-IDF + LR catches XSS, SSRF and path traversal in our campaigns at the 0.01 % budget (100 %,
+  100 %, 80 %), where AEGIS needs a first exposure plus about a minute to learn a rule. A per-request
+  ML-WAF has a real advantage on payloads like these.
+* It is still weak where it matters for our claims: **0 % of command injection** (the public set has only 89
+  such values and they look different from our shell-chaining requests), **37.5 % of SQLi** (the public
+  SQLi values are sqlmap's, which differ from hand-written login bypasses), 0 % of three of the four
+  unseen families, and **0 % of every behavioural campaign** (credential stuffing, IDOR, enumeration: each
+  request is individually normal, so no per-request model can see them).
+* The campaign sets are small (10-30 requests per class), the models are untuned, and the dataset is
+  parameter values, not full requests. Treat the percentages as rough. This is a fair "CRS + a static
+  classifier" comparison for the claims about behavioural campaigns and unseen families; it is not a claim
+  that AEGIS beats a tuned commercial ML-WAF on classic payloads.
+* The max-of-both ensemble is worse than TF-IDF + LR alone, because the GBDT's threshold at the 0.01 %
+  budget is much stricter.
+
+## v1: generated training attacks (2026-10-24)
+
 
 Script `eval/ml_baseline.py`, output `docs/data/ml_baseline.txt` / `.json` (re-run 2026-10-24 on the
 combined 20,262-distinct-request benign corpus). A hashed character-n-gram logistic regression (numpy

@@ -23,10 +23,10 @@ application it defends.
 | M2 rule synthesis + 6-stage gate | done | [docs/M2-RESULTS.md](docs/M2-RESULTS.md), [docs/M2-LIVE-STAGES.md](docs/M2-LIVE-STAGES.md) |
 | M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
 | M3 LLM last-resort path | **0/16** ablation cells promoted a rule (Mistral 7B and Qwen2.5-Coder 7B, one-shot and repair loop, 4 novel campaigns); the gate absorbed all 124 candidates | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
-| M2/M3 closed loop (the whole thing, no human) | **done and replicated**: `controller/loop.py` enforced a rule 58-80 s (mean) after a campaign began in 24 of 24 class-runs (5 replicates on Juice Shop, 3 on a second small app), gate corpus of 20,262 distinct benign requests; 0 of 151,726 benign requests blocked on Juice Shop and 0 of 155,444 on the second app; memory speeds the synthesis step by orders of magnitude but not end-to-end time; attacks shorter than the ~1-1.5 minute loop latency are not mitigated | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
+| M2/M3 closed loop (the whole thing, no human) | **done and replicated**: `controller/loop.py` enforced a rule 58-80 s (mean) after a campaign began in 33 of 33 class-runs (5 replicates on Juice Shop, 3 on a second small app, 3 on DVWA), gate corpus of 20,262 distinct benign requests; 0 of 151,726 benign requests blocked on Juice Shop and 0 of 155,444 on the second app, 0 of 40,828 on DVWA; memory speeds the synthesis step by orders of magnitude but not end-to-end time; attacks shorter than the ~1-1.5 minute loop latency are not mitigated | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
 | Rule-store hardening | HMAC-signed manifest + admin bearer token implemented, unit-tested and **used in every end-to-end run since 2026-10-12**; tamper/replay against a live gateway untested | [docs/HARDENING.md](docs/HARDENING.md) |
 | M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; real-speed adaptive red agent: requests reaching the app 380 -> 11 of 400 (SQLi), 323 -> 40 (cmdi); credential stuffing slowed (400 -> 267) but not stopped (single runs); a first adaptive run found one real password blocked by the SQLi rule, fixed | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
-| Baselines | CRS alone (above) and a crude static ML-WAF (`docs/ML-BASELINE.md`): 0% on the behavioural campaigns and on unseen families | [docs/ML-BASELINE.md](docs/ML-BASELINE.md) |
+| Baselines | CRS alone (above) and a static ML-WAF trained on public attack data (`docs/ML-BASELINE.md`): good on classic XSS/SSRF/traversal payloads, 0% on command injection, 37.5% on SQLi and 0% on the behavioural campaigns | [docs/ML-BASELINE.md](docs/ML-BASELINE.md) |
 | M5 write-up | **draft v0.3** (numbers trace to the results files; 15 methodology/engineering errors disclosed) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 
 Read the "Caveats" section of each results file before quoting a number. Early
@@ -121,3 +121,10 @@ prevent. The manifest and admin API are unauthenticated. See each results file.
 
 MIT (own code). GPL/AGPL range tools (sqlmap, nikto, DVWA, Grafana) run as
 separate processes and are not linked.
+
+
+## Third target: DVWA (optional)
+
+`python range/dvwa/setup_dvwa.py` downloads PHP 8.3 and MariaDB 10.11 (SHA-256 verified) and DVWA 2.5 under
+`~/tools`, then `python eval/e2e_dvwa.py` runs the autonomous loop against it. Loopback only; DVWA is
+deliberately vulnerable. See `docs/E2E-RESULTS.md` (DVWA section).

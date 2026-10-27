@@ -1,6 +1,6 @@
 # AEGIS: Gating Autonomous Web-Application Defence on Measured Harm
 
-*Draft v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
+*Draft v0.5 — 2026-10-27 (adds DVWA as a third target, a stronger ML baseline trained on public data, lessons 20-22). v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
 repository (linked in section 9) and was produced by a script in `eval/`. Citations
 use the numbering of the PRD bibliography and **must be verified against the originals
 before submission** (PRD section 0).*
@@ -28,11 +28,11 @@ and two that blocked a whole campaign but were stopped by the mutation stage for
 memorising the payload. Wired into one autonomous loop (detect, synthesise, gate, shadow,
 canary, enforce, with a signed rule store), AEGIS put a rule in force 58-80 s on average after a
 campaign began, in 24 of 24 class-runs over five replicates on Juice Shop and three on a second small
-app, with 0 of 151,726 benign requests blocked on Juice Shop and 0 of 155,444 on the second app. Against a real-speed adaptive attacker that re-encodes payloads and rotates
+app, and in 9 of 9 on a third (DVWA, a PHP/MySQL application with form logins), with 0 of 151,726, 0 of 155,444 and 0 of 40,828 benign requests blocked on the three apps. Against a real-speed adaptive attacker that re-encodes payloads and rotates
 identity, requests reaching the app fell from 380 to 11 of 400 (SQLi) and 323 to 40 (command
 injection); credential stuffing was slowed (400 to 267 guesses reaching the app) but not prevented, and
 a short attack that finishes inside the ~1-1.5 minute loop latency is not mitigated. We also report
-nineteen measurement and engineering errors we made and corrected, among them attack tools that announce
+twenty-two measurement and engineering errors we made and corrected, among them attack tools that announce
 themselves (inflating a WAF baseline twofold), a `localhost` delay that slowed our own attackers
 tenfold, and a benign corpus whose 443,507 rows hold only about 4,100 distinct request shapes.
 
@@ -251,25 +251,35 @@ for stuffing (section 6, item 13), and a first closed-loop batch of these runs m
 command injection because of a flawed canary check (item 19); those runs are superseded. Benign
 requests blocked by an AEGIS rule across the three closed-loop runs: **0 of 225,558**.
 
-### 5.12 A second target app (`docs/E2E-RESULTS.md`)
+### 5.12 A second and a third target app (`docs/E2E-RESULTS.md`)
 BookNook is a small deliberately vulnerable stdlib-Python app with different paths, parameter names
 and a simulated command sink, with its own 30,011-request benign corpus. Nothing was retuned for it,
 but the first run failed on SQLi: the detector hard-coded Juice Shop's login URL, and the SQLi
 template flagged a benign review `'quoted' and "double"` (0.60% of that corpus). After fixing both
 (generic login detection; a real comparison required after `and`/`or`), all three classes were
-mitigated in 3/3 replicates. This is a self-built second app: it shows the pipeline is not
-hard-wired to one app's URLs, not that it generalises to real ones (DVWA was not run: it needs
-PHP/MySQL downloads).
+mitigated in 3/3 replicates. **DVWA** (PHP 8.3 + MariaDB, security level low, form logins with a CSRF
+token) was added as a third target: 3/3 replicates, all three classes enforced in 57-89 s, 0 of 40,828
+benign requests blocked. It also exposed four faults in my own tooling that no earlier app had: a login
+detector that understood only JSON, a mutation engine that broke form bodies and therefore rightly
+failed a correct command-injection rule (nothing was enforced in the first run), a cookie jar that
+dropped the app's session cookie, and a single-threaded server that punished slow payloads (section 6,
+items 20-22). Together the pipeline produced a rule in 33 of 33 class-runs on three applications. All
+three are lab targets I set up, and I wrote the attacks and the benign generators; this shows the
+pipeline is not hard-wired to one app's URLs or body format, not that it generalises to production
+applications.
 
 ### 5.13 A static ML-WAF baseline (`docs/ML-BASELINE.md`)
-A hashed n-gram logistic regression trained once offline on benign requests (20,262 distinct) plus
-generated attack variants, thresholded to our 0.01% false-positive budget (measured 0.012% of raw rows
-on the test split). It detects 0% / 0% of the real SQLi / XSS campaign requests, 80% / 0% / 80% of
-traversal / command-injection / SSRF, 0% of four families it never saw, and **0% of the three
-behavioural campaigns** (each request looks normal). The baseline is crude (generated training
-data, one configuration) and must not be read as a claim that AEGIS beats a good ML-WAF; it
-illustrates the structural gap that per-request models cannot see campaign-level attacks, and that a
-diverse benign corpus makes a fixed false-positive budget much stricter on them.
+A character TF-IDF + logistic regression (and a gradient-boosted-trees variant) trained on the public
+HttpParamsDataset (31k labelled values from CSIC-2010, sqlmap, XSSYA, Vega, FuzzDB) plus the benign
+requests of our four corpora, thresholded to our 0.01% false-positive budget (0.003% measured). It
+is genuinely good at classic single-request payloads in our campaigns (XSS 100%, SSRF 100%, path
+traversal 80%), where AEGIS needs a first exposure and about a minute, but it detects **0% of command
+injection**, 37.5% of SQLi (the 16 requests our scripts send), 0% of three of four unseen families and
+**0% of the three behavioural campaigns** (each request looks normal). An earlier baseline trained on
+my own generator did worse and is kept for the record. The campaign sets are 10-30 requests per class and
+the models untuned, so these are rough; the structural point stands: per-request models cannot see
+campaign-level attacks, and a rule learned from the campaign covers shell-chaining payloads that the
+public training data does not.
 
 ## 6. Methodology errors we made, and what they taught
 These are reported because each would have flattered the system, or hidden a weakness,
@@ -362,9 +372,24 @@ had it gone uncaught.
     The check now computes p99 from the request log with long-poll requests excluded, with a unit
     test. A related harness lesson: a laptop suspend of ~15 h hid inside one adaptive run, caught only
     because the harness reports log gaps; that run was repeated.
+20. **A detector that understands only JSON is blind on a form-based app.** The login detector, the
+    enumeration detector and the account extractors parsed JSON bodies only; DVWA's login is a urlencoded
+    form, so credential stuffing produced no campaign. Found by running a third app, as the hard-coded
+    login URL was found by the second. All four extractors now share one body parser.
+21. **Our own mutation engine produced invalid mutants.** It treated a form body as one string and
+    URL-encoded the `=` and `&` as well, which makes the app see no parameter at all, so the "mutant" was
+    not an attack. The gate then correctly refused a good command-injection rule (67% on mutants against an
+    80% threshold) and the loop enforced nothing for that class. The fix made the mutants faithful (mutate
+    values, keep the structure); it did not touch the threshold. Lesson: when the gate rejects, check the
+    test before blaming the rule, and equally do not loosen the gate to make a result appear.
+22. **Test harness details decided the result again.** DVWA sets its session cookie for `domain=localhost`
+    while our clients use `127.0.0.1`, so Python's cookie jar dropped it and the "attacker" silently never
+    logged in; PHP's built-in server serialises requests, so a ping to an unresolvable name (2+ s) stalled
+    everything; DVWA locks accounts after three failed logins, so one stuffing run broke the next. Each
+    would have produced a plausible but wrong "not mitigated" or "app broken" number.
 
 ## 7. Threats to validity and limitations
-One main application (plus one small self-built second app), eight attack classes we wrote, one
+One main application (plus a small self-built second app and DVWA as a third), eight attack classes we wrote, one
 laptop, five or three replicates for the end-to-end timings and single runs for the adaptive attacker; percentages over 8 campaigns move in 12.5-point steps. Actors are separated by
 a per-client cookie standing in for source IPs, so IP rotation is unhandled (the adaptive attacker in 5.11 exploits exactly this). The behavioural
 detector's thresholds are hand-set and evadable by pacing. Shadow and canary use the
@@ -379,7 +404,7 @@ means on those shapes (an earlier batch still blocked 3 of 138,611 live benign r
 ## 8. Future work
 A stronger adaptive adversary (probing rule boundaries; pacing under thresholds from the start); actor linkage beyond a cookie (IP/ASN/TLS fingerprint on a real deployment); held-out attack
 variants; for the LLM path, a vetted-pattern-library interface (the model chooses token
-classes, we compile the regex) and then larger/API models; DVWA (needs PHP/MySQL downloads) in addition to the BookNook second app (5.12); a campaign stream to measure the
+classes, we compile the regex) and then larger/API models; a real-world application outside our control (DVWA is a lab target); a campaign stream to measure the
 fraction of campaigns reaching the LLM.
 
 ## 9. Reproducibility
