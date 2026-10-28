@@ -1,0 +1,180 @@
+{
+  "phases": [
+    {
+      "label": "first",
+      "campaign": "sqli",
+      "enforced": true,
+      "rule": "aegis-sqli-3",
+      "enforce_event": "enforced",
+      "detect_after_onset_s": 1.4,
+      "detector_ttd_s": 0.3,
+      "mitigation_source": "fresh",
+      "mitigation_ttm_s": 0.5866,
+      "enforce_after_onset_s": 59.0,
+      "before_enforcement": {
+        "total": 90,
+        "blocked_by_aegis_rule": 16,
+        "blocked_by_crs": 64,
+        "reached_app": 10
+      },
+      "after_enforcement": {
+        "total": 63,
+        "blocked_by_aegis_rule": 56,
+        "blocked_by_crs": 0,
+        "reached_app": 7
+      },
+      "attacker_runs": 17,
+      "objective_met_runs_before": 0,
+      "objective_met_runs_after": 0
+    },
+    {
+      "label": "first",
+      "campaign": "command_injection",
+      "enforced": true,
+      "rule": "aegis-cmdi-1",
+      "enforce_event": "enforced",
+      "detect_after_onset_s": 1.0,
+      "detector_ttd_s": 0.3,
+      "mitigation_source": "fresh",
+      "mitigation_ttm_s": 0.5527,
+      "enforce_after_onset_s": 58.6,
+      "before_enforcement": {
+        "total": 77,
+        "blocked_by_aegis_rule": 0,
+        "blocked_by_crs": 44,
+        "reached_app": 33
+      },
+      "after_enforcement": {
+        "total": 49,
+        "blocked_by_aegis_rule": 35,
+        "blocked_by_crs": 7,
+        "reached_app": 7
+      },
+      "attacker_runs": 18,
+      "objective_met_runs_before": 11,
+      "objective_met_runs_after": 0
+    },
+    {
+      "label": "first",
+      "campaign": "credential_stuffing",
+      "enforced": true,
+      "rule": "aegis-credential_stuffing-1",
+      "enforce_event": "enforced",
+      "detect_after_onset_s": 1.5,
+      "detector_ttd_s": 0.7,
+      "mitigation_source": "fresh",
+      "mitigation_ttm_s": 0.0241,
+      "enforce_after_onset_s": 59.0,
+      "before_enforcement": {
+        "total": 121,
+        "blocked_by_aegis_rule": 10,
+        "blocked_by_crs": 0,
+        "reached_app": 111
+      },
+      "after_enforcement": {
+        "total": 88,
+        "blocked_by_aegis_rule": 40,
+        "blocked_by_crs": 0,
+        "reached_app": 48
+      },
+      "attacker_runs": 19,
+      "objective_met_runs_before": 11,
+      "objective_met_runs_after": 8
+    }
+  ],
+  "controller": {
+    "campaigns_detected": 101,
+    "false_triggers_on_benign_actors": 44,
+    "false_trigger_samples": [
+      {
+        "technique": "sqli",
+        "actor_gt": "benign",
+        "n": 6
+      },
+      {
+        "technique": "sqli",
+        "actor_gt": "benign",
+        "n": 5
+      },
+      {
+        "technique": "sqli",
+        "actor_gt": "benign",
+        "n": 4
+      },
+      {
+        "technique": "sqli",
+        "actor_gt": "benign",
+        "n": 4
+      },
+      {
+        "technique": "sqli",
+        "actor_gt": "benign",
+        "n": 5
+      }
+    ],
+    "events_by_type": {
+      "already_enforcing": 33,
+      "campaign_detected": 101,
+      "candidate": 11,
+      "controller_start": 1,
+      "cooldown_skip": 57,
+      "enforced": 3,
+      "identity_rotation_detected": 1,
+      "live_stage": 7,
+      "live_start": 5,
+      "mitigation": 44,
+      "rejected_live": 1
+    },
+    "errors": [],
+    "rejected_live": [
+      {
+        "t": 1792904351.496,
+        "event": "rejected_live",
+        "rule": "aegis-credential_stuffing-3"
+      }
+    ],
+    "fraction_reaching_llm": 0.0
+  },
+  "benign": {
+    "requests": 51326,
+    "blocked_by_aegis_rule": 0,
+    "blocked_by_crs": 0,
+    "aegis_blocked_samples": [],
+    "journeys": 0,
+    "journeys_failed": 0,
+    "journeys_broken_by_defence": 0,
+    "journeys_failed_other": {
+      "app": 0,
+      "script": 0
+    }
+  },
+  "log_gaps_over_60s": [],
+  "target": "BookNook (second app)",
+  "final_rules": [
+    {
+      "id": "aegis-sqli-3",
+      "mode": "enforce"
+    },
+    {
+      "id": "aegis-cmdi-1",
+      "mode": "enforce"
+    },
+    {
+      "id": "aegis-credential_stuffing-1",
+      "mode": "enforce"
+    },
+    {
+      "id": "aegis-credential_stuffing-3",
+      "mode": "off"
+    },
+    {
+      "id": "aegis-credential_stuffing-4",
+      "mode": "shadow"
+    }
+  ],
+  "config": {
+    "shadow_s": 20,
+    "canary_s": 30,
+    "wall_s": 372
+  }
+}

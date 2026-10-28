@@ -1,0 +1,232 @@
+{
+  "config": {
+    "arms": [
+      "crs",
+      "closed"
+    ],
+    "goals": [
+      "command_injection"
+    ],
+    "budget": 400,
+    "pace": 0.4,
+    "seed": 1,
+    "rps": 8.0,
+    "shadow_s": 20,
+    "canary_s": 30,
+    "warmup_s": 75,
+    "settle_s": 10
+  },
+  "arms": [
+    {
+      "arm": "crs",
+      "goals": [
+        {
+          "goal": "command_injection",
+          "agent": {
+            "goal": "command_injection",
+            "budget": 400,
+            "requests": 400,
+            "blocked": 77,
+            "passed": 323,
+            "first_block_at": 2,
+            "objective_met": false,
+            "requests_to_objective": null,
+            "valid_found": [],
+            "adaptations": {
+              "mutate": 3,
+              "rotate": 2,
+              "slow": 2
+            },
+            "identities": 3,
+            "learned_quota": null,
+            "mutators_tried": [
+              "upper_keywords",
+              "mixed_case",
+              "url_encode"
+            ],
+            "final_pace": 1.6,
+            "seconds": 685.2,
+            "timeline": [
+              [
+                3,
+                "mutate->upper_keywords"
+              ],
+              [
+                6,
+                "rotate identity"
+              ],
+              [
+                9,
+                "slow->0.8s"
+              ],
+              [
+                12,
+                "mutate->mixed_case"
+              ],
+              [
+                15,
+                "rotate identity"
+              ],
+              [
+                18,
+                "slow->1.6s"
+              ],
+              [
+                21,
+                "mutate->url_encode"
+              ]
+            ]
+          },
+          "gateway_view": {
+            "attack_requests": 400,
+            "identities_seen": 3,
+            "blocked_by_aegis_rule": 0,
+            "blocked_by_crs": 77,
+            "reached_app": 323,
+            "first_aegis_block_at_request": null
+          },
+          "observer": {
+            "identities_flagged": 0,
+            "flagged_with_right_technique": 0,
+            "campaign_events": 0
+          },
+          "aegis_rules_enforced": [],
+          "rejected_live": [],
+          "bypass_events": 0
+        }
+      ],
+      "benign": {
+        "benign_requests": 31505,
+        "blocked_by_aegis_rule": 0,
+        "fraction": 0.0,
+        "worst_60s_window_fraction": 0.0,
+        "samples": []
+      },
+      "journeys": {
+        "n": 506,
+        "failed": 77,
+        "broken_by_defence": 28
+      },
+      "log_gaps_over_60s": [],
+      "controller_events": {},
+      "final_rules": []
+    },
+    {
+      "arm": "closed",
+      "goals": [
+        {
+          "goal": "command_injection",
+          "agent": {
+            "goal": "command_injection",
+            "budget": 400,
+            "requests": 400,
+            "blocked": 77,
+            "passed": 323,
+            "first_block_at": 2,
+            "objective_met": false,
+            "requests_to_objective": null,
+            "valid_found": [],
+            "adaptations": {
+              "mutate": 3,
+              "rotate": 2,
+              "slow": 2
+            },
+            "identities": 3,
+            "learned_quota": null,
+            "mutators_tried": [
+              "upper_keywords",
+              "mixed_case",
+              "url_encode"
+            ],
+            "final_pace": 1.6,
+            "seconds": 683.2,
+            "timeline": [
+              [
+                3,
+                "mutate->upper_keywords"
+              ],
+              [
+                6,
+                "rotate identity"
+              ],
+              [
+                9,
+                "slow->0.8s"
+              ],
+              [
+                12,
+                "mutate->mixed_case"
+              ],
+              [
+                15,
+                "rotate identity"
+              ],
+              [
+                18,
+                "slow->1.6s"
+              ],
+              [
+                21,
+                "mutate->url_encode"
+              ]
+            ]
+          },
+          "gateway_view": {
+            "attack_requests": 400,
+            "identities_seen": 3,
+            "blocked_by_aegis_rule": 0,
+            "blocked_by_crs": 77,
+            "reached_app": 323,
+            "first_aegis_block_at_request": null
+          },
+          "observer": {
+            "identities_flagged": 3,
+            "flagged_with_right_technique": 3,
+            "campaign_events": 7
+          },
+          "aegis_rules_enforced": [],
+          "rejected_live": [
+            "aegis-cmdi-1",
+            "aegis-traversal-1"
+          ],
+          "bypass_events": 0
+        }
+      ],
+      "benign": {
+        "benign_requests": 29399,
+        "blocked_by_aegis_rule": 0,
+        "fraction": 0.0,
+        "worst_60s_window_fraction": 0.0,
+        "samples": []
+      },
+      "journeys": {
+        "n": 457,
+        "failed": 82,
+        "broken_by_defence": 23
+      },
+      "log_gaps_over_60s": [],
+      "controller_events": {
+        "controller_start": 1,
+        "campaign_detected": 7,
+        "mitigation": 6,
+        "live_start": 4,
+        "live_stage": 7,
+        "retry_after_noisy_rollback": 2,
+        "rejected_live": 2,
+        "candidate": 4,
+        "cooldown_skip": 1,
+        "controller_stop": 1
+      },
+      "final_rules": [
+        {
+          "id": "aegis-cmdi-1",
+          "mode": "off"
+        },
+        {
+          "id": "aegis-traversal-1",
+          "mode": "off"
+        }
+      ]
+    }
+  ]
+}

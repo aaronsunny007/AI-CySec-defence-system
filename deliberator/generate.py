@@ -52,10 +52,23 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # Comment-tolerance is in the regex (not a transform): removeComments
         # would delete the `--` we match for payloads like admin'--. The
         # (?:\s|/\*.*?\*/) class also absorbs the /**/ whitespace-evasion mutant.
+        # A bare quote followed by '#' is NOT matched: a real user's password
+        # (7ggq|;]3,p'#) contained it and was locked out of login in a live run
+        # (docs/M4-RESULTS.md). "' OR 1=1#" is still caught by the quote+or branch.
+        # The comment branch needs the quote attached to a value (admin'--, 1') --) or at the very start,
+        # not a lone quote after a space: the generated review "don't ' and ' --" was blocked live (3 of
+        # 138,611 benign requests in the final Juice Shop runs).
+        # The boolean branch demands an actual COMPARISON after or/and (1=1, '1'='1', a call,
+        # not/true/false/null). A bare "quote then and" matched the review text 'quoted' and
+        # "double" on a second app (0.60% of its benign corpus) and was rightly rejected.
+        ws = r"(?:\s|/\*.*?\*/)"
+        cmp_ = (r"(?:\d+" + ws + r"*[=<>]|'[^']*'" + ws + r"*[=<>]|\(|\bnot\b|\btrue\b|\bfalse\b|\bnull\b|\w+" + ws + r"*=)")
         c.append(_ir("sqli", 3, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(union(?:\s|/\*.*?\*/)+select|('|%27)(?:\s|/\*.*?\*/|\)|%29)*(--|#)|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and|union)\b|\bor\b(?:\s|/\*.*?\*/)+\d+(?:\s|/\*.*?\*/)*=(?:\s|/\*.*?\*/)*\d+)",
-                     ["urlDecodeUni"],
-                     desc="regex for quote+keyword/comment and union SQLi (comment-tolerant)"))
+                     r"(?i)(union(?:\s|/\*.*?\*/)+(?:all(?:\s|/\*.*?\*/)+)?select|(?:^|[\w)%])('|%27)(?:\s|/\*.*?\*/|\)|%29)*--(?:[^a-z]|$)"
+                     r"|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and)\b" + ws + r"*" + cmp_ +
+                     r"|\bor\b" + ws + r"+\d+" + ws + r"*=" + ws + r"*\d+)",
+                     ["urlDecodeUni", "urlDecodeUni"],
+                     desc="regex for quote+boolean comparison / comment / union-select SQLi (comment- and double-encoding tolerant)"))
 
     elif attack_class == "xss":
         c.append(_ir("xss", 1, "signature", "args_and_body", "detectXSS", "",
@@ -74,27 +87,42 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # so the very pattern we want to match is gone (found in the M4 arms race).
         # The payload is in the PATH, so the target is the URI, not args/body.
         # `.{2,}` followed by a slash also catches `....//` (a ../ filter bypass).
-        trav = r"(?i)(\.{2,}(/|%2f|%5c|\\)+|%2e%2e|%252e|/etc/passwd|%00|%2500)"
+        # A single "../" is ordinary text ("see ../docs": 0.22% of a diverse benign corpus). Attacks
+        # chain several, name a sensitive file, use a null byte, or climb one level straight into
+        # a system directory.
+        trav = (r"(?i)((\.{2,}(/|%2f|%5c|\\)+){2,}|(%2e%2e(/|%2f|%5c|\\)+){2,}|/etc/(passwd|shadow)"
+                r"|win\.ini|boot\.ini|/proc/self|%00|%2500|\x00"
+                r"|\.{2,}(/|%2f|%5c|\\)+(etc|windows|winnt|proc|boot|root|var)\b)")
         c.append(_ir("traversal", 1, "input_constraint", "uri", "rx", trav,
-                     ["urlDecodeUni"], desc="traversal sequences / null byte / /etc/passwd in URI"))
+                     ["urlDecodeUni", "urlDecodeUni"], desc="traversal sequences / null byte / /etc/passwd in URI"))
         if ep:
             c.append(_ir("traversal", 2, "input_constraint", "uri", "rx", trav,
-                         ["urlDecodeUni"], endpoint=ep.split("{")[0].rstrip("/") or None,
+                         ["urlDecodeUni", "urlDecodeUni"], endpoint=ep.split("{")[0].rstrip("/") or None,
                          desc="traversal patterns in URI, scoped to the targeted endpoint"))
         c.append(_ir("traversal", 3, "input_constraint", "uri", "rx",
-                     r"(\.{2,}[/\\]+){2,}", ["urlDecodeUni"],
+                     r"(\.{2,}[/\\]+){2,}", ["urlDecodeUni", "urlDecodeUni"],
                      desc="two or more consecutive ../ sequences in URI"))
 
     elif attack_class == "cmdi":
+        # NOTE: no cmdLine transform. ModSecurity's cmdLine DELETES quotes/backslashes and
+        # turns ';' into a space, so a regex that looks for ';' can never match after it
+        # (found by the first live end-to-end run: all three templates blocked 0% of
+        # '; cat /etc/passwd'). Match the raw decoded text instead.
+        ws = r"(?:\s|/\*.*?\*/)"
+        cmd = r"(cat|id|whoami|ls|ping|sleep|uname|wget|curl|nc|bash|sh)\b"
+        # $( and backticks count only when a command word follows ("$(10) off" and `code` are
+        # ordinary text); HTML entities are decoded first so "&amp; ping" is not read as "; ping".
         c.append(_ir("cmdi", 1, "input_constraint", "args_and_body", "rx",
-                     r"(?i)(;\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(|`)",
-                     ["urlDecodeUni", "cmdLine"], desc="shell metacharacters + commands"))
+                     r"(?i)((;|&&|\|\|?)" + ws + r"*" + cmd + r"|\$\(" + ws + r"*" + cmd + r"|`" + ws + r"*" + cmd + r"[^`]*`)",
+                     ["urlDecodeUni", "urlDecodeUni", "htmlEntityDecode"],
+                     desc="shell separator + command, $(command), `command` (entity-decoded, comment/double-encoding tolerant)"))
         c.append(_ir("cmdi", 2, "input_constraint", "args_and_body", "rx",
                      r"(?i)(&&|\|\||;|\$\(|`).*(cat|id|whoami|ls|ping|sleep)",
-                     ["urlDecodeUni", "cmdLine"], desc="command chaining then command"))
+                     ["urlDecodeUni", "urlDecodeUni"], desc="command chaining then command (broad)"))
         c.append(_ir("cmdi", 3, "input_constraint", "args_and_body", "rx",
-                     r"[;&|`$]{1,}\s*(cat|id|whoami|ping|sleep)\b",
-                     ["urlDecodeUni", "cmdLine"], desc="metachar directly before command"))
+                     r"(?i)[;&|]{1,2}" + ws + r"*" + cmd + r"(?:" + ws + r"+[^\s]|$)",
+                     ["urlDecodeUni", "urlDecodeUni", "htmlEntityDecode"],
+                     desc="separator directly before a command that has an argument or ends the value"))
 
     elif attack_class == "ssrf":
         c.append(_ir("ssrf", 1, "input_constraint", "args_and_body", "rx",
@@ -144,6 +172,12 @@ def _rate_ir(cls: str, dossier: dict) -> list[dict]:
         "idor_bola": ("/rest/basket", ["GET"], [(8, 30), (15, 60)]),
     }
     endpoint, methods, rates = cfg.get(cls, ("/rest", ["GET", "POST"], [(10, 60)]))
+    if cls == "credential_stuffing":
+        # scope to the endpoint the campaign actually hit (works on apps other than Juice Shop)
+        for e in dossier.get("endpoints", []):
+            if e not in ("", "/") and not e.startswith("/socket.io"):
+                endpoint = e.replace("{id}", "").rstrip("/") or endpoint
+                break
     out = []
     for i, (n, w) in enumerate(rates, 1):
         out.append({
@@ -153,6 +187,19 @@ def _rate_ir(cls: str, dossier: dict) -> list[dict]:
             "scope": {"endpoint_prefix": endpoint, "methods": methods},
             "rate": {"count": n, "window_s": w},
         })
+    if cls == "credential_stuffing":
+        # Account-keyed variants: count guesses per TARGET account, so an attacker who rotates
+        # identity cannot reset the counter. Tried only after the identity-keyed ones (smaller
+        # blast radius: an attacker can deliberately lock a victim account out of logins).
+        for j, (n, w) in enumerate([(5, 60), (10, 60)], len(rates) + 1):
+            out.append({
+                "id": f"aegis-{cls}-{j}",
+                "description": f"rate-limit {cls} per ACCOUNT: >{n} attempts/{w}s on one account",
+                "attack_class": cls, "mechanism": "rate_limit", "action": "block",
+                "ttl_s": 86400, "key": "account",
+                "scope": {"endpoint_prefix": endpoint, "methods": methods},
+                "rate": {"count": n, "window_s": w},
+            })
     return out
 
 

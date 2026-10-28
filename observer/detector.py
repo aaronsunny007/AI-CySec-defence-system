@@ -100,6 +100,36 @@ def _decoded(r: Request) -> str:
     return urllib.parse.unquote_plus(r.query + " " + r.body)
 
 
+def body_fields(body: str | None) -> dict:
+    """The fields of a small request body, from JSON or from an HTML form (urlencoded). Anything else,
+    or anything over 4 KB, yields {}. (DVWA logs in with a plain form post; a detector that only
+    understood JSON bodies was blind to credential stuffing there.)"""
+    if not body or len(body) > 4096:
+        return {}
+    b = body.lstrip()
+    if b.startswith("{"):
+        try:
+            d = json.loads(b)
+        except (json.JSONDecodeError, ValueError):
+            return {}
+        return d if isinstance(d, dict) else {}
+    if "=" in b and "\n" not in b.strip():
+        q = urllib.parse.parse_qs(b, keep_blank_values=True)
+        return {k.lower(): v[0] for k, v in q.items() if v}
+    return {}
+
+
+def is_login_attempt(r: Request) -> bool:
+    """A credential attempt on ANY endpoint: a POST whose body (JSON or form) carries a password and an
+    identifier. (Hard-coding Juice Shop's /rest/user/login made the detector blind on any
+    other app; found by running it against a second target. Form bodies: found on the third.)"""
+    if r.method != "POST" or not r.body or "password" not in r.body.lower():
+        return False
+    d = body_fields(r.body)
+    return (isinstance(d.get("password"), str)
+            and any(isinstance(d.get(k), str) for k in ("email", "username", "user")))
+
+
 def detect(actor: Actor) -> list[Finding]:
     """Run all behavioural detectors over one actor's time-sorted requests."""
     out: list[Finding] = []
@@ -123,7 +153,7 @@ def detect(actor: Actor) -> list[Finding]:
                                f"{len(hits)} requests matching {fam} signature"))
 
     # --- credential stuffing: many logins in a window ---
-    logins = [r for r in reqs if r.method == "POST" and r.path == "/rest/user/login"]
+    logins = [r for r in reqs if is_login_attempt(r)]
     out += _rate_rule(logins, T["stuffing_min"], "credential_stuffing",
                       lambda rs: f"{len(rs)} login attempts within {T['window_s']:.0f}s")
 
@@ -131,7 +161,7 @@ def detect(actor: Actor) -> list[Finding]:
     enum_eps = ("/rest/user/security-question", "/rest/user/reset-password",
                 "/rest/user/whoami")
     enum = [r for r in reqs if any(r.path.startswith(e) for e in enum_eps)
-            or (r.method == "POST" and r.path == "/rest/user/login")]
+            or is_login_attempt(r)]
     emails = _distinct_window(enum, lambda r: _email_of(r))
     if emails and len(emails[0]) >= T["enum_min"]:
         first = emails[1]
@@ -166,14 +196,26 @@ def detect(actor: Actor) -> list[Finding]:
     return out
 
 
+def evidence(actor: Actor, technique: str) -> list[Request]:
+    """The requests that made the detector fire for an injection family: the ones
+    matching that family's signature. These (not the actor's recon traffic) are the
+    'malicious requests' a candidate rule must block."""
+    rx = SIGS.get(technique)
+    if rx is None:
+        return []
+    if technique == "traversal":
+        # Traversal rules inspect the URI; a '/etc/passwd' inside a POST body (e.g. a
+        # command-injection payload) is not something a URI rule can be asked to block.
+        return [r for r in actor.requests
+                if rx.search(urllib.parse.unquote_plus(r.path + "?" + r.query))]
+    return [r for r in actor.requests if rx.search(_decoded(r)) or rx.search(r.path)]
+
+
 def _email_of(r: Request) -> str | None:
-    try:
-        if r.body:
-            d = json.loads(r.body)
-            if isinstance(d, dict) and d.get("email"):
-                return str(d["email"]).lower()
-    except json.JSONDecodeError:
-        pass
+    d = body_fields(r.body)
+    for k in ("email", "username"):
+        if isinstance(d.get(k), str) and d[k]:
+            return d[k].lower()
     q = urllib.parse.parse_qs(r.query)
     return (q.get("email") or [None])[0]
 

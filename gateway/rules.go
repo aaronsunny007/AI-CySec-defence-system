@@ -17,8 +17,8 @@ package main
 //     windows survive reloads.
 //   - Rollback = set mode off; the admin call reloads immediately, so rollback
 //     is bounded by build time, well under 5 s (FR-E5).
-//   - The admin API listens on loopback only. Signing the manifest (rule-store
-//     tampering, PRD section 9) is NOT implemented yet.
+//   - The admin API listens on loopback only. With AEGIS_MANIFEST_KEY set the manifest
+//     must be HMAC-signed and AEGIS_ADMIN_TOKEN guards the mutating endpoints (sign.go).
 
 import (
 	"encoding/json"
@@ -51,6 +51,10 @@ type ManifestRule struct {
 	Methods        []string `json:"methods,omitempty"`
 	Count          int      `json:"count,omitempty"`
 	WindowS        int      `json:"window_s,omitempty"`
+	// Key: what a rate rule counts per. "" / "actor" = the visitor identity (default);
+	// "account" = the account named in the request body (defeats identity rotation for
+	// credential stuffing; does not help against one password sprayed over many accounts).
+	Key string `json:"key,omitempty"`
 }
 
 type Manifest struct {
@@ -182,6 +186,9 @@ func buildRuleSet(m Manifest, staticInclude string) (*ruleSet, error) {
 		case "rate":
 			if r.Count < 1 || r.WindowS < 1 || r.EndpointPrefix == "" {
 				return nil, fmt.Errorf("rule %s: bad rate spec", r.ID)
+			}
+			if r.Key != "" && r.Key != "actor" && r.Key != "account" {
+				return nil, fmt.Errorf("rule %s: bad rate key %q", r.ID, r.Key)
 			}
 			rs.rate = append(rs.rate, r)
 			rs.rateByID[r.ID] = r
@@ -323,7 +330,7 @@ func newRateLimiter() *rateLimiter { return &rateLimiter{hits: map[string][]time
 // check records this request against every matching rate rule and returns the
 // ids of rules whose window is exceeded: the (count+1)-th and later in-scope
 // request within the trailing window_s. Same logic as gate/ratelimit.py.
-func (rl *rateLimiter) check(rules []ManifestRule, actor, method, path string) []string {
+func (rl *rateLimiter) check(rules []ManifestRule, actor, account, method, path string) []string {
 	if rl == nil || len(rules) == 0 {
 		return nil
 	}
@@ -335,7 +342,14 @@ func (rl *rateLimiter) check(rules []ManifestRule, actor, method, path string) [
 		if !rr.matches(method, path) {
 			continue
 		}
-		key := actor + "\x00" + rr.ID
+		subject := actor
+		if rr.Key == "account" {
+			if account == "" {
+				continue // nothing to key on: this request is not about an account
+			}
+			subject = "acct:" + account
+		}
+		key := subject + "\x00" + rr.ID
 		win := append(rl.hits[key], now)
 		cutoff := now.Add(-time.Duration(rr.WindowS) * time.Second)
 		j := 0
@@ -367,9 +381,13 @@ func (rl *rateLimiter) prune(maxIdle time.Duration) {
 
 // --- manifest IO, reload, watcher ---------------------------------------------
 
-func readManifest(path string) (Manifest, error) {
+func readManifest(path string, key []byte) (Manifest, error) {
 	var m Manifest
-	b, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return m, err
+	}
+	b, err := decodeManifest(raw, key)
 	if err != nil {
 		return m, err
 	}
@@ -379,8 +397,8 @@ func readManifest(path string) (Manifest, error) {
 	return m, nil
 }
 
-func writeManifest(path string, m Manifest) error {
-	b, err := json.MarshalIndent(m, "", "  ")
+func writeManifest(path string, m Manifest, key []byte) error {
+	b, err := encodeManifest(m, key)
 	if err != nil {
 		return err
 	}
@@ -406,9 +424,16 @@ func (g *gateway) reload() error {
 	g.reloadMu.Lock()
 	defer g.reloadMu.Unlock()
 	t0 := time.Now()
-	m, err := readManifest(g.manifestPath)
+	m, err := readManifest(g.manifestPath, g.manifestKey)
 	if err != nil {
 		return err
+	}
+	// Replay protection (signed mode): never go back to an older manifest, even a
+	// validly signed one.
+	if len(g.manifestKey) > 0 {
+		if cur := g.rs.Load(); cur != nil && m.Version < cur.version {
+			return fmt.Errorf("manifest v%d is older than the loaded v%d (replay refused)", m.Version, cur.version)
+		}
 	}
 	rs, err := buildRuleSet(m, g.staticInclude)
 	if err != nil {
@@ -484,7 +509,7 @@ func (g *gateway) adminMux() http.Handler {
 			return
 		}
 		g.reloadMu.Lock()
-		m, err := readManifest(g.manifestPath)
+		m, err := readManifest(g.manifestPath, g.manifestKey)
 		if err != nil {
 			g.reloadMu.Unlock()
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -502,7 +527,7 @@ func (g *gateway) adminMux() http.Handler {
 			return
 		}
 		m.Version++
-		err = writeManifest(g.manifestPath, m)
+		err = writeManifest(g.manifestPath, m, g.manifestKey)
 		g.reloadMu.Unlock()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -514,13 +539,13 @@ func (g *gateway) adminMux() http.Handler {
 		}
 		fmt.Fprintf(w, "%s -> %s\n", id, mode)
 	}
-	mux.HandleFunc("/mode", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/mode", requireToken(g.adminToken, func(w http.ResponseWriter, r *http.Request) {
 		pct := 0
 		fmt.Sscanf(r.URL.Query().Get("pct"), "%d", &pct)
 		setMode(w, r, r.URL.Query().Get("id"), r.URL.Query().Get("mode"), pct)
-	})
-	mux.HandleFunc("/rollback", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	mux.HandleFunc("/rollback", requireToken(g.adminToken, func(w http.ResponseWriter, r *http.Request) {
 		setMode(w, r, r.URL.Query().Get("id"), "off", 0)
-	})
+	}))
 	return mux
 }

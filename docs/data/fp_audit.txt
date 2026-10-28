@@ -1,0 +1,34 @@
+
+=== benign_00_combined_detect.jsonl: 20262 rows, 20262 distinct requests
+aegis-sqli-1         rows     45 (0.2221%)  distinct    44  <-- FP
+aegis-sqli-2         rows     11 (0.0543%)  distinct    11  <-- FP
+aegis-sqli-3         rows      1 (0.0049%)  distinct     1  <-- FP
+aegis-xss-1          rows     22 (0.1086%)  distinct    14  <-- FP
+aegis-xss-2          rows     18 (0.0888%)  distinct    10  <-- FP
+aegis-xss-3          rows      0 (0.0000%)  distinct     0
+aegis-traversal-1    rows      0 (0.0000%)  distinct     0
+aegis-traversal-2    rows      0 (0.0000%)  distinct     0
+aegis-traversal-3    rows      0 (0.0000%)  distinct     0
+aegis-cmdi-1         rows      2 (0.0099%)  distinct     2  <-- FP
+aegis-cmdi-2         rows     69 (0.3405%)  distinct    69  <-- FP
+aegis-cmdi-3         rows      0 (0.0000%)  distinct     0
+aegis-ssrf-1         rows      0 (0.0000%)  distinct     0
+aegis-ssrf-2         rows      0 (0.0000%)  distinct     0
+aegis-ssrf-3         rows      0 (0.0000%)  distinct     0
+
+=== stress_benign_detect.jsonl: 60116 rows, 33294 distinct requests
+aegis-sqli-1         rows    436 (0.7253%)  distinct   429  <-- FP
+aegis-sqli-2         rows    170 (0.2828%)  distinct   163  <-- FP
+aegis-sqli-3         rows     13 (0.0216%)  distinct    13  <-- FP
+aegis-xss-1          rows      4 (0.0067%)  distinct     4  <-- FP
+aegis-xss-2          rows      0 (0.0000%)  distinct     0
+aegis-xss-3          rows      0 (0.0000%)  distinct     0
+aegis-traversal-1    rows      0 (0.0000%)  distinct     0
+aegis-traversal-2    rows      0 (0.0000%)  distinct     0
+aegis-traversal-3    rows      0 (0.0000%)  distinct     0
+aegis-cmdi-1         rows      2 (0.0033%)  distinct     2  <-- FP
+aegis-cmdi-2         rows    970 (1.6135%)  distinct   970  <-- FP
+aegis-cmdi-3         rows     23 (0.0383%)  distinct    23  <-- FP
+aegis-ssrf-1         rows      0 (0.0000%)  distinct     0
+aegis-ssrf-2         rows      0 (0.0000%)  distinct     0
+aegis-ssrf-3         rows      0 (0.0000%)  distinct     0

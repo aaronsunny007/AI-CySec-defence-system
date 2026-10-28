@@ -100,7 +100,7 @@ def validate(ir: dict) -> None:
         _require(isinstance(rate, dict), "rate_limit needs a rate block")
         _require(isinstance(rate.get("count"), int) and rate["count"] >= 1, "rate.count >= 1")
         _require(isinstance(rate.get("window_s"), int) and rate["window_s"] >= 1, "rate.window_s >= 1")
-        _require(ir.get("key", "actor") == "actor", "rate_limit key must be 'actor'")
+        _require(ir.get("key", "actor") in ("actor", "account"), "rate_limit key must be 'actor' or 'account'")
         _require(bool(sc.get("endpoint_prefix")), "rate_limit needs scope.endpoint_prefix")
         return
 
@@ -137,6 +137,7 @@ def compile_rate(ir: dict) -> dict:
         "endpoint_prefix": sc["endpoint_prefix"],
         "methods": sc.get("methods") or ["GET", "POST", "PUT", "DELETE", "PATCH"],
         "count": ir["rate"]["count"], "window_s": ir["rate"]["window_s"],
+        "key": ir.get("key", "actor"),
         "ttl_s": ir.get("ttl_s", 86400),
         "description": ir.get("description", f"rate-limit {ir['attack_class']}"),
     }

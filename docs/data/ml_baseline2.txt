@@ -1,0 +1,32 @@
+dataset: 31067 values; labels: {'cmdi': 89, 'norm': 19304, 'path-traversal': 290, 'sqli': 10852, 'xss': 532}
+benign benign_00_combined_detect.jsonl: distinct train/val/test = 6092/5829/8341
+benign booknook_corpus.jsonl: distinct train/val/test = 94/100/119
+benign dvwa_corpus.jsonl: distinct train/val/test = 1363/1328/1861
+train docs: 26190 attacks: 7143
+tfidf+lr        threshold   -1.77: test benign FP at the 0.01% threshold = 0.0029% of raw rows, 0.01% of distinct
+gbdt            threshold    3.29: test benign FP at the 0.01% threshold = 0.0000% of raw rows, 0.00% of distinct
+ensemble(max)   threshold    3.29: test benign FP at the 0.01% threshold = 0.0000% of raw rows, 0.00% of distinct
+
+what                                                              tfidf+lr                  gbdt         ensemble(max)
+                                                         @0.01% / @0.1% FP     @0.01% / @0.1% FP     @0.01% / @0.1% FP
+held-out public dataset: cmdi                               79.1% /  93.0%        44.2% /  44.2%        55.8% /  55.8%
+held-out public dataset: path-traversal                    100.0% / 100.0%        86.2% /  86.2%        94.8% /  94.8%
+held-out public dataset: sqli                              100.0% / 100.0%        99.7% /  99.7%       100.0% / 100.0%
+held-out public dataset: xss                                99.0% /  99.5%        92.9% /  92.9%        96.0% /  96.0%
+REAL campaign requests: sqli                                37.5% /  37.5%         0.0% /   0.0%         0.0% /   0.0%
+  ...their mutants: sqli                                    34.8% /  41.3%         0.0% /   0.0%         0.0% /   0.0%
+REAL campaign requests: xss                                100.0% / 100.0%        50.0% /  50.0%        50.0% /  50.0%
+  ...their mutants: xss                                     88.2% /  97.1%        50.0% /  50.0%        50.0% /  50.0%
+REAL campaign requests: path_traversal                      80.0% / 100.0%         0.0% /   0.0%        80.0% /  80.0%
+  ...their mutants: path_traversal                         100.0% / 100.0%         0.0% /   0.0%        92.9% /  92.9%
+REAL campaign requests: command_injection                    0.0% /  33.3%         8.3% /   8.3%         8.3% /   8.3%
+  ...their mutants: command_injection                        0.0% /  31.8%         9.1% /   9.1%         9.1% /   9.1%
+REAL campaign requests: ssrf                               100.0% / 100.0%         0.0% /   0.0%         0.0% /   0.0%
+  ...their mutants: ssrf                                   100.0% / 100.0%         0.0% /   0.0%         0.0% /   0.0%
+NOVEL family (never trained): ssti                           0.0% /   0.0%        16.7% /  16.7%        16.7% /  16.7%
+NOVEL family (never trained): nosqli                         0.0% /   0.0%         0.0% /   0.0%         0.0% /   0.0%
+NOVEL family (never trained): xxe                           83.3% /  83.3%         8.3% /   8.3%         8.3% /   8.3%
+NOVEL family (never trained): jndi                           0.0% /  58.3%        33.3% /  33.3%        33.3% /  33.3%
+behavioural campaign, per request: credential_stuffing         0.0% /   0.0%         0.0% /   0.0%         0.0% /   0.0%
+behavioural campaign, per request: idor_bola                 0.0% /   0.0%         0.0% /   0.0%         0.0% /   0.0%
+behavioural campaign, per request: user_enumeration          0.0% /   0.0%         0.0% /   0.0%         0.0% /   0.0%

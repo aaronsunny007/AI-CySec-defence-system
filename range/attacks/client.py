@@ -78,6 +78,10 @@ class Actor:
         # requests into one actor (stands in for a distinct source IP on the
         # single-host range). Not a detection feature.
         hdrs = {"User-Agent": self.user_agent, "Cookie": f"aegis_vid=atk-{self.actor_id}"}
+        if "127.0.0.1" in self.base:
+            # Connect by IP (avoids a ~2 s IPv6-fallback delay per connection on Windows) but keep
+            # the Host header a browser would send, so CRS rule 920350 (numeric Host) does not fire.
+            hdrs["Host"] = "localhost:8080"
         body = data
         if json_body is not None:
             body = json.dumps(json_body).encode()

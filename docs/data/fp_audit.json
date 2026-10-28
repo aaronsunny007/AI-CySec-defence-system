@@ -1,0 +1,128 @@
+{
+ "dvwa_corpus.jsonl": [
+  {
+   "rule": "aegis-sqli-1",
+   "rows_matched": 43,
+   "rate_rows": 0.001643353970801804,
+   "distinct_matched": 8,
+   "examples": [
+    [
+     "POST",
+     "/vulnerabilities/xss_s/",
+     "txtName=%C3%9Cnal&mtxMessage=%27quoted%27+and+%22double%22&btnSign=Sig",
+     12
+    ],
+    [
+     "POST",
+     "/vulnerabilities/xss_s/",
+     "txtName=Zo%C3%AB&mtxMessage=%27quoted%27+and+%22double%22&btnSign=Sign",
+     9
+    ],
+    [
+     "POST",
+     "/vulnerabilities/xss_s/",
+     "txtName=xxxxxxxxxx&mtxMessage=%27quoted%27+and+%22double%22&btnSign=Si",
+     5
+    ]
+   ]
+  },
+  {
+   "rule": "aegis-sqli-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-sqli-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-xss-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-xss-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-xss-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-traversal-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-cmdi-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-cmdi-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-cmdi-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-1",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-2",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  },
+  {
+   "rule": "aegis-ssrf-3",
+   "rows_matched": 0,
+   "rate_rows": 0,
+   "distinct_matched": 0,
+   "examples": []
+  }
+ ]
+}

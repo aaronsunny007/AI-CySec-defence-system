@@ -1,0 +1,1027 @@
+{
+  "config": {
+    "arms": [
+      "crs",
+      "closed"
+    ],
+    "goals": [
+      "sqli"
+    ],
+    "budget": 400,
+    "pace": 0.4,
+    "seed": 1,
+    "rps": 8.0,
+    "shadow_s": 20,
+    "canary_s": 30,
+    "warmup_s": 75,
+    "settle_s": 10
+  },
+  "arms": [
+    {
+      "arm": "crs",
+      "goals": [
+        {
+          "goal": "sqli",
+          "agent": {
+            "goal": "sqli",
+            "budget": 400,
+            "requests": 400,
+            "blocked": 20,
+            "passed": 380,
+            "first_block_at": 1,
+            "objective_met": false,
+            "requests_to_objective": null,
+            "valid_found": [],
+            "adaptations": {
+              "mutate": 4,
+              "rotate": 3,
+              "slow": 3
+            },
+            "identities": 4,
+            "learned_quota": null,
+            "mutators_tried": [
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode"
+            ],
+            "final_pace": 3.2,
+            "seconds": 1451.8,
+            "timeline": [
+              [
+                2,
+                "mutate->upper_keywords"
+              ],
+              [
+                4,
+                "rotate identity"
+              ],
+              [
+                6,
+                "slow->0.8s"
+              ],
+              [
+                8,
+                "mutate->mixed_case"
+              ],
+              [
+                10,
+                "rotate identity"
+              ],
+              [
+                12,
+                "slow->1.6s"
+              ],
+              [
+                14,
+                "mutate->url_encode"
+              ],
+              [
+                16,
+                "rotate identity"
+              ],
+              [
+                18,
+                "slow->3.2s"
+              ],
+              [
+                20,
+                "mutate->double_url_encode"
+              ]
+            ]
+          },
+          "gateway_view": {
+            "attack_requests": 400,
+            "identities_seen": 4,
+            "blocked_by_aegis_rule": 0,
+            "blocked_by_crs": 20,
+            "reached_app": 380,
+            "first_aegis_block_at_request": null
+          },
+          "observer": {
+            "identities_flagged": 0,
+            "flagged_with_right_technique": 0,
+            "campaign_events": 0
+          },
+          "aegis_rules_enforced": [],
+          "rejected_live": [],
+          "bypass_events": 0
+        }
+      ],
+      "benign": {
+        "benign_requests": 49961,
+        "blocked_by_aegis_rule": 0,
+        "fraction": 0.0,
+        "worst_60s_window_fraction": 0.0,
+        "samples": []
+      },
+      "journeys": {
+        "n": 760,
+        "failed": 118,
+        "broken_by_defence": 28
+      },
+      "log_gaps_over_60s": [],
+      "controller_events": {},
+      "final_rules": []
+    },
+    {
+      "arm": "closed",
+      "goals": [
+        {
+          "goal": "sqli",
+          "agent": {
+            "goal": "sqli",
+            "budget": 400,
+            "requests": 400,
+            "blocked": 375,
+            "passed": 25,
+            "first_block_at": 1,
+            "objective_met": false,
+            "requests_to_objective": null,
+            "valid_found": [],
+            "adaptations": {
+              "mutate": 63,
+              "rotate": 62,
+              "slow": 62
+            },
+            "identities": 63,
+            "learned_quota": null,
+            "mutators_tried": [
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment",
+              "identity",
+              "upper_keywords",
+              "mixed_case",
+              "url_encode",
+              "double_url_encode",
+              "sql_comments",
+              "extra_whitespace",
+              "case_comment"
+            ],
+            "final_pace": 5.0,
+            "seconds": 1886.7,
+            "timeline": [
+              [
+                2,
+                "mutate->upper_keywords"
+              ],
+              [
+                4,
+                "rotate identity"
+              ],
+              [
+                6,
+                "slow->0.8s"
+              ],
+              [
+                8,
+                "mutate->mixed_case"
+              ],
+              [
+                10,
+                "rotate identity"
+              ],
+              [
+                12,
+                "slow->1.6s"
+              ],
+              [
+                14,
+                "mutate->url_encode"
+              ],
+              [
+                16,
+                "rotate identity"
+              ],
+              [
+                18,
+                "slow->3.2s"
+              ],
+              [
+                20,
+                "mutate->double_url_encode"
+              ],
+              [
+                47,
+                "rotate identity"
+              ],
+              [
+                49,
+                "slow->5.0s"
+              ],
+              [
+                51,
+                "mutate->sql_comments"
+              ],
+              [
+                53,
+                "rotate identity"
+              ],
+              [
+                55,
+                "slow->5.0s"
+              ],
+              [
+                57,
+                "mutate->extra_whitespace"
+              ],
+              [
+                59,
+                "rotate identity"
+              ],
+              [
+                61,
+                "slow->5.0s"
+              ],
+              [
+                63,
+                "mutate->case_comment"
+              ],
+              [
+                65,
+                "rotate identity"
+              ],
+              [
+                67,
+                "slow->5.0s"
+              ],
+              [
+                69,
+                "mutate->identity"
+              ],
+              [
+                71,
+                "rotate identity"
+              ],
+              [
+                73,
+                "slow->5.0s"
+              ],
+              [
+                75,
+                "mutate->upper_keywords"
+              ],
+              [
+                77,
+                "rotate identity"
+              ],
+              [
+                79,
+                "slow->5.0s"
+              ],
+              [
+                81,
+                "mutate->mixed_case"
+              ],
+              [
+                83,
+                "rotate identity"
+              ],
+              [
+                85,
+                "slow->5.0s"
+              ],
+              [
+                87,
+                "mutate->url_encode"
+              ],
+              [
+                89,
+                "rotate identity"
+              ],
+              [
+                91,
+                "slow->5.0s"
+              ],
+              [
+                93,
+                "mutate->double_url_encode"
+              ],
+              [
+                95,
+                "rotate identity"
+              ],
+              [
+                97,
+                "slow->5.0s"
+              ],
+              [
+                99,
+                "mutate->sql_comments"
+              ],
+              [
+                101,
+                "rotate identity"
+              ],
+              [
+                103,
+                "slow->5.0s"
+              ],
+              [
+                105,
+                "mutate->extra_whitespace"
+              ],
+              [
+                107,
+                "rotate identity"
+              ],
+              [
+                109,
+                "slow->5.0s"
+              ],
+              [
+                111,
+                "mutate->case_comment"
+              ],
+              [
+                113,
+                "rotate identity"
+              ],
+              [
+                115,
+                "slow->5.0s"
+              ],
+              [
+                117,
+                "mutate->identity"
+              ],
+              [
+                119,
+                "rotate identity"
+              ],
+              [
+                121,
+                "slow->5.0s"
+              ],
+              [
+                123,
+                "mutate->upper_keywords"
+              ],
+              [
+                125,
+                "rotate identity"
+              ],
+              [
+                127,
+                "slow->5.0s"
+              ],
+              [
+                129,
+                "mutate->mixed_case"
+              ],
+              [
+                131,
+                "rotate identity"
+              ],
+              [
+                133,
+                "slow->5.0s"
+              ],
+              [
+                135,
+                "mutate->url_encode"
+              ],
+              [
+                137,
+                "rotate identity"
+              ],
+              [
+                139,
+                "slow->5.0s"
+              ],
+              [
+                141,
+                "mutate->double_url_encode"
+              ],
+              [
+                143,
+                "rotate identity"
+              ],
+              [
+                145,
+                "slow->5.0s"
+              ],
+              [
+                147,
+                "mutate->sql_comments"
+              ],
+              [
+                149,
+                "rotate identity"
+              ],
+              [
+                151,
+                "slow->5.0s"
+              ],
+              [
+                153,
+                "mutate->extra_whitespace"
+              ],
+              [
+                155,
+                "rotate identity"
+              ],
+              [
+                157,
+                "slow->5.0s"
+              ],
+              [
+                159,
+                "mutate->case_comment"
+              ],
+              [
+                161,
+                "rotate identity"
+              ],
+              [
+                163,
+                "slow->5.0s"
+              ],
+              [
+                165,
+                "mutate->identity"
+              ],
+              [
+                167,
+                "rotate identity"
+              ],
+              [
+                169,
+                "slow->5.0s"
+              ],
+              [
+                171,
+                "mutate->upper_keywords"
+              ],
+              [
+                173,
+                "rotate identity"
+              ],
+              [
+                175,
+                "slow->5.0s"
+              ],
+              [
+                177,
+                "mutate->mixed_case"
+              ],
+              [
+                179,
+                "rotate identity"
+              ],
+              [
+                181,
+                "slow->5.0s"
+              ],
+              [
+                183,
+                "mutate->url_encode"
+              ],
+              [
+                185,
+                "rotate identity"
+              ],
+              [
+                187,
+                "slow->5.0s"
+              ],
+              [
+                189,
+                "mutate->double_url_encode"
+              ],
+              [
+                191,
+                "rotate identity"
+              ],
+              [
+                193,
+                "slow->5.0s"
+              ],
+              [
+                195,
+                "mutate->sql_comments"
+              ],
+              [
+                197,
+                "rotate identity"
+              ],
+              [
+                199,
+                "slow->5.0s"
+              ],
+              [
+                201,
+                "mutate->extra_whitespace"
+              ],
+              [
+                203,
+                "rotate identity"
+              ],
+              [
+                205,
+                "slow->5.0s"
+              ],
+              [
+                207,
+                "mutate->case_comment"
+              ],
+              [
+                209,
+                "rotate identity"
+              ],
+              [
+                211,
+                "slow->5.0s"
+              ],
+              [
+                213,
+                "mutate->identity"
+              ],
+              [
+                215,
+                "rotate identity"
+              ],
+              [
+                217,
+                "slow->5.0s"
+              ],
+              [
+                219,
+                "mutate->upper_keywords"
+              ],
+              [
+                221,
+                "rotate identity"
+              ],
+              [
+                223,
+                "slow->5.0s"
+              ],
+              [
+                225,
+                "mutate->mixed_case"
+              ],
+              [
+                227,
+                "rotate identity"
+              ],
+              [
+                229,
+                "slow->5.0s"
+              ],
+              [
+                231,
+                "mutate->url_encode"
+              ],
+              [
+                233,
+                "rotate identity"
+              ],
+              [
+                235,
+                "slow->5.0s"
+              ],
+              [
+                237,
+                "mutate->double_url_encode"
+              ],
+              [
+                239,
+                "rotate identity"
+              ],
+              [
+                241,
+                "slow->5.0s"
+              ],
+              [
+                243,
+                "mutate->sql_comments"
+              ],
+              [
+                245,
+                "rotate identity"
+              ],
+              [
+                247,
+                "slow->5.0s"
+              ],
+              [
+                249,
+                "mutate->extra_whitespace"
+              ],
+              [
+                251,
+                "rotate identity"
+              ],
+              [
+                253,
+                "slow->5.0s"
+              ],
+              [
+                255,
+                "mutate->case_comment"
+              ],
+              [
+                257,
+                "rotate identity"
+              ],
+              [
+                259,
+                "slow->5.0s"
+              ],
+              [
+                261,
+                "mutate->identity"
+              ],
+              [
+                263,
+                "rotate identity"
+              ],
+              [
+                265,
+                "slow->5.0s"
+              ],
+              [
+                267,
+                "mutate->upper_keywords"
+              ],
+              [
+                269,
+                "rotate identity"
+              ],
+              [
+                271,
+                "slow->5.0s"
+              ],
+              [
+                273,
+                "mutate->mixed_case"
+              ],
+              [
+                275,
+                "rotate identity"
+              ],
+              [
+                277,
+                "slow->5.0s"
+              ],
+              [
+                279,
+                "mutate->url_encode"
+              ],
+              [
+                281,
+                "rotate identity"
+              ],
+              [
+                283,
+                "slow->5.0s"
+              ],
+              [
+                285,
+                "mutate->double_url_encode"
+              ],
+              [
+                287,
+                "rotate identity"
+              ],
+              [
+                289,
+                "slow->5.0s"
+              ],
+              [
+                291,
+                "mutate->sql_comments"
+              ],
+              [
+                293,
+                "rotate identity"
+              ],
+              [
+                295,
+                "slow->5.0s"
+              ],
+              [
+                297,
+                "mutate->extra_whitespace"
+              ],
+              [
+                299,
+                "rotate identity"
+              ],
+              [
+                301,
+                "slow->5.0s"
+              ],
+              [
+                303,
+                "mutate->case_comment"
+              ],
+              [
+                305,
+                "rotate identity"
+              ],
+              [
+                307,
+                "slow->5.0s"
+              ],
+              [
+                309,
+                "mutate->identity"
+              ],
+              [
+                311,
+                "rotate identity"
+              ],
+              [
+                313,
+                "slow->5.0s"
+              ],
+              [
+                315,
+                "mutate->upper_keywords"
+              ],
+              [
+                317,
+                "rotate identity"
+              ],
+              [
+                319,
+                "slow->5.0s"
+              ],
+              [
+                321,
+                "mutate->mixed_case"
+              ],
+              [
+                323,
+                "rotate identity"
+              ],
+              [
+                325,
+                "slow->5.0s"
+              ],
+              [
+                327,
+                "mutate->url_encode"
+              ],
+              [
+                329,
+                "rotate identity"
+              ],
+              [
+                331,
+                "slow->5.0s"
+              ],
+              [
+                333,
+                "mutate->double_url_encode"
+              ],
+              [
+                335,
+                "rotate identity"
+              ],
+              [
+                337,
+                "slow->5.0s"
+              ],
+              [
+                339,
+                "mutate->sql_comments"
+              ],
+              [
+                341,
+                "rotate identity"
+              ],
+              [
+                343,
+                "slow->5.0s"
+              ],
+              [
+                345,
+                "mutate->extra_whitespace"
+              ],
+              [
+                347,
+                "rotate identity"
+              ],
+              [
+                349,
+                "slow->5.0s"
+              ],
+              [
+                351,
+                "mutate->case_comment"
+              ],
+              [
+                353,
+                "rotate identity"
+              ],
+              [
+                355,
+                "slow->5.0s"
+              ],
+              [
+                357,
+                "mutate->identity"
+              ],
+              [
+                359,
+                "rotate identity"
+              ],
+              [
+                361,
+                "slow->5.0s"
+              ],
+              [
+                363,
+                "mutate->upper_keywords"
+              ],
+              [
+                365,
+                "rotate identity"
+              ],
+              [
+                367,
+                "slow->5.0s"
+              ],
+              [
+                369,
+                "mutate->mixed_case"
+              ],
+              [
+                371,
+                "rotate identity"
+              ],
+              [
+                373,
+                "slow->5.0s"
+              ],
+              [
+                375,
+                "mutate->url_encode"
+              ],
+              [
+                377,
+                "rotate identity"
+              ],
+              [
+                379,
+                "slow->5.0s"
+              ],
+              [
+                381,
+                "mutate->double_url_encode"
+              ],
+              [
+                383,
+                "rotate identity"
+              ],
+              [
+                385,
+                "slow->5.0s"
+              ],
+              [
+                387,
+                "mutate->sql_comments"
+              ],
+              [
+                389,
+                "rotate identity"
+              ],
+              [
+                391,
+                "slow->5.0s"
+              ],
+              [
+                393,
+                "mutate->extra_whitespace"
+              ],
+              [
+                395,
+                "rotate identity"
+              ],
+              [
+                397,
+                "slow->5.0s"
+              ],
+              [
+                399,
+                "mutate->case_comment"
+              ]
+            ]
+          },
+          "gateway_view": {
+            "attack_requests": 400,
+            "identities_seen": 63,
+            "blocked_by_aegis_rule": 355,
+            "blocked_by_crs": 20,
+            "reached_app": 25,
+            "first_aegis_block_at_request": 46
+          },
+          "observer": {
+            "identities_flagged": 63,
+            "flagged_with_right_technique": 63,
+            "campaign_events": 238
+          },
+          "aegis_rules_enforced": [
+            "aegis-sqli-3",
+            "aegis-credential_stuffing-1"
+          ],
+          "rejected_live": [],
+          "bypass_events": 0
+        }
+      ],
+      "benign": {
+        "benign_requests": 69527,
+        "blocked_by_aegis_rule": 0,
+        "fraction": 0.0,
+        "worst_60s_window_fraction": 0.0,
+        "samples": []
+      },
+      "journeys": {
+        "n": 1066,
+        "failed": 196,
+        "broken_by_defence": 43
+      },
+      "log_gaps_over_60s": [],
+      "controller_events": {
+        "controller_start": 1,
+        "campaign_detected": 238,
+        "mitigation": 83,
+        "live_start": 2,
+        "live_stage": 4,
+        "enforced": 2,
+        "candidate": 44,
+        "already_enforcing": 70,
+        "cooldown_skip": 96,
+        "identity_rotation_detected": 1,
+        "budget_skip": 59,
+        "controller_stop": 1
+      },
+      "final_rules": [
+        {
+          "id": "aegis-sqli-3",
+          "mode": "enforce"
+        },
+        {
+          "id": "aegis-credential_stuffing-1",
+          "mode": "enforce"
+        }
+      ]
+    }
+  ]
+}

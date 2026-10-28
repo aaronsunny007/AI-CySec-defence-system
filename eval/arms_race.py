@@ -51,7 +51,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--attack-log", type=Path, default=ROOT / "logs" / "attacks" / "requests.jsonl")
     p.add_argument("--benign", type=Path,
-                   default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                   default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     p.add_argument("--db", type=Path, default=ROOT / "memory" / "armsrace.db")
     args = p.parse_args()
 

@@ -51,7 +51,7 @@ def main() -> int:
     ap.add_argument("--pct", type=int, default=25)
     ap.add_argument("--rps", type=float, default=60)
     args = ap.parse_args()
-    corpus = next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))
+    corpus = sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"))[0]
     good = next(c for c in deliberator.candidates_for("sqli", {"endpoints": ["/rest/products/search"]})
                 if c["id"] == "aegis-sqli-3")
     exps = args.exp.split(",")

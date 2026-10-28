@@ -79,14 +79,16 @@ MAX_LLM_CALLS_PER_HOUR = 6
 def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
              mem: Memory, max_new_per_hour: int = MAX_NEW_RULES_PER_HOUR,
              llm=None, max_llm_per_hour: int = MAX_LLM_CALLS_PER_HOUR,
-             llm_rounds: int = 1) -> dict:
+             llm_rounds: int = 1, exclude: frozenset | set = frozenset(),
+             llm_interface: str = "free") -> dict:
+    """`exclude`: rule ids that already failed the LIVE stages; never offered again."""
     cls = (dossier.get("techniques") or [dossier.get("attack_class", "")])[0]
     campaign_id, sig = mem.record_campaign(dossier)
     t0 = time.perf_counter()
 
     # 1) exact repeat
     exact = mem.rule_for_signature(sig)
-    if exact:
+    if exact and exact["id"] not in exclude:
         mem.touch_rule(exact["id"])
         ttm = time.perf_counter() - t0
         mem.record_outcome(campaign_id, "reused", exact["id"], ttm)
@@ -96,6 +98,8 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
         tmp = Path(td)
         # 2) variant generalisation
         for ir in mem.rules_for_class(cls):
+            if ir["id"] in exclude:
+                continue
             if _quick_blocks(ir, campaign_requests, tmp):
                 mem.promote_rule(ir, sig)  # now also indexed under this signature
                 mem.touch_rule(ir["id"])
@@ -116,6 +120,8 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
         candidates = deliberator.candidates_for(cls, dossier)
         promoted = None
         for ir in candidates:
+            if ir["id"] in exclude:
+                continue
             if ir.get("mechanism") == "rate_limit":
                 continue  # rate candidates validated by the rate gate, not here
             ok, results = gatemod.run_gate(ir, campaign_requests, benign_corpus, tmp)
@@ -146,8 +152,12 @@ def mitigate(dossier: dict, campaign_requests: list[dict], benign_corpus: Path,
                     return {"source": "llm_budget_blocked", "rule": None, "ttm_s": ttm,
                             "signature": sig, "llm": llm_info,
                             "detail": f"LLM call cap {max_llm_per_hour}/h reached"}
-                prop = llm_mod.propose(dossier, campaign_requests, llm,
-                                       feedback=feedback or None)
+                proposer = llm_mod.propose
+                if llm_interface == "patterns":
+                    import patterns as patterns_mod
+                    proposer = patterns_mod.propose
+                prop = proposer(dossier, campaign_requests, llm,
+                                feedback=feedback or None)
                 r = prop.response
                 mem.record_llm_call(campaign_id, r.model if r else "?", r.tokens_in if r else 0,
                                     r.tokens_out if r else 0, r.seconds if r else 0.0,
@@ -203,7 +213,7 @@ def main() -> int:
     p.add_argument("--novel", type=Path,
                    help="JSON file holding both {dossier, requests} (e.g. data/attack_corpus/novel_ssti.json)")
     p.add_argument("--benign", type=Path,
-                   default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                   default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     p.add_argument("--db", type=Path, default=ROOT / "memory" / "aegis.db")
     p.add_argument("--repeats", type=int, default=2, help="how many times to see this campaign")
     p.add_argument("--llm", choices=["none", "ollama"], default="none",

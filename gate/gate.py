@@ -42,6 +42,10 @@ REPLAY = ROOT / "bin" / "replay.exe"
 FP_BUDGET = 0.0001          # 0.01%
 MUTATION_THRESHOLD = 0.80   # must block >= 80% of mutants
 DECISIONS_LOG = ROOT / "logs" / "gate" / "decisions.jsonl"
+# Benign requests that a rule has ALREADY been seen to block in a live run. The FP budget is a
+# rate (0.01%), and a rate cannot express "never this user": one real user's password was
+# locked out while the rule stayed inside the budget. Zero tolerance for these.
+HARD_NEGATIVES = ROOT / "data" / "hard_negatives.jsonl"
 
 
 @dataclass
@@ -52,14 +56,33 @@ class StageResult:
     numbers: dict = field(default_factory=dict)
 
 
+_REPLAY_CACHE: dict = {}
+
+
 def _replay(rule_file: Path, corpus_file: Path, limit: int = 0) -> dict:
+    """Run the real engine over a corpus. Results are cached in-process by (rule text, corpus file
+    identity): the answer is a pure function of those, and a controller that sees hundreds of
+    look-alike campaigns must not re-replay a 20k-request corpus for each one (the false-trigger
+    flood otherwise starved the real campaigns of controller time)."""
+    import hashlib
+    key = None
+    try:
+        st = corpus_file.stat()
+        key = (hashlib.sha1(rule_file.read_bytes()).hexdigest(), str(corpus_file), st.st_mtime_ns, st.st_size, limit)
+        if key in _REPLAY_CACHE:
+            return dict(_REPLAY_CACHE[key])
+    except OSError:
+        key = None
     cmd = [str(REPLAY), "-rule", str(rule_file), "-corpus", str(corpus_file)]
     if limit:
         cmd += ["-limit", str(limit)]
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode != 0:
         raise RuntimeError(f"replay failed: {p.stderr.strip()}")
-    return json.loads(p.stdout.strip().splitlines()[-1])
+    res = json.loads(p.stdout.strip().splitlines()[-1])
+    if key is not None and len(_REPLAY_CACHE) < 5000:
+        _REPLAY_CACHE[key] = dict(res)
+    return res
 
 
 def _write_corpus(records: list[dict], path: Path) -> None:
@@ -98,6 +121,15 @@ def run_gate(ir: dict, campaign_requests: list[dict], benign_corpus: Path,
         {"fp_rate": b["rate"], "matched": b["matched"], "total": b["total"]}))
     if not fp_ok:
         return False, results
+
+    # Stage 1b: hard negatives -> a rule must not match ANY of them (no budget).
+    if HARD_NEGATIVES.exists() and HARD_NEGATIVES.stat().st_size:
+        h = _replay(rule_file, HARD_NEGATIVES)
+        results.append(StageResult("hard_negatives", h["matched"] == 0,
+            f"matches {h['matched']}/{h['total']} known-harmful-to-block benign requests (allowed 0)",
+            {"matched": h["matched"], "total": h["total"]}))
+        if h["matched"]:
+            return False, results
 
     # Stage 2: campaign/attack replay -> must block the observed malicious requests.
     mal = [r for r in campaign_requests if r.get("malicious", True)]
@@ -153,7 +185,7 @@ def main() -> int:
     p.add_argument("--campaign", type=Path, required=True,
                    help="JSONL of the observed campaign's attack requests")
     p.add_argument("--benign", type=Path,
-                   default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                   default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     args = p.parse_args()
 
     if not REPLAY.exists():

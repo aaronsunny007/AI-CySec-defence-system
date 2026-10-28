@@ -76,7 +76,7 @@ def _benign_fp(rule_file: Path, benign: Path) -> float:
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--benign", type=Path,
-                   default=next((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl"), None))
+                   default=(sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) or [None])[0])
     args = p.parse_args()
     if args.benign is None or not args.benign.exists():
         print("benign corpus not found", file=sys.stderr)
