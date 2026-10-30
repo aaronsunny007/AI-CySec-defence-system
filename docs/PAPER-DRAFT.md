@@ -1,6 +1,6 @@
 # AEGIS: Gating Autonomous Web-Application Defence on Measured Harm
 
-*Draft v0.5 — 2026-10-27 (adds DVWA as a third target, a stronger ML baseline trained on public data, lessons 20-22). v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
+*Draft v0.6 — 2026-10-30 (re-runs the adaptive attacker with the final SQLi rule; fixes the IDOR detector's false alarms on public browsing, 100-136 to 7-10 false triggers per Juice Shop run; lesson 23). v0.5 — 2026-10-27 (adds DVWA as a third target, a stronger ML baseline trained on public data, lessons 20-22). v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
 repository (linked in section 9) and was produced by a script in `eval/`. Citations
 use the numbering of the PRD bibliography and **must be verified against the originals
 before submission** (PRD section 0).*
@@ -32,7 +32,7 @@ app, and in 9 of 9 on a third (DVWA, a PHP/MySQL application with form logins), 
 identity, requests reaching the app fell from 380 to 12 of 400 (SQLi) and 323 to 40 (command
 injection); credential stuffing was slowed (400 to 269 guesses reaching the app) but not prevented, and
 a short attack that finishes inside the ~1-1.5 minute loop latency is not mitigated. We also report
-twenty-two measurement and engineering errors we made and corrected, among them attack tools that announce
+twenty-three measurement and engineering errors we made and corrected, among them attack tools that announce
 themselves (inflating a WAF baseline twofold), a `localhost` delay that slowed our own attackers
 tenfold, and a benign corpus whose 443,507 rows hold only about 4,100 distinct request shapes.
 
@@ -388,6 +388,14 @@ had it gone uncaught.
     logged in; PHP's built-in server serialises requests, so a ping to an unresolvable name (2+ s) stalled
     everything; DVWA locks accounts after three failed logins, so one stuffing run broke the next. Each
     would have produced a plausible but wrong "not mitigated" or "app broken" number.
+23. **A flat threshold in our own detector produced most of our false alarms.** The IDOR heuristic flagged
+    any actor touching 4+ distinct ids on one endpoint, which is right for baskets and wrong for product
+    reviews that every shopper browses: about 90 false campaigns per Juice Shop run, none of which became a
+    rule (the gate rejected them) but which crowded the controller's budget. The fix is a per-endpoint ceiling
+    measured offline from benign actors (362 of 12,290 real benign actors flagged before, 0 after; live false
+    triggers 100-136 per run before, 7-10 after, 3 replicates). It is a curated file, not runtime learning, so
+    an attacker cannot raise it. Limit: the ceiling comes from our own corpora, and our replay harness still
+    assigns random requests to pseudo-users, which I did not change (`docs/E2E-RESULTS.md`).
 
 ## 7. Threats to validity and limitations
 One main application (plus a small self-built second app and DVWA as a third), eight attack classes we wrote, one
