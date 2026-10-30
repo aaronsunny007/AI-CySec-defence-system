@@ -244,3 +244,39 @@ injection was repeated because the laptop suspended for ~15 h mid-run.
   benign requests in the three closed-loop runs (66,230 / 80,688 / 78,640).
 * The weakness these runs expose is not the rules; it is the controller's dependence on the canary's
   health checks: one flawed metric turned a working system into one that mitigated nothing.
+
+
+---
+
+# Adaptive attacker, final rule set (2026-10-30)
+
+Re-run of the closed-loop arm with the final rule set, including the tightened SQLi comment branch
+(`aegis-sqli-3`), because the 2026-10-24 runs above used the SQLi rule before that last change. Same red
+agent, 400-request budget, seed 1, 8 req/s of background replay plus Playwright journeys, signed manifest
+and admin token on. Command: `eval/adaptive_run.py --arms closed --goals <g> --budget 400 --pace 0.4 --rps 8`
+(`logs/run_batch9.sh`); data in `docs/data/rep11/`. The CRS-only arm is not repeated: it does not depend
+on AEGIS code. **One run per cell, no confidence intervals.**
+
+| goal | requests reaching the app | blocked by an AEGIS rule | first AEGIS block | identities used / flagged right | valid logins harvested |
+|---|---|---|---|---|---|
+| credential stuffing | 269 / 400 | 131 | request 45 | 36 / 35 | **1** |
+| SQLi | **12 / 400** | 368 (+20 by CRS) | request 33 | 66 / 65 | n/a (never met) |
+| command injection | **40 / 400** | 294 (+66 by CRS) | request 49 | 59 / 48 (of 58 seen) | n/a (no sink) |
+
+* **Same picture as 2026-10-24, with the final SQLi rule.** SQLi 11 to 12 requests reaching the app,
+  command injection identical (40; its rule was not touched), stuffing 267 to 269. The tightened SQLi
+  branch cost nothing against this attacker.
+* **Stuffing is still slowed, not stopped.** The attacker harvested `admin@juice-sh.op` after 303 requests,
+  before the rate rules (`aegis-credential_stuffing-1`, then `-4`) had cut it off; it learned a quota of 44.
+  This is the second run in a row with one valid login; with one run per cell I cannot say whether the
+  earlier 0-login batch was luck or a different guess order.
+* **Safety:** 0 benign requests blocked by an AEGIS rule across 230,949 benign requests in the three runs
+  (82,461 / 84,625 / 63,863); worst 60-second window 0%. Journeys marked broken: 56/1,322, 65/1,367 and
+  35/1,019 (4.2%, 4.8%, 3.4%), the same range as the CRS-only arm earlier (3.5%), and not caused by an
+  AEGIS rule (none blocked a benign request). I did not break down the causes this time; the CRS-only arm
+  showed the same rate earlier, and CRS's own false positives (e.g. `PUT` rejected by rule 911100) are the
+  likely source.
+* **No live-stage rejections, no bypass events, no log gaps over 60 s** in any of the three runs.
+* **False triggers were 0 in these runs, as before** (every detection was on an attacker identity). That
+  is a property of this harness, which has a lighter background load than the end-to-end runs, so these
+  runs say nothing about the IDOR false-alarm fix; that is measured in `docs/E2E-RESULTS.md`.

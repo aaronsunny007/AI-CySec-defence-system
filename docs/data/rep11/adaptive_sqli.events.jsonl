@@ -1,0 +1,842 @@
+{"t": 1793351161.89, "event": "controller_start", "log": "C:\\Users\\denny\\Documents\\AI-CySec-defence-system\\logs\\gateway\\adaptive_closed.jsonl", "shadow_s": 20.0, "canary_s": 30.0, "window_s": 600.0, "ext_benign_actors": 162}
+{"t": 1793351237.694, "event": "campaign_detected", "actor": "h:88fa8502d4f494b7", "technique": "sqli", "onset": 1793351236.449159, "ttd_s": 0.277144, "n_requests": 3}
+{"t": 1793351241.012, "event": "mitigation", "technique": "sqli", "source": "fresh", "rule": "aegis-sqli-3", "ttm_s": 3.3086, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351241.013, "event": "live_start", "rule": "aegis-sqli-3", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1793351296.367, "event": "live_stage", "rule": "aegis-sqli-3", "stage": "shadow", "passed": true, "detail": "1079 live requests; suspected FPs 0/1069 (+1 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); live 11 vs replay-predicted 11 (tol 2)", "numbers": {"window_requests": 1079, "live_matches": 13, "logged_matches": 11, "nonflagged_requests": 1069, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 1, "flagged_actors": 3, "sample_suspect_uris": [], "replay_predicted": 11, "tolerance": 2}}
+{"t": 1793351296.367, "event": "live_stage", "rule": "aegis-sqli-3", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 0 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 1580, "rule_blocks": 0, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 0, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1793351296.368, "event": "enforced", "rule": "aegis-sqli-3"}
+{"t": 1793351297.449, "event": "campaign_detected", "actor": "h:244686e6be8f342c", "technique": "credential_stuffing", "onset": 1793351251.164474, "ttd_s": 13.837882, "n_requests": 16}
+{"t": 1793351297.464, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 11 request(s) limited"]}
+{"t": 1793351297.469, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0117, "signature": "87ac366fab484cfb"}
+{"t": 1793351297.47, "event": "live_start", "rule": "aegis-credential_stuffing-1", "shadow_s": 20.0, "canary_s": 30.0, "canary_pct": 25}
+{"t": 1793351354.582, "event": "live_stage", "rule": "aegis-credential_stuffing-1", "stage": "shadow", "passed": true, "detail": "1189 live requests; suspected FPs 0/1184 (+0 indeterminate, actors with <3 requests) non-campaign requests (allowed 0); n/a (rate rule)", "numbers": {"window_requests": 1189, "live_matches": 0, "logged_matches": 0, "nonflagged_requests": 1184, "suspected_fp_matches": 0, "fp_allowed": 0, "indeterminate_matches": 0, "flagged_actors": 5, "sample_suspect_uris": []}}
+{"t": 1793351354.583, "event": "live_stage", "rule": "aegis-credential_stuffing-1", "stage": "canary", "passed": true, "detail": "30s at 25%: no regression; rule blocked 1 attack / 0 benign requests (GT)", "numbers": {"canary_pct": 25, "window_requests": 1357, "rule_blocks": 1, "benign_requests_blocked_GT": 0, "attack_requests_blocked_GT": 1, "rolled_back": false, "detect_after_s": null, "rollback_call_s": null}}
+{"t": 1793351354.584, "event": "enforced", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351354.584, "event": "campaign_detected", "actor": "h:244686e6be8f342c", "technique": "user_enumeration", "onset": 1793351251.164474, "ttd_s": 10.427614, "n_requests": 16}
+{"t": 1793351354.615, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351354.636, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351354.647, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0512, "signature": "6205c942f2fff687"}
+{"t": 1793351354.648, "event": "campaign_detected", "actor": "h:244686e6be8f342c", "technique": "sqli", "onset": 1793351251.164474, "ttd_s": 1.264023, "n_requests": 16}
+{"t": 1793351354.683, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0116, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351354.685, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351354.686, "event": "campaign_detected", "actor": "h:1313a478dc8f2ef3", "technique": "sqli", "onset": 1793351238.141514, "ttd_s": 0.406528, "n_requests": 6}
+{"t": 1793351354.718, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0093, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351354.719, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351354.72, "event": "campaign_detected", "actor": "h:1313a478dc8f2ef3", "technique": "credential_stuffing", "onset": 1793351238.141514, "ttd_s": 3.63134, "n_requests": 6}
+{"t": 1793351354.722, "event": "identity_rotation_detected", "technique": "credential_stuffing", "identities": 2}
+{"t": 1793351354.773, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 4/29"]}
+{"t": 1793351354.807, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/29"]}
+{"t": 1793351354.826, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351354.85, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1039, "signature": "87ac366fab484cfb"}
+{"t": 1793351354.851, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351354.851, "event": "campaign_detected", "actor": "h:1313a478dc8f2ef3", "technique": "user_enumeration", "onset": 1793351238.141514, "ttd_s": 2.116129, "n_requests": 6}
+{"t": 1793351354.881, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351354.9, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351354.911, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0471, "signature": "6205c942f2fff687"}
+{"t": 1793351354.912, "event": "campaign_detected", "actor": "h:e77df92475ce243f", "technique": "sqli", "onset": 1793351242.247432, "ttd_s": 1.072669, "n_requests": 6}
+{"t": 1793351354.945, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0101, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351354.946, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351354.946, "event": "campaign_detected", "actor": "h:e77df92475ce243f", "technique": "credential_stuffing", "onset": 1793351242.247432, "ttd_s": 6.926897, "n_requests": 6}
+{"t": 1793351354.994, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 4/29"]}
+{"t": 1793351355.024, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/29"]}
+{"t": 1793351355.044, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351355.067, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0971, "signature": "87ac366fab484cfb"}
+{"t": 1793351355.068, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351355.069, "event": "campaign_detected", "actor": "h:e77df92475ce243f", "technique": "user_enumeration", "onset": 1793351242.247432, "ttd_s": 4.601078, "n_requests": 6}
+{"t": 1793351355.097, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351355.117, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351355.127, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0476, "signature": "6205c942f2fff687"}
+{"t": 1793351355.127, "event": "campaign_detected", "actor": "h:88fa8502d4f494b7", "technique": "user_enumeration", "onset": 1793351236.449159, "ttd_s": 1.330235, "n_requests": 4}
+{"t": 1793351355.169, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351355.232, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/442", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351355.305, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.1042, "signature": "6205c942f2fff687"}
+{"t": 1793351356.437, "event": "campaign_detected", "actor": "h:c218b578be21fbe2", "technique": "credential_stuffing", "onset": 1793351302.855827, "ttd_s": 22.909035, "n_requests": 6}
+{"t": 1793351356.48, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/36"]}
+{"t": 1793351356.51, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/36"]}
+{"t": 1793351356.526, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/512", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351356.542, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0892, "signature": "87ac366fab484cfb"}
+{"t": 1793351356.543, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351356.544, "event": "campaign_detected", "actor": "h:c218b578be21fbe2", "technique": "user_enumeration", "onset": 1793351302.855827, "ttd_s": 11.90044, "n_requests": 6}
+{"t": 1793351356.568, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/512", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351356.583, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/512", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351356.59, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0392, "signature": "6205c942f2fff687"}
+{"t": 1793351356.592, "event": "campaign_detected", "actor": "h:a583f47930e3443b", "technique": "user_enumeration", "onset": 1793351329.246943, "ttd_s": 17.402943, "n_requests": 5}
+{"t": 1793351356.616, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/512", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351356.632, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/512", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351356.638, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0395, "signature": "6205c942f2fff687"}
+{"t": 1793351356.638, "event": "campaign_detected", "actor": "h:a583f47930e3443b", "technique": "sqli", "onset": 1793351336.736221, "ttd_s": 6.804631, "n_requests": 5}
+{"t": 1793351356.663, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0071, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351356.664, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351356.665, "event": "campaign_detected", "actor": "h:c218b578be21fbe2", "technique": "sqli", "onset": 1793351308.046863, "ttd_s": 6.709404, "n_requests": 6}
+{"t": 1793351356.69, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0071, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351356.691, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351357.702, "event": "campaign_detected", "actor": "h:a583f47930e3443b", "technique": "credential_stuffing", "onset": 1793351329.246943, "ttd_s": 27.688245, "n_requests": 6}
+{"t": 1793351357.729, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/37"]}
+{"t": 1793351357.759, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/37"]}
+{"t": 1793351357.772, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/513", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351357.777, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0701, "signature": "87ac366fab484cfb"}
+{"t": 1793351357.777, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351375.927, "event": "campaign_detected", "actor": "h:9b2d9d90b747c76c", "technique": "sqli", "onset": 1793351363.038225, "ttd_s": 7.18658, "n_requests": 3}
+{"t": 1793351375.953, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0067, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351375.955, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351381.977, "event": "campaign_detected", "actor": "h:9b2d9d90b747c76c", "technique": "user_enumeration", "onset": 1793351363.038225, "ttd_s": 18.583933, "n_requests": 4}
+{"t": 1793351381.991, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/533", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351382.002, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/533", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351382.004, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0238, "signature": "6205c942f2fff687"}
+{"t": 1793351392.202, "event": "campaign_detected", "actor": "h:9b2d9d90b747c76c", "technique": "credential_stuffing", "onset": 1793351363.038225, "ttd_s": 28.468708, "n_requests": 6}
+{"t": 1793351392.231, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/45"]}
+{"t": 1793351392.257, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/45"]}
+{"t": 1793351392.268, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/540", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351392.274, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0649, "signature": "87ac366fab484cfb"}
+{"t": 1793351392.275, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351416.402, "event": "campaign_detected", "actor": "h:02bdddafe51c778c", "technique": "user_enumeration", "onset": 1793351396.970153, "ttd_s": 18.696467, "n_requests": 4}
+{"t": 1793351416.628, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/557", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351416.679, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/557", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351416.697, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.2783, "signature": "6205c942f2fff687"}
+{"t": 1793351421.724, "event": "campaign_detected", "actor": "h:02bdddafe51c778c", "technique": "sqli", "onset": 1793351396.970153, "ttd_s": 24.167718, "n_requests": 5}
+{"t": 1793351421.736, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0036, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351421.737, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351424.759, "event": "campaign_detected", "actor": "h:02bdddafe51c778c", "technique": "credential_stuffing", "onset": 1793351396.970153, "ttd_s": 26.8449, "n_requests": 6}
+{"t": 1793351424.788, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/53"]}
+{"t": 1793351424.81, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/53"]}
+{"t": 1793351424.821, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/566", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351424.828, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0615, "signature": "87ac366fab484cfb"}
+{"t": 1793351424.829, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351439.996, "event": "campaign_detected", "actor": "h:eeb90fc2ba891789", "technique": "sqli", "onset": 1793351427.575355, "ttd_s": 6.492156, "n_requests": 3}
+{"t": 1793351440.006, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351440.007, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351443.03, "event": "campaign_detected", "actor": "h:eeb90fc2ba891789", "technique": "user_enumeration", "onset": 1793351427.575355, "ttd_s": 14.438633, "n_requests": 4}
+{"t": 1793351443.052, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/585", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351443.069, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/585", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351443.073, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0387, "signature": "6205c942f2fff687"}
+{"t": 1793351454.214, "event": "campaign_detected", "actor": "h:eeb90fc2ba891789", "technique": "credential_stuffing", "onset": 1793351427.575355, "ttd_s": 25.720703, "n_requests": 6}
+{"t": 1793351454.244, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/57"]}
+{"t": 1793351454.274, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/57"]}
+{"t": 1793351454.285, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/597", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351454.291, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0704, "signature": "87ac366fab484cfb"}
+{"t": 1793351454.291, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351469.65, "event": "campaign_detected", "actor": "h:b50e4ae20c8e677c", "technique": "sqli", "onset": 1793351459.208108, "ttd_s": 4.457313, "n_requests": 3}
+{"t": 1793351469.725, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0129, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351469.726, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351473.752, "event": "campaign_detected", "actor": "h:b50e4ae20c8e677c", "technique": "user_enumeration", "onset": 1793351459.208108, "ttd_s": 14.219681, "n_requests": 4}
+{"t": 1793351473.769, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/613", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351473.783, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/613", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351473.786, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0308, "signature": "6205c942f2fff687"}
+{"t": 1793351485.938, "event": "campaign_detected", "actor": "h:b50e4ae20c8e677c", "technique": "credential_stuffing", "onset": 1793351459.208108, "ttd_s": 25.728188, "n_requests": 6}
+{"t": 1793351485.969, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/63"]}
+{"t": 1793351485.997, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/63"]}
+{"t": 1793351486.009, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/625", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351486.014, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0696, "signature": "87ac366fab484cfb"}
+{"t": 1793351486.015, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351498.092, "event": "campaign_detected", "actor": "h:2d8000b7c8a70815", "technique": "sqli", "onset": 1793351489.428599, "ttd_s": 4.953154, "n_requests": 3}
+{"t": 1793351498.106, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0036, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351498.106, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351501.119, "event": "campaign_detected", "actor": "h:2d8000b7c8a70815", "technique": "user_enumeration", "onset": 1793351489.428599, "ttd_s": 10.341951, "n_requests": 4}
+{"t": 1793351501.133, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/636", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351501.145, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/636", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351501.147, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0249, "signature": "6205c942f2fff687"}
+{"t": 1793351514.338, "event": "campaign_detected", "actor": "h:2d8000b7c8a70815", "technique": "credential_stuffing", "onset": 1793351489.428599, "ttd_s": 23.833197, "n_requests": 6}
+{"t": 1793351514.371, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/63"]}
+{"t": 1793351514.396, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/63"]}
+{"t": 1793351514.411, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/643", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351514.416, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0723, "signature": "87ac366fab484cfb"}
+{"t": 1793351514.417, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351526.65, "event": "campaign_detected", "actor": "h:0fbd6bfff2262bb4", "technique": "sqli", "onset": 1793351518.768628, "ttd_s": 4.474473, "n_requests": 3}
+{"t": 1793351526.66, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0025, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351526.661, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351531.694, "event": "campaign_detected", "actor": "h:0fbd6bfff2262bb4", "technique": "user_enumeration", "onset": 1793351518.768628, "ttd_s": 12.848262, "n_requests": 4}
+{"t": 1793351531.708, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/655", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351531.721, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/655", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351531.725, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.027, "signature": "6205c942f2fff687"}
+{"t": 1793351545.799, "event": "campaign_detected", "actor": "h:0fbd6bfff2262bb4", "technique": "credential_stuffing", "onset": 1793351518.768628, "ttd_s": 26.639883, "n_requests": 6}
+{"t": 1793351545.857, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/66"]}
+{"t": 1793351545.895, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/66"]}
+{"t": 1793351545.908, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/664", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351545.915, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1084, "signature": "87ac366fab484cfb"}
+{"t": 1793351545.916, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351567.225, "event": "campaign_detected", "actor": "h:607d86bbfc4d95d0", "technique": "user_enumeration", "onset": 1793351550.647614, "ttd_s": 15.545957, "n_requests": 4}
+{"t": 1793351567.244, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/682", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351567.263, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/682", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351567.266, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0378, "signature": "6205c942f2fff687"}
+{"t": 1793351574.306, "event": "campaign_detected", "actor": "h:607d86bbfc4d95d0", "technique": "sqli", "onset": 1793351550.647614, "ttd_s": 22.813001, "n_requests": 5}
+{"t": 1793351574.316, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351574.319, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351579.388, "event": "campaign_detected", "actor": "h:607d86bbfc4d95d0", "technique": "credential_stuffing", "onset": 1793351550.647614, "ttd_s": 28.208251, "n_requests": 6}
+{"t": 1793351579.431, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/71"]}
+{"t": 1793351579.472, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/71"]}
+{"t": 1793351579.487, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/692", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351579.494, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0989, "signature": "87ac366fab484cfb"}
+{"t": 1793351579.495, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351600.691, "event": "campaign_detected", "actor": "h:fd45b5efe4fd979f", "technique": "user_enumeration", "onset": 1793351583.679924, "ttd_s": 16.397588, "n_requests": 4}
+{"t": 1793351600.709, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/708", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351600.723, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/708", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351600.725, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0312, "signature": "6205c942f2fff687"}
+{"t": 1793351602.743, "event": "campaign_detected", "actor": "h:fd45b5efe4fd979f", "technique": "sqli", "onset": 1793351600.077512, "ttd_s": 2.533258, "n_requests": 5}
+{"t": 1793351602.754, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0029, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351602.755, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351609.78, "event": "campaign_detected", "actor": "h:fd45b5efe4fd979f", "technique": "credential_stuffing", "onset": 1793351583.679924, "ttd_s": 25.35887, "n_requests": 6}
+{"t": 1793351609.829, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/80"]}
+{"t": 1793351609.867, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/80"]}
+{"t": 1793351609.883, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/710", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351609.89, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1026, "signature": "87ac366fab484cfb"}
+{"t": 1793351609.892, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351636.181, "event": "campaign_detected", "actor": "h:94b900bc1cf474a9", "technique": "user_enumeration", "onset": 1793351615.710071, "ttd_s": 19.697009, "n_requests": 4}
+{"t": 1793351636.201, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/729", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351636.217, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/729", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351636.219, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0346, "signature": "6205c942f2fff687"}
+{"t": 1793351636.219, "event": "campaign_detected", "actor": "h:94b900bc1cf474a9", "technique": "sqli", "onset": 1793351628.853995, "ttd_s": 6.553085, "n_requests": 4}
+{"t": 1793351636.229, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351636.23, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351646.296, "event": "campaign_detected", "actor": "h:94b900bc1cf474a9", "technique": "credential_stuffing", "onset": 1793351615.710071, "ttd_s": 30.108898, "n_requests": 6}
+{"t": 1793351646.336, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/84"]}
+{"t": 1793351646.374, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/84"]}
+{"t": 1793351646.388, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351646.392, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0904, "signature": "87ac366fab484cfb"}
+{"t": 1793351646.394, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351660.518, "event": "campaign_detected", "actor": "h:8ed3c530cb31002a", "technique": "sqli", "onset": 1793351653.261443, "ttd_s": 6.868828, "n_requests": 3}
+{"t": 1793351660.533, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0038, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351660.534, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351666.577, "event": "campaign_detected", "actor": "h:8ed3c530cb31002a", "technique": "user_enumeration", "onset": 1793351650.476187, "ttd_s": 15.021607, "n_requests": 4}
+{"t": 1793351666.601, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/744", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351666.621, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/744", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351666.626, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0445, "signature": "6205c942f2fff687"}
+{"t": 1793351674.68, "event": "campaign_detected", "actor": "h:8ed3c530cb31002a", "technique": "credential_stuffing", "onset": 1793351650.476187, "ttd_s": 23.637349, "n_requests": 6}
+{"t": 1793351674.79, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/85"]}
+{"t": 1793351675.028, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/85"]}
+{"t": 1793351675.064, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/754", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351675.082, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.3839, "signature": "87ac366fab484cfb"}
+{"t": 1793351675.084, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351688.168, "event": "campaign_detected", "actor": "h:065f808b4a195c91", "technique": "sqli", "onset": 1793351679.065811, "ttd_s": 4.312928, "n_requests": 3}
+{"t": 1793351688.186, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0067, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351688.188, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351693.21, "event": "campaign_detected", "actor": "h:065f808b4a195c91", "technique": "user_enumeration", "onset": 1793351679.065811, "ttd_s": 13.779178, "n_requests": 4}
+{"t": 1793351693.212, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793351704.316, "event": "campaign_detected", "actor": "h:065f808b4a195c91", "technique": "credential_stuffing", "onset": 1793351679.065811, "ttd_s": 24.979669, "n_requests": 6}
+{"t": 1793351704.357, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/88"]}
+{"t": 1793351704.396, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/88"]}
+{"t": 1793351704.409, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/769", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351704.414, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.0926, "signature": "87ac366fab484cfb"}
+{"t": 1793351704.415, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351716.486, "event": "campaign_detected", "actor": "h:10495e2370a78ea1", "technique": "sqli", "onset": 1793351708.86971, "ttd_s": 2.649942, "n_requests": 3}
+{"t": 1793351716.498, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0028, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351716.499, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351719.519, "event": "campaign_detected", "actor": "h:10495e2370a78ea1", "technique": "user_enumeration", "onset": 1793351708.86971, "ttd_s": 9.695903, "n_requests": 4}
+{"t": 1793351719.539, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/778", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351719.555, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/778", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351719.558, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0365, "signature": "6205c942f2fff687"}
+{"t": 1793351731.653, "event": "campaign_detected", "actor": "h:10495e2370a78ea1", "technique": "credential_stuffing", "onset": 1793351708.86971, "ttd_s": 21.962532, "n_requests": 6}
+{"t": 1793351731.721, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/91"]}
+{"t": 1793351731.784, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/91"]}
+{"t": 1793351731.8, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/786", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351731.805, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1454, "signature": "87ac366fab484cfb"}
+{"t": 1793351731.806, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351750.965, "event": "campaign_detected", "actor": "h:c156fd56f152e1f8", "technique": "sqli", "onset": 1793351737.368791, "ttd_s": 6.501116, "n_requests": 3}
+{"t": 1793351750.981, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0046, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351750.983, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351755.021, "event": "campaign_detected", "actor": "h:c156fd56f152e1f8", "technique": "user_enumeration", "onset": 1793351737.368791, "ttd_s": 16.881765, "n_requests": 4}
+{"t": 1793351755.067, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/805", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351755.095, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/805", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351755.101, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0704, "signature": "6205c942f2fff687"}
+{"t": 1793351767.183, "event": "campaign_detected", "actor": "h:c156fd56f152e1f8", "technique": "credential_stuffing", "onset": 1793351737.368791, "ttd_s": 29.495146, "n_requests": 6}
+{"t": 1793351767.232, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/97"]}
+{"t": 1793351767.275, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/97"]}
+{"t": 1793351767.29, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/815", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351767.294, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1071, "signature": "87ac366fab484cfb"}
+{"t": 1793351767.296, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351775.423, "event": "campaign_detected", "actor": "h:827b34bb7c209f3d", "technique": "sqli", "onset": 1793351769.80558, "ttd_s": 2.587863, "n_requests": 3}
+{"t": 1793351775.455, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0076, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351775.458, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351782.495, "event": "campaign_detected", "actor": "h:827b34bb7c209f3d", "technique": "user_enumeration", "onset": 1793351769.80558, "ttd_s": 11.450269, "n_requests": 4}
+{"t": 1793351782.496, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793351788.626, "event": "campaign_detected", "actor": "h:827b34bb7c209f3d", "technique": "credential_stuffing", "onset": 1793351769.80558, "ttd_s": 18.25584, "n_requests": 6}
+{"t": 1793351788.791, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/100"]}
+{"t": 1793351788.9, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/100"]}
+{"t": 1793351788.931, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/804", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351788.945, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.3033, "signature": "87ac366fab484cfb"}
+{"t": 1793351788.946, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351788.947, "event": "campaign_detected", "actor": "h:dcf8d3ff114d8552", "technique": "idor_bola", "onset": 1793351253.125764, "ttd_s": 534.525259, "n_requests": 28}
+{"t": 1793351788.977, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/804", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351788.997, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/804", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351789.002, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0498, "signature": "d4e3e99d070cbba4"}
+{"t": 1793351801.19, "event": "campaign_detected", "actor": "h:ca9424cab2bca1d9", "technique": "sqli", "onset": 1793351797.960448, "ttd_s": 2.910006, "n_requests": 3}
+{"t": 1793351801.212, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0078, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351801.214, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351805.234, "event": "campaign_detected", "actor": "h:ca9424cab2bca1d9", "technique": "user_enumeration", "onset": 1793351793.733929, "ttd_s": 10.44769, "n_requests": 4}
+{"t": 1793351805.252, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/798", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351805.265, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/798", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351805.267, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0306, "signature": "6205c942f2fff687"}
+{"t": 1793351813.343, "event": "campaign_detected", "actor": "h:ca9424cab2bca1d9", "technique": "credential_stuffing", "onset": 1793351793.733929, "ttd_s": 18.936734, "n_requests": 6}
+{"t": 1793351813.424, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/101"]}
+{"t": 1793351813.487, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/101", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351813.513, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/795", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351813.523, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1689, "signature": "87ac366fab484cfb"}
+{"t": 1793351813.524, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351827.735, "event": "campaign_detected", "actor": "h:c78323477b4b9b76", "technique": "sqli", "onset": 1793351816.572579, "ttd_s": 6.082359, "n_requests": 3}
+{"t": 1793351827.79, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0216, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351827.793, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351831.831, "event": "campaign_detected", "actor": "h:c78323477b4b9b76", "technique": "user_enumeration", "onset": 1793351816.572579, "ttd_s": 14.985126, "n_requests": 4}
+{"t": 1793351831.854, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/793", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351831.87, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/793", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351831.875, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0377, "signature": "6205c942f2fff687"}
+{"t": 1793351839.925, "event": "campaign_detected", "actor": "h:c78323477b4b9b76", "technique": "credential_stuffing", "onset": 1793351816.572579, "ttd_s": 22.497546, "n_requests": 6}
+{"t": 1793351839.979, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 5/103"]}
+{"t": 1793351840.02, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/103", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351840.035, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/795", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351840.043, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1099, "signature": "87ac366fab484cfb"}
+{"t": 1793351840.043, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351855.264, "event": "campaign_detected", "actor": "h:1abca2209eb2f943", "technique": "user_enumeration", "onset": 1793351843.538214, "ttd_s": 11.107358, "n_requests": 4}
+{"t": 1793351855.318, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/789", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351855.371, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/789", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351855.378, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.1053, "signature": "6205c942f2fff687"}
+{"t": 1793351862.446, "event": "campaign_detected", "actor": "h:1abca2209eb2f943", "technique": "sqli", "onset": 1793351843.538214, "ttd_s": 18.129237, "n_requests": 5}
+{"t": 1793351862.463, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0057, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351862.465, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351867.512, "event": "campaign_detected", "actor": "h:1abca2209eb2f943", "technique": "credential_stuffing", "onset": 1793351843.538214, "ttd_s": 23.185875, "n_requests": 6}
+{"t": 1793351867.605, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 4/103"]}
+{"t": 1793351867.683, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/103", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351867.702, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/782", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351867.712, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1912, "signature": "87ac366fab484cfb"}
+{"t": 1793351867.713, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351886.092, "event": "campaign_detected", "actor": "h:6e0f5845de59e699", "technique": "user_enumeration", "onset": 1793351870.356688, "ttd_s": 14.799466, "n_requests": 4}
+{"t": 1793351886.093, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793351889.12, "event": "campaign_detected", "actor": "h:6e0f5845de59e699", "technique": "sqli", "onset": 1793351885.156154, "ttd_s": 2.595841, "n_requests": 5}
+{"t": 1793351889.322, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.1499, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351889.325, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351891.363, "event": "campaign_detected", "actor": "h:6e0f5845de59e699", "technique": "credential_stuffing", "onset": 1793351870.356688, "ttd_s": 20.633346, "n_requests": 6}
+{"t": 1793351891.495, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 2/104"]}
+{"t": 1793351891.583, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/104", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351891.604, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/773", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351891.612, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.2398, "signature": "87ac366fab484cfb"}
+{"t": 1793351891.613, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351906.871, "event": "campaign_detected", "actor": "h:6b749f61fd84111a", "technique": "sqli", "onset": 1793351897.149783, "ttd_s": 3.306747, "n_requests": 3}
+{"t": 1793351906.886, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0033, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351906.887, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351912.938, "event": "campaign_detected", "actor": "h:6b749f61fd84111a", "technique": "user_enumeration", "onset": 1793351897.149783, "ttd_s": 15.229902, "n_requests": 4}
+{"t": 1793351912.939, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793351922.054, "event": "campaign_detected", "actor": "h:6b749f61fd84111a", "technique": "credential_stuffing", "onset": 1793351897.149783, "ttd_s": 24.066613, "n_requests": 6}
+{"t": 1793351922.155, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/105"]}
+{"t": 1793351922.319, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/105", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351922.372, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/770", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351922.42, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.3174, "signature": "87ac366fab484cfb"}
+{"t": 1793351922.422, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351940.752, "event": "campaign_detected", "actor": "h:0eada34545f078bb", "technique": "sqli", "onset": 1793351928.648786, "ttd_s": 6.495529, "n_requests": 3}
+{"t": 1793351940.768, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0047, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351940.77, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351944.814, "event": "campaign_detected", "actor": "h:0eada34545f078bb", "technique": "user_enumeration", "onset": 1793351928.648786, "ttd_s": 15.329284, "n_requests": 4}
+{"t": 1793351944.815, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793351954.981, "event": "campaign_detected", "actor": "h:0eada34545f078bb", "technique": "credential_stuffing", "onset": 1793351928.648786, "ttd_s": 25.565011, "n_requests": 6}
+{"t": 1793351955.075, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/107"]}
+{"t": 1793351955.169, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/107", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351955.198, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/769", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351955.209, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.2162, "signature": "87ac366fab484cfb"}
+{"t": 1793351955.211, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793351970.653, "event": "campaign_detected", "actor": "h:156bfd2b18469c8f", "technique": "sqli", "onset": 1793351959.649386, "ttd_s": 4.117754, "n_requests": 3}
+{"t": 1793351970.703, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0209, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793351970.708, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793351972.733, "event": "campaign_detected", "actor": "h:156bfd2b18469c8f", "technique": "user_enumeration", "onset": 1793351959.649386, "ttd_s": 12.591559, "n_requests": 4}
+{"t": 1793351972.764, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/767", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351972.793, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/767", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793351972.797, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0591, "signature": "6205c942f2fff687"}
+{"t": 1793351984.003, "event": "campaign_detected", "actor": "h:156bfd2b18469c8f", "technique": "credential_stuffing", "onset": 1793351959.649386, "ttd_s": 23.93685, "n_requests": 6}
+{"t": 1793351984.193, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/108"]}
+{"t": 1793351984.318, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/108", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793351984.359, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/768", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793351984.377, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.3532, "signature": "87ac366fab484cfb"}
+{"t": 1793351984.379, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352002.59, "event": "campaign_detected", "actor": "h:7ae4e4cb7f74412f", "technique": "sqli", "onset": 1793351990.519246, "ttd_s": 4.060101, "n_requests": 3}
+{"t": 1793352002.6, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0028, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352002.601, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352005.776, "event": "campaign_detected", "actor": "h:7ae4e4cb7f74412f", "technique": "user_enumeration", "onset": 1793351990.519246, "ttd_s": 14.924443, "n_requests": 4}
+{"t": 1793352005.777, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352019.908, "event": "campaign_detected", "actor": "h:7ae4e4cb7f74412f", "technique": "credential_stuffing", "onset": 1793351990.519246, "ttd_s": 28.411553, "n_requests": 6}
+{"t": 1793352019.963, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/109"]}
+{"t": 1793352020.01, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/109", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352020.029, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/760", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352020.034, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1199, "signature": "87ac366fab484cfb"}
+{"t": 1793352020.035, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352037.183, "event": "campaign_detected", "actor": "h:62f03738512bb0d3", "technique": "user_enumeration", "onset": 1793352023.546476, "ttd_s": 13.209327, "n_requests": 4}
+{"t": 1793352037.205, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/755", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352037.223, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/755", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352037.227, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0398, "signature": "6205c942f2fff687"}
+{"t": 1793352040.248, "event": "campaign_detected", "actor": "h:62f03738512bb0d3", "technique": "sqli", "onset": 1793352036.755803, "ttd_s": 2.693956, "n_requests": 5}
+{"t": 1793352040.256, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352040.258, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352046.3, "event": "campaign_detected", "actor": "h:62f03738512bb0d3", "technique": "credential_stuffing", "onset": 1793352023.546476, "ttd_s": 22.504607, "n_requests": 6}
+{"t": 1793352046.345, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/111"]}
+{"t": 1793352046.389, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/111", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352046.408, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/750", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352046.414, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1073, "signature": "87ac366fab484cfb"}
+{"t": 1793352046.414, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352069.669, "event": "campaign_detected", "actor": "h:f3ebea02d7248c15", "technique": "user_enumeration", "onset": 1793352053.387604, "ttd_s": 15.575317, "n_requests": 4}
+{"t": 1793352069.705, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352069.732, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352069.736, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0625, "signature": "6205c942f2fff687"}
+{"t": 1793352069.736, "event": "campaign_detected", "actor": "h:f3ebea02d7248c15", "technique": "sqli", "onset": 1793352062.118789, "ttd_s": 6.844132, "n_requests": 4}
+{"t": 1793352069.748, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0031, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352069.75, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352082.84, "event": "campaign_detected", "actor": "h:f3ebea02d7248c15", "technique": "credential_stuffing", "onset": 1793352053.387604, "ttd_s": 28.993412, "n_requests": 6}
+{"t": 1793352082.892, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/114"]}
+{"t": 1793352082.936, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/114", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352082.951, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/740", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352082.957, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1098, "signature": "87ac366fab484cfb"}
+{"t": 1793352082.959, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352097.081, "event": "campaign_detected", "actor": "h:7f58718ebfdd4ae0", "technique": "sqli", "onset": 1793352091.904095, "ttd_s": 4.275213, "n_requests": 3}
+{"t": 1793352097.091, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0027, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352097.093, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352101.249, "event": "campaign_detected", "actor": "h:7f58718ebfdd4ae0", "technique": "user_enumeration", "onset": 1793352087.46037, "ttd_s": 12.275077, "n_requests": 4}
+{"t": 1793352101.301, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352101.344, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352101.357, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0953, "signature": "6205c942f2fff687"}
+{"t": 1793352111.437, "event": "campaign_detected", "actor": "h:7f58718ebfdd4ae0", "technique": "credential_stuffing", "onset": 1793352087.46037, "ttd_s": 22.819662, "n_requests": 6}
+{"t": 1793352111.507, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/117"]}
+{"t": 1793352111.566, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/117", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352111.585, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/731", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352111.604, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1471, "signature": "87ac366fab484cfb"}
+{"t": 1793352111.605, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352123.781, "event": "campaign_detected", "actor": "h:837e5800f1db3f85", "technique": "sqli", "onset": 1793352113.776408, "ttd_s": 3.026835, "n_requests": 3}
+{"t": 1793352124.008, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.1994, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352124.011, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352127.161, "event": "campaign_detected", "actor": "h:837e5800f1db3f85", "technique": "user_enumeration", "onset": 1793352113.776408, "ttd_s": 12.845082, "n_requests": 4}
+{"t": 1793352127.166, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352136.283, "event": "campaign_detected", "actor": "h:837e5800f1db3f85", "technique": "credential_stuffing", "onset": 1793352113.776408, "ttd_s": 21.980419, "n_requests": 6}
+{"t": 1793352136.36, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/122"]}
+{"t": 1793352136.571, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/122", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352136.632, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/729", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352136.67, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.35, "signature": "87ac366fab484cfb"}
+{"t": 1793352136.672, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352147.769, "event": "campaign_detected", "actor": "h:78c9adbfc3b63051", "technique": "idor_bola", "onset": 1793352003.721639, "ttd_s": 143.497109, "n_requests": 42}
+{"t": 1793352147.788, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/730", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352147.804, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/730", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352147.807, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0349, "signature": "847354a48c8431f4"}
+{"t": 1793352152.906, "event": "campaign_detected", "actor": "h:a9d580cbbde172d8", "technique": "sqli", "onset": 1793352142.640356, "ttd_s": 7.00543, "n_requests": 3}
+{"t": 1793352152.958, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.009, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352152.96, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352156.992, "event": "campaign_detected", "actor": "h:a9d580cbbde172d8", "technique": "user_enumeration", "onset": 1793352142.640356, "ttd_s": 13.110846, "n_requests": 4}
+{"t": 1793352156.993, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352168.131, "event": "campaign_detected", "actor": "h:a9d580cbbde172d8", "technique": "credential_stuffing", "onset": 1793352142.640356, "ttd_s": 24.6994, "n_requests": 6}
+{"t": 1793352168.203, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/128"]}
+{"t": 1793352168.277, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/128", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352168.3, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/731", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352168.309, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1682, "signature": "87ac366fab484cfb"}
+{"t": 1793352168.311, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352182.448, "event": "campaign_detected", "actor": "h:22264d0b0dd66787", "technique": "sqli", "onset": 1793352173.793964, "ttd_s": 4.199919, "n_requests": 3}
+{"t": 1793352182.488, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0047, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352182.489, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352188.551, "event": "campaign_detected", "actor": "h:22264d0b0dd66787", "technique": "user_enumeration", "onset": 1793352173.793964, "ttd_s": 13.649113, "n_requests": 4}
+{"t": 1793352188.57, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352188.588, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352188.592, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0377, "signature": "6205c942f2fff687"}
+{"t": 1793352201.715, "event": "campaign_detected", "actor": "h:22264d0b0dd66787", "technique": "credential_stuffing", "onset": 1793352173.793964, "ttd_s": 27.525342, "n_requests": 6}
+{"t": 1793352201.775, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/130"]}
+{"t": 1793352201.817, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/130", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352201.833, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/731", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352201.835, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1161, "signature": "87ac366fab484cfb"}
+{"t": 1793352201.835, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352219.01, "event": "campaign_detected", "actor": "h:5770d43fdbb5e866", "technique": "sqli", "onset": 1793352205.564807, "ttd_s": 6.916001, "n_requests": 3}
+{"t": 1793352219.048, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0062, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352219.049, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352224.088, "event": "campaign_detected", "actor": "h:5770d43fdbb5e866", "technique": "user_enumeration", "onset": 1793352205.564807, "ttd_s": 17.795769, "n_requests": 4}
+{"t": 1793352224.115, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352224.141, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352224.144, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0528, "signature": "6205c942f2fff687"}
+{"t": 1793352235.403, "event": "campaign_detected", "actor": "h:5770d43fdbb5e866", "technique": "credential_stuffing", "onset": 1793352205.564807, "ttd_s": 28.933239, "n_requests": 6}
+{"t": 1793352235.456, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/131"]}
+{"t": 1793352235.504, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/131", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352235.521, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/734", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352235.528, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1183, "signature": "87ac366fab484cfb"}
+{"t": 1793352235.529, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352247.69, "event": "campaign_detected", "actor": "h:465618896c639cc2", "technique": "sqli", "onset": 1793352240.6585, "ttd_s": 2.929442, "n_requests": 3}
+{"t": 1793352247.699, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352247.7, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352254.777, "event": "campaign_detected", "actor": "h:465618896c639cc2", "technique": "user_enumeration", "onset": 1793352240.6585, "ttd_s": 13.363768, "n_requests": 4}
+{"t": 1793352254.797, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352254.814, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352254.817, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0371, "signature": "6205c942f2fff687"}
+{"t": 1793352264.938, "event": "campaign_detected", "actor": "h:465618896c639cc2", "technique": "credential_stuffing", "onset": 1793352240.6585, "ttd_s": 23.248244, "n_requests": 6}
+{"t": 1793352265.01, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/131"]}
+{"t": 1793352265.071, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/131", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352265.096, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/747", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352265.103, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1577, "signature": "87ac366fab484cfb"}
+{"t": 1793352265.104, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352281.229, "event": "campaign_detected", "actor": "h:d983af6d5deeea04", "technique": "sqli", "onset": 1793352269.461004, "ttd_s": 6.731175, "n_requests": 3}
+{"t": 1793352281.241, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0043, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352281.243, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352285.285, "event": "campaign_detected", "actor": "h:d983af6d5deeea04", "technique": "user_enumeration", "onset": 1793352269.461004, "ttd_s": 15.30295, "n_requests": 4}
+{"t": 1793352285.311, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352285.332, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352285.336, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0471, "signature": "6205c942f2fff687"}
+{"t": 1793352296.444, "event": "campaign_detected", "actor": "h:d983af6d5deeea04", "technique": "credential_stuffing", "onset": 1793352269.461004, "ttd_s": 26.107538, "n_requests": 6}
+{"t": 1793352296.502, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/132"]}
+{"t": 1793352296.551, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/132", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352296.57, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/747", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352296.576, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1249, "signature": "87ac366fab484cfb"}
+{"t": 1793352296.576, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352318.735, "event": "campaign_detected", "actor": "h:6f1439ae5848a21c", "technique": "user_enumeration", "onset": 1793352301.124192, "ttd_s": 17.445458, "n_requests": 4}
+{"t": 1793352318.76, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/740", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352318.781, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/740", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352318.784, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0456, "signature": "6205c942f2fff687"}
+{"t": 1793352324.908, "event": "campaign_detected", "actor": "h:6f1439ae5848a21c", "technique": "sqli", "onset": 1793352301.124192, "ttd_s": 22.705643, "n_requests": 5}
+{"t": 1793352324.918, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0025, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352324.92, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352327.985, "event": "campaign_detected", "actor": "h:6f1439ae5848a21c", "technique": "credential_stuffing", "onset": 1793352301.124192, "ttd_s": 25.730938, "n_requests": 6}
+{"t": 1793352328.046, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/134"]}
+{"t": 1793352328.099, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/134", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352328.12, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352328.125, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.135, "signature": "87ac366fab484cfb"}
+{"t": 1793352328.126, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352346.267, "event": "campaign_detected", "actor": "h:f7dc003ca44f94c6", "technique": "user_enumeration", "onset": 1793352329.651423, "ttd_s": 16.161089, "n_requests": 4}
+{"t": 1793352346.288, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/742", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352346.306, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/742", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352346.308, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0385, "signature": "6205c942f2fff687"}
+{"t": 1793352353.412, "event": "campaign_detected", "actor": "h:f7dc003ca44f94c6", "technique": "sqli", "onset": 1793352345.812512, "ttd_s": 6.647133, "n_requests": 5}
+{"t": 1793352353.481, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0288, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352353.483, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352357.514, "event": "campaign_detected", "actor": "h:f7dc003ca44f94c6", "technique": "credential_stuffing", "onset": 1793352329.651423, "ttd_s": 27.016325, "n_requests": 6}
+{"t": 1793352357.565, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/137"]}
+{"t": 1793352357.615, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/137", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352357.635, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/742", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352357.64, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1199, "signature": "87ac366fab484cfb"}
+{"t": 1793352357.641, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352378.86, "event": "campaign_detected", "actor": "h:99789de40865614e", "technique": "user_enumeration", "onset": 1793352362.315423, "ttd_s": 16.21226, "n_requests": 4}
+{"t": 1793352378.861, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352378.861, "event": "campaign_detected", "actor": "h:99789de40865614e", "technique": "sqli", "onset": 1793352373.146027, "ttd_s": 5.381656, "n_requests": 4}
+{"t": 1793352378.872, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0027, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352378.874, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352385.957, "event": "campaign_detected", "actor": "h:99789de40865614e", "technique": "credential_stuffing", "onset": 1793352362.315423, "ttd_s": 22.748267, "n_requests": 6}
+{"t": 1793352386.013, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/141"]}
+{"t": 1793352386.08, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/141", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352386.104, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352386.111, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1466, "signature": "87ac366fab484cfb"}
+{"t": 1793352386.112, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352402.253, "event": "campaign_detected", "actor": "h:d3dc21af46ddd82a", "technique": "sqli", "onset": 1793352388.927233, "ttd_s": 6.973136, "n_requests": 3}
+{"t": 1793352402.264, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0036, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352402.265, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352409.324, "event": "campaign_detected", "actor": "h:d3dc21af46ddd82a", "technique": "user_enumeration", "onset": 1793352388.927233, "ttd_s": 19.430255, "n_requests": 4}
+{"t": 1793352409.324, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352417.408, "event": "campaign_detected", "actor": "h:d3dc21af46ddd82a", "technique": "credential_stuffing", "onset": 1793352388.927233, "ttd_s": 28.114788, "n_requests": 6}
+{"t": 1793352417.461, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/146"]}
+{"t": 1793352417.509, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/146", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352417.525, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352417.526, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1171, "signature": "87ac366fab484cfb"}
+{"t": 1793352417.526, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352433.678, "event": "campaign_detected", "actor": "h:187f5a3c1448c975", "technique": "sqli", "onset": 1793352423.517295, "ttd_s": 6.660793, "n_requests": 3}
+{"t": 1793352433.76, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0581, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352433.761, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352438.796, "event": "campaign_detected", "actor": "h:187f5a3c1448c975", "technique": "user_enumeration", "onset": 1793352423.517295, "ttd_s": 15.103835, "n_requests": 4}
+{"t": 1793352438.819, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/739", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352438.838, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/739", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352438.84, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.042, "signature": "6205c942f2fff687"}
+{"t": 1793352445.894, "event": "campaign_detected", "actor": "h:187f5a3c1448c975", "technique": "credential_stuffing", "onset": 1793352423.517295, "ttd_s": 21.184704, "n_requests": 6}
+{"t": 1793352445.944, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/147"]}
+{"t": 1793352445.993, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/147", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352446.025, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/735", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352446.041, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.131, "signature": "87ac366fab484cfb"}
+{"t": 1793352446.043, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352459.217, "event": "campaign_detected", "actor": "h:b08b97401fa4781b", "technique": "sqli", "onset": 1793352451.653372, "ttd_s": 2.704471, "n_requests": 3}
+{"t": 1793352459.243, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0043, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352459.245, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352466.304, "event": "campaign_detected", "actor": "h:b08b97401fa4781b", "technique": "user_enumeration", "onset": 1793352451.653372, "ttd_s": 13.852634, "n_requests": 4}
+{"t": 1793352466.328, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352466.348, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352466.369, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0435, "signature": "6205c942f2fff687"}
+{"t": 1793352471.407, "event": "campaign_detected", "actor": "h:a22cf9546f1b41c9", "technique": "idor_bola", "onset": 1793351755.876802, "ttd_s": 714.601471, "n_requests": 52}
+{"t": 1793352471.428, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/743", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352471.445, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/743", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352471.448, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0373, "signature": "d4e3e99d070cbba4"}
+{"t": 1793352474.484, "event": "campaign_detected", "actor": "h:b08b97401fa4781b", "technique": "credential_stuffing", "onset": 1793352451.653372, "ttd_s": 21.561893, "n_requests": 6}
+{"t": 1793352474.542, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/150"]}
+{"t": 1793352474.595, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/150", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352474.613, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/743", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352474.619, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1288, "signature": "87ac366fab484cfb"}
+{"t": 1793352474.62, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352486.73, "event": "campaign_detected", "actor": "h:2df907decf6f1851", "technique": "sqli", "onset": 1793352476.628854, "ttd_s": 3.735998, "n_requests": 3}
+{"t": 1793352486.74, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0024, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352486.741, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352490.774, "event": "campaign_detected", "actor": "h:2df907decf6f1851", "technique": "user_enumeration", "onset": 1793352476.628854, "ttd_s": 13.023932, "n_requests": 4}
+{"t": 1793352490.774, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352501.884, "event": "campaign_detected", "actor": "h:2df907decf6f1851", "technique": "credential_stuffing", "onset": 1793352476.628854, "ttd_s": 24.519355, "n_requests": 6}
+{"t": 1793352501.937, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/149"]}
+{"t": 1793352501.986, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/149", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352502.002, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352502.007, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1178, "signature": "87ac366fab484cfb"}
+{"t": 1793352502.008, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352524.211, "event": "campaign_detected", "actor": "h:c33b16b17dc1afb0", "technique": "user_enumeration", "onset": 1793352508.525276, "ttd_s": 14.798183, "n_requests": 4}
+{"t": 1793352524.234, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352524.255, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352524.257, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0426, "signature": "6205c942f2fff687"}
+{"t": 1793352524.258, "event": "campaign_detected", "actor": "h:c33b16b17dc1afb0", "technique": "sqli", "onset": 1793352519.550169, "ttd_s": 3.77329, "n_requests": 4}
+{"t": 1793352524.268, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0027, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352524.269, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352532.355, "event": "campaign_detected", "actor": "h:c33b16b17dc1afb0", "technique": "credential_stuffing", "onset": 1793352508.525276, "ttd_s": 22.713106, "n_requests": 6}
+{"t": 1793352532.407, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/154"]}
+{"t": 1793352532.459, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/154", "attacked accounts that would be limited: 0/23 (victim lock-out is the accepted cost)"]}
+{"t": 1793352532.479, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/737", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352532.572, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1244, "signature": "87ac366fab484cfb"}
+{"t": 1793352532.574, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352532.576, "event": "campaign_detected", "actor": "h:fe00a47cdc1bff10", "technique": "idor_bola", "onset": 1793351512.18154, "ttd_s": 1019.866364, "n_requests": 51}
+{"t": 1793352532.577, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352542.651, "event": "campaign_detected", "actor": "h:b5e73bafaa51da82", "technique": "sqli", "onset": 1793352539.748573, "ttd_s": 2.556834, "n_requests": 3}
+{"t": 1793352542.668, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352542.668, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352550.785, "event": "campaign_detected", "actor": "h:b5e73bafaa51da82", "technique": "user_enumeration", "onset": 1793352537.046852, "ttd_s": 12.693161, "n_requests": 4}
+{"t": 1793352550.812, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352550.834, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352550.838, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0485, "signature": "6205c942f2fff687"}
+{"t": 1793352553.868, "event": "campaign_detected", "actor": "h:c257092ac800fe0b", "technique": "idor_bola", "onset": 1793351417.962862, "ttd_s": 1135.100625, "n_requests": 54}
+{"t": 1793352553.868, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352559.959, "event": "campaign_detected", "actor": "h:b5e73bafaa51da82", "technique": "credential_stuffing", "onset": 1793352537.046852, "ttd_s": 22.162293, "n_requests": 6}
+{"t": 1793352560.014, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/155"]}
+{"t": 1793352560.062, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/155", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352560.079, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/730", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352560.083, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1199, "signature": "87ac366fab484cfb"}
+{"t": 1793352560.085, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352571.208, "event": "campaign_detected", "actor": "h:5e1ee2489bc27f98", "technique": "sqli", "onset": 1793352564.005339, "ttd_s": 4.070719, "n_requests": 3}
+{"t": 1793352571.217, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0025, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352571.218, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352578.403, "event": "campaign_detected", "actor": "h:5e1ee2489bc27f98", "technique": "user_enumeration", "onset": 1793352564.005339, "ttd_s": 13.986196, "n_requests": 4}
+{"t": 1793352578.446, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/739", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352578.481, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/739", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352578.487, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0775, "signature": "6205c942f2fff687"}
+{"t": 1793352593.682, "event": "campaign_detected", "actor": "h:5e1ee2489bc27f98", "technique": "credential_stuffing", "onset": 1793352564.005339, "ttd_s": 28.694155, "n_requests": 6}
+{"t": 1793352593.743, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/162"]}
+{"t": 1793352593.801, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/162", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352593.825, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352593.833, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1426, "signature": "87ac366fab484cfb"}
+{"t": 1793352593.834, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352613.048, "event": "campaign_detected", "actor": "h:35b68a2e9f878e32", "technique": "user_enumeration", "onset": 1793352595.792502, "ttd_s": 16.610613, "n_requests": 4}
+{"t": 1793352613.048, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352615.064, "event": "campaign_detected", "actor": "h:bfa3c9e2fe9e665d", "technique": "idor_bola", "onset": 1793351566.567017, "ttd_s": 1047.941997, "n_requests": 70}
+{"t": 1793352615.065, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352618.107, "event": "campaign_detected", "actor": "h:35b68a2e9f878e32", "technique": "sqli", "onset": 1793352595.792502, "ttd_s": 21.832219, "n_requests": 5}
+{"t": 1793352618.14, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0108, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352618.141, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352624.182, "event": "campaign_detected", "actor": "h:35b68a2e9f878e32", "technique": "credential_stuffing", "onset": 1793352595.792502, "ttd_s": 27.798209, "n_requests": 6}
+{"t": 1793352624.244, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/166"]}
+{"t": 1793352624.299, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/166", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352624.318, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352624.323, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1303, "signature": "87ac366fab484cfb"}
+{"t": 1793352624.325, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352639.472, "event": "campaign_detected", "actor": "h:57944535ff3ff525", "technique": "sqli", "onset": 1793352629.443902, "ttd_s": 3.799366, "n_requests": 3}
+{"t": 1793352639.481, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352639.481, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352643.518, "event": "campaign_detected", "actor": "h:57944535ff3ff525", "technique": "user_enumeration", "onset": 1793352629.443902, "ttd_s": 13.055515, "n_requests": 4}
+{"t": 1793352643.518, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352650.605, "event": "campaign_detected", "actor": "h:57944535ff3ff525", "technique": "credential_stuffing", "onset": 1793352629.443902, "ttd_s": 19.702694, "n_requests": 6}
+{"t": 1793352650.662, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/171"]}
+{"t": 1793352650.724, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/171", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352650.744, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/743", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352650.748, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1386, "signature": "87ac366fab484cfb"}
+{"t": 1793352650.75, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352663.902, "event": "campaign_detected", "actor": "h:db3f7bd8f5f51d39", "technique": "idor_bola", "onset": 1793351229.837823, "ttd_s": 1433.249029, "n_requests": 57}
+{"t": 1793352663.903, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352666.065, "event": "campaign_detected", "actor": "h:d99ec71e336ffe6b", "technique": "sqli", "onset": 1793352653.089101, "ttd_s": 7.431015, "n_requests": 3}
+{"t": 1793352666.079, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.004, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352666.08, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352672.155, "event": "campaign_detected", "actor": "h:d99ec71e336ffe6b", "technique": "user_enumeration", "onset": 1793352653.089101, "ttd_s": 17.948564, "n_requests": 4}
+{"t": 1793352672.182, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/744", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352672.207, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/744", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352672.211, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0512, "signature": "6205c942f2fff687"}
+{"t": 1793352684.329, "event": "campaign_detected", "actor": "h:d99ec71e336ffe6b", "technique": "credential_stuffing", "onset": 1793352653.089101, "ttd_s": 30.938333, "n_requests": 6}
+{"t": 1793352684.417, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/175"]}
+{"t": 1793352684.492, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/175", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352684.515, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352684.52, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1863, "signature": "87ac366fab484cfb"}
+{"t": 1793352684.52, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352697.635, "event": "campaign_detected", "actor": "h:a8066cc3ede009c4", "technique": "sqli", "onset": 1793352688.581339, "ttd_s": 4.06083, "n_requests": 3}
+{"t": 1793352697.649, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0043, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352697.651, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352701.703, "event": "campaign_detected", "actor": "h:a8066cc3ede009c4", "technique": "user_enumeration", "onset": 1793352688.581339, "ttd_s": 12.30142, "n_requests": 4}
+{"t": 1793352701.728, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352701.748, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/741", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352701.751, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0438, "signature": "6205c942f2fff687"}
+{"t": 1793352714.915, "event": "campaign_detected", "actor": "h:a8066cc3ede009c4", "technique": "credential_stuffing", "onset": 1793352688.581339, "ttd_s": 26.02693, "n_requests": 6}
+{"t": 1793352714.975, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/179"]}
+{"t": 1793352715.027, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/179", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352715.044, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/745", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352715.049, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1281, "signature": "87ac366fab484cfb"}
+{"t": 1793352715.049, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352728.281, "event": "campaign_detected", "actor": "h:d6b7c6346bed4cb7", "technique": "sqli", "onset": 1793352718.646198, "ttd_s": 4.175378, "n_requests": 3}
+{"t": 1793352728.288, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0018, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352728.29, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352734.366, "event": "campaign_detected", "actor": "h:d6b7c6346bed4cb7", "technique": "user_enumeration", "onset": 1793352718.646198, "ttd_s": 14.825223, "n_requests": 4}
+{"t": 1793352734.366, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352743.458, "event": "campaign_detected", "actor": "h:d6b7c6346bed4cb7", "technique": "credential_stuffing", "onset": 1793352718.646198, "ttd_s": 24.039702, "n_requests": 6}
+{"t": 1793352743.609, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/180"]}
+{"t": 1793352743.704, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/180", "attacked accounts that would be limited: 0/25 (victim lock-out is the accepted cost)"]}
+{"t": 1793352743.732, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/743", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352743.737, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.2733, "signature": "87ac366fab484cfb"}
+{"t": 1793352743.739, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352744.751, "event": "campaign_detected", "actor": "h:87ef0fc4a37600fe", "technique": "idor_bola", "onset": 1793351211.615477, "ttd_s": 1531.887836, "n_requests": 67}
+{"t": 1793352744.752, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352757.905, "event": "campaign_detected", "actor": "h:a01259fd9727bcb9", "technique": "user_enumeration", "onset": 1793352745.31305, "ttd_s": 11.880769, "n_requests": 4}
+{"t": 1793352757.926, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/744", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352757.946, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/744", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352757.948, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0407, "signature": "6205c942f2fff687"}
+{"t": 1793352760.971, "event": "campaign_detected", "actor": "h:a01259fd9727bcb9", "technique": "sqli", "onset": 1793352745.31305, "ttd_s": 14.761604, "n_requests": 5}
+{"t": 1793352760.978, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0019, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352760.979, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352764.007, "event": "campaign_detected", "actor": "h:a01259fd9727bcb9", "technique": "credential_stuffing", "onset": 1793352745.31305, "ttd_s": 17.641905, "n_requests": 6}
+{"t": 1793352764.104, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/179"]}
+{"t": 1793352764.163, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/179", "attacked accounts that would be limited: 0/27 (victim lock-out is the accepted cost)"]}
+{"t": 1793352764.181, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/738", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352764.187, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1735, "signature": "87ac366fab484cfb"}
+{"t": 1793352764.188, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352784.413, "event": "campaign_detected", "actor": "h:942521c46d44149f", "technique": "user_enumeration", "onset": 1793352768.669636, "ttd_s": 15.395814, "n_requests": 4}
+{"t": 1793352784.44, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/731", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352784.459, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/731", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352784.461, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0456, "signature": "6205c942f2fff687"}
+{"t": 1793352791.607, "event": "campaign_detected", "actor": "h:942521c46d44149f", "technique": "sqli", "onset": 1793352784.06545, "ttd_s": 6.816664, "n_requests": 5}
+{"t": 1793352791.616, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0026, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352791.616, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352795.646, "event": "campaign_detected", "actor": "h:942521c46d44149f", "technique": "credential_stuffing", "onset": 1793352768.669636, "ttd_s": 25.489829, "n_requests": 6}
+{"t": 1793352795.707, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/182"]}
+{"t": 1793352795.756, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/182", "attacked accounts that would be limited: 0/27 (victim lock-out is the accepted cost)"]}
+{"t": 1793352795.77, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/727", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352795.779, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1234, "signature": "87ac366fab484cfb"}
+{"t": 1793352795.78, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352817.132, "event": "campaign_detected", "actor": "h:85514ad6dfc3c97f", "technique": "user_enumeration", "onset": 1793352799.207091, "ttd_s": 16.6589, "n_requests": 4}
+{"t": 1793352817.168, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352817.198, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352817.203, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0652, "signature": "6205c942f2fff687"}
+{"t": 1793352817.203, "event": "campaign_detected", "actor": "h:85514ad6dfc3c97f", "technique": "sqli", "onset": 1793352808.597665, "ttd_s": 7.268326, "n_requests": 4}
+{"t": 1793352817.215, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0039, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352817.216, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352826.349, "event": "campaign_detected", "actor": "h:85514ad6dfc3c97f", "technique": "credential_stuffing", "onset": 1793352799.207091, "ttd_s": 26.437528, "n_requests": 6}
+{"t": 1793352826.402, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/181"]}
+{"t": 1793352826.464, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/181", "attacked accounts that would be limited: 0/27 (victim lock-out is the accepted cost)"]}
+{"t": 1793352826.486, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352826.493, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1372, "signature": "87ac366fab484cfb"}
+{"t": 1793352826.493, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352844.749, "event": "campaign_detected", "actor": "h:93d18d1da4134946", "technique": "sqli", "onset": 1793352839.745887, "ttd_s": 4.127003, "n_requests": 3}
+{"t": 1793352844.761, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0029, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352844.761, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352847.787, "event": "campaign_detected", "actor": "h:93d18d1da4134946", "technique": "user_enumeration", "onset": 1793352833.113484, "ttd_s": 13.797471, "n_requests": 4}
+{"t": 1793352847.787, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352853.837, "event": "campaign_detected", "actor": "h:49c19dc1e71c6567", "technique": "idor_bola", "onset": 1793351537.828039, "ttd_s": 1315.61542, "n_requests": 78}
+{"t": 1793352853.837, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352859.914, "event": "campaign_detected", "actor": "h:93d18d1da4134946", "technique": "credential_stuffing", "onset": 1793352833.113484, "ttd_s": 25.973768, "n_requests": 6}
+{"t": 1793352859.976, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/186"]}
+{"t": 1793352860.028, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/186", "attacked accounts that would be limited: 0/27 (victim lock-out is the accepted cost)"]}
+{"t": 1793352860.039, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/722", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352860.049, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1275, "signature": "87ac366fab484cfb"}
+{"t": 1793352860.052, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352874.253, "event": "campaign_detected", "actor": "h:55fbbfecec2a52af", "technique": "sqli", "onset": 1793352863.080003, "ttd_s": 7.089901, "n_requests": 3}
+{"t": 1793352874.268, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0038, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352874.269, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352881.357, "event": "campaign_detected", "actor": "h:55fbbfecec2a52af", "technique": "user_enumeration", "onset": 1793352863.080003, "ttd_s": 17.363713, "n_requests": 4}
+{"t": 1793352881.359, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352888.419, "event": "campaign_detected", "actor": "h:55fbbfecec2a52af", "technique": "credential_stuffing", "onset": 1793352863.080003, "ttd_s": 24.11449, "n_requests": 6}
+{"t": 1793352888.475, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/188"]}
+{"t": 1793352888.523, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/188", "attacked accounts that would be limited: 0/27 (victim lock-out is the accepted cost)"]}
+{"t": 1793352888.54, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/721", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352888.546, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1205, "signature": "87ac366fab484cfb"}
+{"t": 1793352888.546, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352908.805, "event": "campaign_detected", "actor": "h:2ba63401ca73c296", "technique": "sqli", "onset": 1793352894.24957, "ttd_s": 6.543976, "n_requests": 3}
+{"t": 1793352908.814, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0023, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352908.815, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352910.848, "event": "campaign_detected", "actor": "h:99929584fa173740", "technique": "idor_bola", "onset": 1793351861.568183, "ttd_s": 1048.138213, "n_requests": 69}
+{"t": 1793352910.85, "event": "cooldown_skip", "technique": "idor_bola", "signature": "d4e3e99d070cbba4", "bypass": false}
+{"t": 1793352914.887, "event": "campaign_detected", "actor": "h:2ba63401ca73c296", "technique": "user_enumeration", "onset": 1793352894.24957, "ttd_s": 20.30698, "n_requests": 4}
+{"t": 1793352914.91, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/724", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352914.929, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/724", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352914.933, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.042, "signature": "6205c942f2fff687"}
+{"t": 1793352927.155, "event": "campaign_detected", "actor": "h:2ba63401ca73c296", "technique": "credential_stuffing", "onset": 1793352894.24957, "ttd_s": 32.530243, "n_requests": 6}
+{"t": 1793352927.218, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/188"]}
+{"t": 1793352927.273, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/188", "attacked accounts that would be limited: 0/28 (victim lock-out is the accepted cost)"]}
+{"t": 1793352927.292, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/725", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352927.297, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1374, "signature": "87ac366fab484cfb"}
+{"t": 1793352927.297, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352939.42, "event": "campaign_detected", "actor": "h:98e10392d2b76497", "technique": "sqli", "onset": 1793352930.2074, "ttd_s": 4.686916, "n_requests": 3}
+{"t": 1793352939.426, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0021, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352939.426, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352945.484, "event": "campaign_detected", "actor": "h:98e10392d2b76497", "technique": "user_enumeration", "onset": 1793352930.2074, "ttd_s": 14.057737, "n_requests": 4}
+{"t": 1793352945.506, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/717", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352945.526, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/717", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793352945.53, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0417, "signature": "6205c942f2fff687"}
+{"t": 1793352954.661, "event": "campaign_detected", "actor": "h:98e10392d2b76497", "technique": "credential_stuffing", "onset": 1793352930.2074, "ttd_s": 23.683367, "n_requests": 6}
+{"t": 1793352954.721, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/190"]}
+{"t": 1793352954.778, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/190", "attacked accounts that would be limited: 0/29 (victim lock-out is the accepted cost)"]}
+{"t": 1793352954.796, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/718", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352954.801, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1361, "signature": "87ac366fab484cfb"}
+{"t": 1793352954.801, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793352971.026, "event": "campaign_detected", "actor": "h:7d4eb6e239b88ef6", "technique": "sqli", "onset": 1793352956.739662, "ttd_s": 7.325501, "n_requests": 3}
+{"t": 1793352971.04, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0036, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793352971.042, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793352977.096, "event": "campaign_detected", "actor": "h:7d4eb6e239b88ef6", "technique": "user_enumeration", "onset": 1793352956.739662, "ttd_s": 19.140541, "n_requests": 4}
+{"t": 1793352977.097, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793352988.249, "event": "campaign_detected", "actor": "h:7d4eb6e239b88ef6", "technique": "credential_stuffing", "onset": 1793352956.739662, "ttd_s": 31.155506, "n_requests": 6}
+{"t": 1793352988.307, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/191"]}
+{"t": 1793352988.369, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/191", "attacked accounts that would be limited: 0/29 (victim lock-out is the accepted cost)"]}
+{"t": 1793352988.398, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/727", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793352988.405, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1477, "signature": "87ac366fab484cfb"}
+{"t": 1793352988.405, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793353001.684, "event": "campaign_detected", "actor": "h:add75ee3ae545ecf", "technique": "sqli", "onset": 1793352997.197185, "ttd_s": 4.221837, "n_requests": 3}
+{"t": 1793353001.692, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0018, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793353001.694, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793353005.734, "event": "campaign_detected", "actor": "h:add75ee3ae545ecf", "technique": "user_enumeration", "onset": 1793352992.713088, "ttd_s": 12.517644, "n_requests": 4}
+{"t": 1793353005.757, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/738", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353005.779, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/738", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353005.781, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.044, "signature": "6205c942f2fff687"}
+{"t": 1793353013.866, "event": "campaign_detected", "actor": "h:add75ee3ae545ecf", "technique": "credential_stuffing", "onset": 1793352992.713088, "ttd_s": 20.911909, "n_requests": 6}
+{"t": 1793353013.927, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/195"]}
+{"t": 1793353013.991, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/195", "attacked accounts that would be limited: 0/29 (victim lock-out is the accepted cost)"]}
+{"t": 1793353014.01, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793353014.013, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1382, "signature": "87ac366fab484cfb"}
+{"t": 1793353014.013, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793353027.187, "event": "campaign_detected", "actor": "h:fc5eef81ecf33ddc", "technique": "sqli", "onset": 1793353018.246373, "ttd_s": 5.357898, "n_requests": 3}
+{"t": 1793353027.195, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0021, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793353027.196, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793353028.202, "event": "campaign_detected", "actor": "h:0e6135cecd0d561e", "technique": "idor_bola", "onset": 1793352329.549421, "ttd_s": 697.763404, "n_requests": 71}
+{"t": 1793353028.223, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353028.243, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/736", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353028.243, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0384, "signature": "a2095478c6dfbe91"}
+{"t": 1793353031.27, "event": "campaign_detected", "actor": "h:fc5eef81ecf33ddc", "technique": "user_enumeration", "onset": 1793353018.246373, "ttd_s": 12.453741, "n_requests": 4}
+{"t": 1793353031.292, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353031.311, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/733", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353031.313, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0395, "signature": "6205c942f2fff687"}
+{"t": 1793353038.442, "event": "campaign_detected", "actor": "h:fc5eef81ecf33ddc", "technique": "credential_stuffing", "onset": 1793353018.246373, "ttd_s": 18.799649, "n_requests": 6}
+{"t": 1793353038.502, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/194"]}
+{"t": 1793353038.555, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/194", "attacked accounts that would be limited: 0/31 (victim lock-out is the accepted cost)"]}
+{"t": 1793353038.573, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793353038.58, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1308, "signature": "87ac366fab484cfb"}
+{"t": 1793353038.581, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793353057.783, "event": "campaign_detected", "actor": "h:8c54087b1e5f8728", "technique": "user_enumeration", "onset": 1793353041.076367, "ttd_s": 15.693887, "n_requests": 4}
+{"t": 1793353057.808, "event": "candidate", "id": "aegis-user_enumeration-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/738", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353057.825, "event": "candidate", "id": "aegis-user_enumeration-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/738", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353057.83, "event": "mitigation", "technique": "user_enumeration", "source": "none", "rule": null, "ttm_s": 0.0453, "signature": "6205c942f2fff687"}
+{"t": 1793353062.982, "event": "campaign_detected", "actor": "h:8c54087b1e5f8728", "technique": "sqli", "onset": 1793353041.076367, "ttd_s": 21.260894, "n_requests": 5}
+{"t": 1793353063.025, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0095, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793353063.027, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793353067.058, "event": "campaign_detected", "actor": "h:8c54087b1e5f8728", "technique": "credential_stuffing", "onset": 1793353041.076367, "ttd_s": 24.932941, "n_requests": 6}
+{"t": 1793353067.124, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/198"]}
+{"t": 1793353067.184, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/198", "attacked accounts that would be limited: 0/31 (victim lock-out is the accepted cost)"]}
+{"t": 1793353067.204, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793353067.204, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1423, "signature": "87ac366fab484cfb"}
+{"t": 1793353067.204, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793353075.329, "event": "campaign_detected", "actor": "h:0a1512f4f07d69d2", "technique": "idor_bola", "onset": 1793351388.334928, "ttd_s": 1685.827548, "n_requests": 70}
+{"t": 1793353075.354, "event": "candidate", "id": "aegis-idor_bola-1", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353075.373, "event": "candidate", "id": "aegis-idor_bola-2", "ok": false, "rejected_at": "attack_actor", "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/732", "campaign actor would have 0 request(s) limited"]}
+{"t": 1793353075.377, "event": "mitigation", "technique": "idor_bola", "source": "none", "rule": null, "ttm_s": 0.0431, "signature": "d4e3e99d070cbba4"}
+{"t": 1793353085.492, "event": "campaign_detected", "actor": "h:d6ec497efa80110a", "technique": "user_enumeration", "onset": 1793353068.572641, "ttd_s": 15.939998, "n_requests": 4}
+{"t": 1793353085.494, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793353090.646, "event": "campaign_detected", "actor": "h:d6ec497efa80110a", "technique": "sqli", "onset": 1793353084.512639, "ttd_s": 4.696295, "n_requests": 5}
+{"t": 1793353090.691, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0092, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793353090.695, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793353095.76, "event": "campaign_detected", "actor": "h:d6ec497efa80110a", "technique": "credential_stuffing", "onset": 1793353068.572641, "ttd_s": 26.597285, "n_requests": 6}
+{"t": 1793353095.832, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/202"]}
+{"t": 1793353095.894, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/202", "attacked accounts that would be limited: 0/32 (victim lock-out is the accepted cost)"]}
+{"t": 1793353095.915, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/743", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793353095.92, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.1535, "signature": "87ac366fab484cfb"}
+{"t": 1793353095.922, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793353111.2, "event": "campaign_detected", "actor": "h:5eac2eb65883e45a", "technique": "sqli", "onset": 1793353101.37448, "ttd_s": 3.715303, "n_requests": 3}
+{"t": 1793353111.252, "event": "mitigation", "technique": "sqli", "source": "reused", "rule": "aegis-sqli-3", "ttm_s": 0.0092, "signature": "eeaf1f34048c7b8b"}
+{"t": 1793353111.254, "event": "already_enforcing", "rule": "aegis-sqli-3"}
+{"t": 1793353115.295, "event": "campaign_detected", "actor": "h:5eac2eb65883e45a", "technique": "user_enumeration", "onset": 1793353101.37448, "ttd_s": 13.617133, "n_requests": 4}
+{"t": 1793353115.295, "event": "cooldown_skip", "technique": "user_enumeration", "signature": "6205c942f2fff687", "bypass": false}
+{"t": 1793353124.413, "event": "campaign_detected", "actor": "h:5eac2eb65883e45a", "technique": "credential_stuffing", "onset": 1793353101.37448, "ttd_s": 21.834665, "n_requests": 6}
+{"t": 1793353124.614, "event": "candidate", "id": "aegis-credential_stuffing-3", "ok": false, "rejected_at": "benign_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 1/204"]}
+{"t": 1793353124.761, "event": "candidate", "id": "aegis-credential_stuffing-4", "ok": false, "rejected_at": "attack_accounts", "stages": ["rate spec valid", "accounts outside the campaign that would be rate-limited: 0/204", "attacked accounts that would be limited: 0/32 (victim lock-out is the accepted cost)"]}
+{"t": 1793353124.806, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": true, "rejected_at": null, "stages": ["rate spec valid", "non-campaign actors rate-limited: 0/750", "campaign actor would have 1 request(s) limited"]}
+{"t": 1793353124.824, "event": "mitigation", "technique": "credential_stuffing", "source": "fresh", "rule": "aegis-credential_stuffing-1", "ttm_s": 0.3934, "signature": "87ac366fab484cfb"}
+{"t": 1793353124.827, "event": "already_enforcing", "rule": "aegis-credential_stuffing-1"}
+{"t": 1793353139.043, "event": "controller_stop", "memory": {"llm_fraction_of_campaigns": 0.0, "llm_calls": 0, "llm_tokens_in": 0, "llm_tokens_out": 0, "llm_seconds": 0, "campaigns": 180, "candidates": 295, "active_rules": 2, "outcomes_by_source": {"fresh": 65, "none": 51, "reused": 64}}}
