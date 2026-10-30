@@ -20,6 +20,7 @@ recognise -- and still emits IR through the same gate.
 
 from __future__ import annotations
 
+import os
 import argparse
 import json
 import subprocess
@@ -38,7 +39,7 @@ import repair as repair_mod    # noqa: E402
 import gate as gatemod         # noqa: E402
 from store import Memory, signature  # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 
 
 def _quick_blocks(ir: dict, campaign_requests: list[dict], tmp: Path) -> bool:

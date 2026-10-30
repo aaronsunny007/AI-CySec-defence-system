@@ -97,3 +97,18 @@ class Signing(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmptyStore(unittest.TestCase):
+    """A fresh gateway writes `"rules": null`; the controller iterates the list on startup."""
+
+    def test_null_rules_loads_as_empty_list_unsigned_and_signed(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "m.json"
+            p.write_text(json.dumps({"version": 1, "rules": None}), encoding="utf-8")
+            with mock.patch.dict(os.environ, {"AEGIS_MANIFEST_KEY": ""}):
+                self.assertEqual(rulestore.load(p)["rules"], [])
+            payload = json.dumps({"version": 1, "rules": None}, indent=2)
+            p.write_text(json.dumps({"payload": payload, "sig": rulestore.sign(KEY.encode(), payload)}), encoding="utf-8")
+            with mock.patch.dict(os.environ, {"AEGIS_MANIFEST_KEY": KEY}):
+                self.assertEqual(rulestore.load(p)["rules"], [])

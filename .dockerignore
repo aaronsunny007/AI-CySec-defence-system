@@ -1,0 +1,8 @@
+.git
+bin/
+logs/
+.venv/
+data/benign_corpus/
+**/__pycache__
+.aegis/
+aegis.json

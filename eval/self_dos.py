@@ -26,6 +26,7 @@ AEGIS to block, with the gate vs without it.
 
 from __future__ import annotations
 
+import os
 import argparse
 import json
 import subprocess
@@ -39,7 +40,7 @@ for p in ("ir", "deliberator"):
 import compile as irc          # noqa: E402
 import generate as deliberator # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 FP_BUDGET = 0.0001  # the gate's benign FP budget (0.01%)
 
 # Adversarial campaigns: malicious payloads deliberately shaped like the benign

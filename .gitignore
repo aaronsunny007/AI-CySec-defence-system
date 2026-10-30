@@ -37,3 +37,8 @@ logs/ab_*.txt
 # runtime rule-store state and derived data (regenerable)
 rules/active/
 data/route_shapes.json
+
+# per-install config and generated secrets
+aegis.json
+.aegis/
+data/learned/

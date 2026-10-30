@@ -47,6 +47,13 @@ def sign(key: bytes, payload: str) -> str:
     return hmac.new(key, payload.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
+def _norm(m: dict) -> dict:
+    """A fresh gateway writes `"rules": null` for an empty store; callers iterate it."""
+    if isinstance(m, dict) and m.get("rules") is None:
+        m["rules"] = []
+    return m
+
+
 def load(path: Path = DEFAULT_MANIFEST) -> dict:
     if not path.exists():
         return {"version": 1, "rules": []}
@@ -55,10 +62,10 @@ def load(path: Path = DEFAULT_MANIFEST) -> dict:
     if isinstance(data, dict) and "payload" in data and "sig" in data:   # signed envelope
         if key and not hmac.compare_digest(sign(key, data["payload"]), str(data["sig"]).lower()):
             raise ValueError("manifest signature does not verify")
-        return json.loads(data["payload"])
+        return _norm(json.loads(data["payload"]))
     if key:
         raise ValueError("manifest is not signed but AEGIS_MANIFEST_KEY is set")
-    return data
+    return _norm(data)
 
 
 def save(m: dict, path: Path = DEFAULT_MANIFEST) -> None:

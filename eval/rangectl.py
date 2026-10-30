@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 JUICE = Path(os.environ.get("AEGIS_JUICESHOP", str(Path.home() / "tools" / "juice-shop")))
-GATEWAY = ROOT / "bin" / "gateway.exe"
+GATEWAY = ROOT / "bin" / ("gateway.exe" if os.name == "nt" else "gateway")
 PIDFILE = ROOT / "logs" / "range.pids"
 
 

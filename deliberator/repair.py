@@ -14,6 +14,7 @@ message is used instead.
 
 from __future__ import annotations
 
+import os
 import json
 import subprocess
 import sys
@@ -27,7 +28,7 @@ sys.path.insert(0, str(ROOT / "ir"))
 import compile as irc  # noqa: E402
 import llm as llm_mod  # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 MAX_BENIGN_SAMPLE = 300
 
 

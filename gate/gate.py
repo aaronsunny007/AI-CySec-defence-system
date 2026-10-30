@@ -24,6 +24,7 @@ exactly what would enforce.
 
 from __future__ import annotations
 
+import os
 import argparse
 import json
 import subprocess
@@ -38,7 +39,7 @@ sys.path.insert(0, str(ROOT / "range" / "mutate"))
 import compile as irc  # noqa: E402
 import mutate as mut   # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 FP_BUDGET = 0.0001          # 0.01%
 MUTATION_THRESHOLD = 0.80   # must block >= 80% of mutants
 DECISIONS_LOG = ROOT / "logs" / "gate" / "decisions.jsonl"

@@ -28,6 +28,7 @@ code for anything else (invariant 5).
 
 from __future__ import annotations
 
+import os
 import json
 import subprocess
 import sys
@@ -46,7 +47,7 @@ from actors import Actor, actor_key, reconstruct, to_request  # noqa: E402
 from detector import detect                       # noqa: E402
 from traffic import ReplayDriver, AttackDriver, ATTACK_UA_MARKERS  # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 GATEWAY_LOG = ROOT / "logs" / "gateway" / "requests.jsonl"
 DECISIONS = ROOT / "logs" / "gate" / "decisions.jsonl"
 
@@ -332,17 +333,22 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
     time.sleep(2.0)
     window = _read_from(off, t_start)
     blocked_all = [r for r in window if _matched(r, rid, "blocked")]
-    # Ground truth (EVALUATION ONLY -- the stage itself never used it):
-    benign_blocked = [r for r in blocked_all if not _is_attack(r)]
-    attack_blocked = [r for r in blocked_all if _is_attack(r)]
+    # Ground truth exists only on the lab range (the gateway logs gt_label there). It is EVALUATION ONLY --
+    # the stage itself never used it. In production there is none, and the report must not pretend otherwise.
+    have_gt = any(r.get("gt_label") for r in window)
     numbers = {
         "canary_pct": pct, "window_requests": len(window), "rule_blocks": len(blocked_all),
-        "benign_requests_blocked_GT": len(benign_blocked),
-        "attack_requests_blocked_GT": len(attack_blocked),
         "rolled_back": trigger is not None,
         "detect_after_s": round(t_trig - t_start, 1) if t_trig else None,
         "rollback_call_s": round(rollback_s, 2) if rollback_s is not None else None,
     }
+    if have_gt:
+        numbers["benign_requests_blocked_GT"] = sum(1 for r in blocked_all if not _is_attack(r))
+        numbers["attack_requests_blocked_GT"] = sum(1 for r in blocked_all if _is_attack(r))
+    else:
+        fl = _flagged_actor_keys((context or []) + window) if blocked_all else set()
+        numbers["blocks_on_flagged_actors"] = sum(1 for r in blocked_all if actor_key(r) in fl)
+        numbers["blocks_on_unflagged_actors"] = len(blocked_all) - numbers["blocks_on_flagged_actors"]
     if thin:
         rulestore.set_mode(rid, "off")
         numbers["insufficient_traffic"] = True
@@ -351,9 +357,13 @@ def canary_stage(ir: dict, corpus: Path | None, attack_class: str, pct: int = 25
                           f"the window: cannot verify absence of regression, rule switched off", numbers)
     if trigger:
         return LiveResult("canary", False, f"ROLLED BACK after {numbers['detect_after_s']}s: {trigger}", numbers)
-    return LiveResult("canary", True,
-                      f"{duration_s:.0f}s at {pct}%: no regression; rule blocked "
-                      f"{len(attack_blocked)} attack / {len(benign_blocked)} benign requests (GT)", numbers)
+    if have_gt:
+        who = (f"rule blocked {numbers['attack_requests_blocked_GT']} attack / "
+               f"{numbers['benign_requests_blocked_GT']} benign requests (GT)")
+    else:
+        who = (f"rule blocked {numbers['blocks_on_flagged_actors']} requests from actors the observer flags as "
+               f"attackers and {numbers['blocks_on_unflagged_actors']} from unflagged actors (no ground truth in production)")
+    return LiveResult("canary", True, f"{duration_s:.0f}s at {pct}%: no regression; {who}", numbers)
 
 
 # --- pipeline + promotion -----------------------------------------------------

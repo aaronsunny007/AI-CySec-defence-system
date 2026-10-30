@@ -58,7 +58,20 @@ unprivileged and sees only a fixed-vocabulary feature summary, never raw traffic
 no rule reaches `enforce` without passing every stage; hard budgets (rules/hour,
 LLM calls/hour, tokens, candidates).
 
-## Run it (native Windows — no Docker, no WSL)
+## Quickstart (free, local, one command)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aaronsunny007/AI-CySec-defence-system/main/install.sh | sh   # Linux/macOS
+irm https://raw.githubusercontent.com/aaronsunny007/AI-CySec-defence-system/main/install.ps1 | iex      # Windows
+aegis init --target http://127.0.0.1:3000   # the app to protect
+aegis learn                                 # observe only; records your normal traffic
+aegis protect                               # enforce + autonomous, gated rule synthesis
+```
+
+Or `docker compose -f docker-compose.aegis.yml up -d`. Details, safety defaults and what is not
+built yet: [docs/INSTALL.md](docs/INSTALL.md).
+
+## Research range (native Windows — no Docker, no WSL)
 
 One-time: Go (zip) in `%USERPROFILE%\tools\go`, Juice Shop
 `juice-shop-20.2.0_node24_win32_x64.zip` in `%USERPROFILE%\tools\juice-shop`, Node 24,
