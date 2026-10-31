@@ -1,6 +1,8 @@
 # AEGIS image: Go gateway + replay tool built from source, Python controller. All open source.
-# gateway/go.mod pins a newer Go than this base image; Go fetches that toolchain itself (GOTOOLCHAIN=auto).
+# gateway/go.mod pins a newer Go than this base image. The golang image sets GOTOOLCHAIN=local, which
+# forbids Go from fetching it, so switch that back to auto for the build.
 FROM golang:1.24-bookworm AS build
+ENV GOTOOLCHAIN=auto
 WORKDIR /src/gateway
 COPY gateway/ ./
 RUN go build -o /out/gateway . && go build -o /out/replay ./cmd/replay
