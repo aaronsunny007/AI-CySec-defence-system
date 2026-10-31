@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: gateway/go.mod
+          cache-dependency-path: gateway/go.sum
+      - name: Build gateway and replay tool
+        run: |
+          mkdir -p bin
+          cd gateway
+          go build -o ../bin/gateway .
+          go build -o ../bin/replay ./cmd/replay
+      - name: Go tests
+        run: cd gateway && go test ./...
+      - name: Python tests (replay binary built, so the gate tests run instead of skipping)
+        run: python -I -m unittest discover -s tests -v
+      - name: Installer syntax
+        run: sh -n install.sh
+      - name: aegis CLI starts
+        run: python aegis.py --help
+
+  windows:
+    # The project was built on Windows first; this keeps it working there and parses install.ps1.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: gateway/go.mod
+          cache-dependency-path: gateway/go.sum
+      - name: Build gateway and replay tool
+        shell: bash
+        run: |
+          mkdir -p bin
+          cd gateway
+          go build -o ../bin/gateway.exe .
+          go build -o ../bin/replay.exe ./cmd/replay
+      - name: Python tests
+        run: python -I -m unittest discover -s tests -v
+      - name: install.ps1 parses
+        shell: pwsh
+        run: |
+          $errs = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile("$PWD/install.ps1", [ref]$null, [ref]$errs)
+          if ($errs) { $errs | Format-List; exit 1 }
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose file is valid
+        run: docker compose -f docker-compose.aegis.yml config -q
+      - name: Image builds
+        run: docker build -t aegis:ci .
+      - name: Image runs the CLI
+        run: docker run --rm --entrypoint python aegis:ci /app/aegis.py --help
