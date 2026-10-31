@@ -1,0 +1,17 @@
+{
+ "_note": "max distinct ids one benign actor touched per endpoint; see eval/idor_baseline.py",
+ "_sources": [
+  "benign_diverse_detect.jsonl",
+  "journeys_20261010.jsonl",
+  "booknook_corpus.jsonl",
+  "dvwa_corpus.jsonl"
+ ],
+ "_actors": 12290,
+ "ceilings": {
+  "/api/Products/{id}": 3,
+  "/api/books/{id}": 2,
+  "/api/orders/{id}": 1,
+  "/rest/basket/{id}": 1,
+  "/rest/products/{id}/reviews": 5
+ }
+}

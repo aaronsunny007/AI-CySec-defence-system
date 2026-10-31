@@ -300,8 +300,8 @@ benign requests 155444, blocked by an AEGIS rule: 0; live-stage rejections: 3; f
   BookNook. About 90 per Juice Shop run are `idor_bola` flags on benign actors browsing
   `/rest/products/{id}/reviews` (4+ distinct ids on one endpoint, which is ordinary product browsing); no
   rule is attempted for them. The others reuse a cached gate result. Only the 4-5 real rules go through
-  the live stages per run, so these cost little now, but they are a precision problem in the observer's
-  IDOR heuristic and I have not changed it.
+  the live stages per run, so these cost little now, but they were a precision problem in the observer's
+  IDOR heuristic. **Fixed afterwards: see "IDOR false-alarm fix (2026-10-30)" at the end of this file.**
 * **Three bugs found along the way, each of which would have made the numbers worse than the system:**
   1. *The cooldown flood.* Keying the cooldown on payload fingerprints (so a false alarm could not lock
      out a real campaign) made every look-alike false alarm run the full gate. With 450-600 false
@@ -372,3 +372,35 @@ benign requests 40828, blocked by an AEGIS rule: 0; live-stage rejections: 4; fa
 * Caveats: the attacks and the benign generator are mine; the corpus is only 4,552 distinct requests;
   the command-injection payloads are read-only commands (`whoami`, `echo`, `dir`, `type` of win.ini,
   `ipconfig`) that would run on the host if not blocked; and DVWA at level "low" is easy.
+
+
+---
+
+# IDOR false-alarm fix (2026-10-30)
+
+**Change.** The IDOR/BOLA detector flagged any actor touching 4+ distinct ids on one endpoint. That is right
+for private objects (`/rest/basket/{id}`: a normal user touches one) and wrong for public browsing
+(`/rest/products/{id}/reviews`). `eval/idor_baseline.py` now records, offline, the most distinct ids any one
+benign actor touched per endpoint (`data/idor_ceilings.json`, from 12,290 actors in four benign corpora), and
+the detector requires `max(4, 2 x ceiling)` ids. Reviews has a ceiling of 5, so it needs 10; baskets and user
+records keep 4. The file is curated by a person running a script, not learned at runtime (invariant 6).
+
+**Offline check.** Real benign actors flagged `idor_bola`: 362 of 12,290 before, 0 after (all 362 were
+review browsing). Unit tests (`tests/test_detector_generic.py`) confirm the campaign's basket walk (ids 1-7)
+and user-record walk (ids 1-5) are still detected, 5 review ids are not flagged, and 11 are.
+
+**Live, 3 Juice Shop replicates** (`eval/e2e_live.py --no-cold`, `docs/data/rep12/`, same harness and 25 req/s
+replay as the runs above): false triggers per run **[10, 10, 7]**, against 100-136 before. All three classes
+were enforced in every run (command injection 57-59 s, stuffing 73-122 s, SQLi 62-81 s after onset, all
+`fresh` synthesis); 0 of 75,396 benign requests blocked by an AEGIS rule; no log gaps over 60 s.
+
+* In the 5 stored samples per run (15 in total), 14 are `cmdi` on benign actors and 1 is `idor_bola`. I did
+  not break down the other false triggers by technique, so I cannot say the IDOR source is fully gone, only
+  that it is no longer the bulk.
+* **Not changed:** the replay driver still assigns random corpus requests to 200 pseudo-users. An offline
+  simulation of that assignment still flags 194 of 200 pseudo-users on the new thresholds (60 random
+  requests each), yet the live runs show few `idor_bola` flags; I have not reconciled the two. A
+  session-based replay would be the clean fix; I left the driver alone so these runs stay comparable with
+  the earlier ones.
+* 3 replicates, not 5, and 17,806-29,086 benign requests per run, fewer than the runs above: compare the
+  false-trigger counts, not the request totals.

@@ -130,6 +130,25 @@ def is_login_attempt(r: Request) -> bool:
             and any(isinstance(d.get(k), str) for k in ("email", "username", "user")))
 
 
+def _load_idor_ceilings() -> dict[str, int]:
+    try:
+        d = json.loads((ROOT / "data" / "idor_ceilings.json").read_text(encoding="utf-8"))
+        return {k: int(v) for k, v in d.get("ceilings", {}).items()}
+    except (OSError, ValueError, TypeError, AttributeError):
+        return {}      # no baseline: every endpoint uses the flat threshold
+
+
+# Per-endpoint benign ceilings, curated offline (eval/idor_baseline.py). Read once at import.
+IDOR_CEILINGS = _load_idor_ceilings()
+
+
+def idor_needed(endpoint: str) -> int:
+    """Distinct ids one actor must touch on this endpoint before it counts as an id walk: the flat
+    minimum, or twice what any benign actor was seen touching there if that is higher. Private objects
+    (a basket: benign ceiling 1) keep the flat 4; public browsing (product reviews: ceiling 5) needs 10."""
+    return max(T["idor_min"], 2 * IDOR_CEILINGS.get(endpoint, 0))
+
+
 def detect(actor: Actor) -> list[Finding]:
     """Run all behavioural detectors over one actor's time-sorted requests."""
     out: list[Finding] = []
@@ -176,8 +195,9 @@ def detect(actor: Actor) -> list[Finding]:
             by_ep.setdefault(r.endpoint, []).append(r)
     for ep, rs in by_ep.items():
         ids = {p for r in rs for p in r.path.split("/") if p.isdigit()}
-        if len(ids) >= T["idor_min"]:
-            onset, trig = rs[0].ts, rs[min(T["idor_min"], len(rs)) - 1].ts
+        need = idor_needed(ep)
+        if len(ids) >= need:
+            onset, trig = rs[0].ts, rs[min(need, len(rs)) - 1].ts
             out.append(Finding("idor_bola", onset.isoformat(), trig.isoformat(),
                                (trig - onset).total_seconds(),
                                f"{len(ids)} distinct ids on {ep}"))

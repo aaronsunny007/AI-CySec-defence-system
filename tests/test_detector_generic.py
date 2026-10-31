@@ -40,6 +40,22 @@ class Generic(unittest.TestCase):
         self.assertTrue(c and all(x["scope"]["endpoint_prefix"] == "/api/login" for x in c))
         self.assertTrue(any(x.get("key") == "account" for x in c))
 
+    def _walk(self, paths):
+        return Actor(key="s", requests=[to_request({"ts": (T0 + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+                                                    "method": "GET", "uri": p, "status": 200, "session": "s"})
+                                        for i, p in enumerate(paths)])
+
+    def test_idor_campaign_walks_are_still_detected(self):
+        # the exact id ranges range/attacks/campaigns.py::idor_bola walks
+        for paths in ([f"/rest/basket/{i}" for i in range(1, 8)], [f"/api/Users/{i}" for i in range(1, 6)]):
+            self.assertIn("idor_bola", {f.technique for f in detect(self._walk(paths))}, paths[0])
+
+    def test_public_browsing_under_the_benign_ceiling_is_not_idor(self):
+        shopper = self._walk([f"/rest/products/{i}/reviews" for i in range(1, 6)])   # ceiling is 5
+        self.assertNotIn("idor_bola", {f.technique for f in detect(shopper)})
+        walker = self._walk([f"/rest/products/{i}/reviews" for i in range(1, 12)])   # past 2x ceiling
+        self.assertIn("idor_bola", {f.technique for f in detect(walker)})
+
 
 if __name__ == "__main__":
     unittest.main()

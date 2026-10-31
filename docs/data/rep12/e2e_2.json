@@ -1,0 +1,194 @@
+{
+  "phases": [
+    {
+      "label": "first",
+      "campaign": "command_injection",
+      "enforced": true,
+      "rule": "aegis-cmdi-1",
+      "enforce_event": "enforced",
+      "detect_after_onset_s": 1.7,
+      "detector_ttd_s": 0.3,
+      "mitigation_source": "fresh",
+      "mitigation_ttm_s": 0.101,
+      "enforce_after_onset_s": 58.8,
+      "before_enforcement": {
+        "total": 126,
+        "blocked_by_aegis_rule": 10,
+        "blocked_by_crs": 66,
+        "reached_app": 50
+      },
+      "after_enforcement": {
+        "total": 98,
+        "blocked_by_aegis_rule": 70,
+        "blocked_by_crs": 14,
+        "reached_app": 14
+      },
+      "attacker_runs": 16,
+      "objective_met_runs_before": 0,
+      "objective_met_runs_after": 0
+    },
+    {
+      "label": "first",
+      "campaign": "credential_stuffing",
+      "enforced": true,
+      "rule": "aegis-credential_stuffing-4",
+      "enforce_event": "enforced",
+      "detect_after_onset_s": 34.3,
+      "detector_ttd_s": 1.9,
+      "mitigation_source": "fresh",
+      "mitigation_ttm_s": 0.0203,
+      "enforce_after_onset_s": 121.6,
+      "before_enforcement": {
+        "total": 180,
+        "blocked_by_aegis_rule": 15,
+        "blocked_by_crs": 0,
+        "reached_app": 165
+      },
+      "after_enforcement": {
+        "total": 72,
+        "blocked_by_aegis_rule": 30,
+        "blocked_by_crs": 0,
+        "reached_app": 42
+      },
+      "attacker_runs": 21,
+      "objective_met_runs_before": 15,
+      "objective_met_runs_after": 6
+    },
+    {
+      "label": "first",
+      "campaign": "sqli",
+      "enforced": true,
+      "rule": "aegis-sqli-3",
+      "enforce_event": "enforced",
+      "detect_after_onset_s": 14.5,
+      "detector_ttd_s": 0.3,
+      "mitigation_source": "fresh",
+      "mitigation_ttm_s": 2.874,
+      "enforce_after_onset_s": 76.1,
+      "before_enforcement": {
+        "total": 120,
+        "blocked_by_aegis_rule": 8,
+        "blocked_by_crs": 88,
+        "reached_app": 24
+      },
+      "after_enforcement": {
+        "total": 50,
+        "blocked_by_aegis_rule": 40,
+        "blocked_by_crs": 0,
+        "reached_app": 10
+      },
+      "attacker_runs": 17,
+      "objective_met_runs_before": 0,
+      "objective_met_runs_after": 0
+    }
+  ],
+  "controller": {
+    "campaigns_detected": 118,
+    "false_triggers_on_benign_actors": 10,
+    "false_trigger_samples": [
+      {
+        "technique": "cmdi",
+        "actor_gt": "benign",
+        "n": 15
+      },
+      {
+        "technique": "cmdi",
+        "actor_gt": "benign",
+        "n": 15
+      },
+      {
+        "technique": "cmdi",
+        "actor_gt": "benign",
+        "n": 17
+      },
+      {
+        "technique": "cmdi",
+        "actor_gt": "benign",
+        "n": 7
+      },
+      {
+        "technique": "cmdi",
+        "actor_gt": "benign",
+        "n": 14
+      }
+    ],
+    "events_by_type": {
+      "already_enforcing": 64,
+      "campaign_detected": 118,
+      "candidate": 13,
+      "controller_start": 1,
+      "controller_stop": 1,
+      "cooldown_skip": 35,
+      "enforced": 4,
+      "identity_rotation_detected": 1,
+      "live_stage": 14,
+      "live_start": 7,
+      "mitigation": 82,
+      "no_evidence": 1,
+      "rejected_live": 2,
+      "retry_after_noisy_rollback": 1
+    },
+    "errors": [],
+    "rejected_live": [
+      {
+        "t": 1793357290.146,
+        "event": "rejected_live",
+        "rule": "aegis-traversal-1"
+      },
+      {
+        "t": 1793357321.458,
+        "event": "rejected_live",
+        "rule": "aegis-credential_stuffing-1"
+      }
+    ],
+    "fraction_reaching_llm": 0.0
+  },
+  "benign": {
+    "requests": 28504,
+    "blocked_by_aegis_rule": 0,
+    "blocked_by_crs": 2200,
+    "aegis_blocked_samples": [],
+    "journeys": 237,
+    "journeys_failed": 47,
+    "journeys_broken_by_defence": 8,
+    "journeys_failed_other": {
+      "app": 26,
+      "script": 13
+    }
+  },
+  "log_gaps_over_60s": [],
+  "config": {
+    "shadow_s": 20,
+    "canary_s": 30,
+    "canary_pct": 25,
+    "replay_rps": 25,
+    "journey_workers": 3,
+    "wall_s": 480
+  },
+  "final_rules": [
+    {
+      "id": "aegis-cmdi-1",
+      "mode": "enforce"
+    },
+    {
+      "id": "aegis-traversal-1",
+      "mode": "off"
+    },
+    {
+      "id": "aegis-credential_stuffing-1",
+      "mode": "off"
+    },
+    {
+      "id": "aegis-credential_stuffing-4",
+      "mode": "enforce"
+    },
+    {
+      "id": "aegis-traversal-2",
+      "mode": "enforce"
+    },
+    {
+      "id": "aegis-sqli-3",
+      "mode": "enforce"
+    }
+  ]
+}

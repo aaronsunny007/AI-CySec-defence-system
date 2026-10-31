@@ -1,6 +1,6 @@
 # AEGIS: Gating Autonomous Web-Application Defence on Measured Harm
 
-*Draft v0.5 — 2026-10-27 (adds DVWA as a third target, a stronger ML baseline trained on public data, lessons 20-22). v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
+*Draft v0.6 — 2026-10-30 (re-runs the adaptive attacker with the final SQLi rule; fixes the IDOR detector's false alarms on public browsing, 100-136 to 7-10 false triggers per Juice Shop run; lesson 23). v0.5 — 2026-10-27 (adds DVWA as a third target, a stronger ML baseline trained on public data, lessons 20-22). v0.4 — 2026-10-24 (v0.4 re-measures everything on a 20,262-distinct-request gate corpus with diverse benign sessions, adds lessons 16-19 and an updated ML baseline). Earlier: v0.3 — 2026-10-15. (v0.2, 2026-10-12, added the autonomous closed loop, the adaptive attacker, rule-store hardening, a second target app and a citation check; v0.3 re-measures them with replicates and real-speed attackers and adds an ML-WAF baseline. Four citation discrepancies are listed in `docs/CITATION-CHECK.md`.) Every number below is taken from a results file in this
 repository (linked in section 9) and was produced by a script in `eval/`. Citations
 use the numbering of the PRD bibliography and **must be verified against the originals
 before submission** (PRD section 0).*
@@ -29,10 +29,10 @@ memorising the payload. Wired into one autonomous loop (detect, synthesise, gate
 canary, enforce, with a signed rule store), AEGIS put a rule in force 58-80 s on average after a
 campaign began, in 24 of 24 class-runs over five replicates on Juice Shop and three on a second small
 app, and in 9 of 9 on a third (DVWA, a PHP/MySQL application with form logins), with 0 of 151,726, 0 of 155,444 and 0 of 40,828 benign requests blocked on the three apps. Against a real-speed adaptive attacker that re-encodes payloads and rotates
-identity, requests reaching the app fell from 380 to 11 of 400 (SQLi) and 323 to 40 (command
-injection); credential stuffing was slowed (400 to 267 guesses reaching the app) but not prevented, and
+identity, requests reaching the app fell from 380 to 12 of 400 (SQLi) and 323 to 40 (command
+injection); credential stuffing was slowed (400 to 269 guesses reaching the app) but not prevented, and
 a short attack that finishes inside the ~1-1.5 minute loop latency is not mitigated. We also report
-twenty-two measurement and engineering errors we made and corrected, among them attack tools that announce
+twenty-three measurement and engineering errors we made and corrected, among them attack tools that announce
 themselves (inflating a WAF baseline twofold), a `localhost` delay that slowed our own attackers
 tenfold, and a benign corpus whose 443,507 rows hold only about 4,100 distinct request shapes.
 
@@ -233,23 +233,24 @@ several rounds of live debugging that offline experiments had not exposed (secti
 
 ### 5.11 An adaptive attacker (`docs/M4-RESULTS.md`)
 A red agent that sees only HTTP status codes re-encodes payloads, rotates identity, slows down and
-learns the rate-limit quota; budget 400 requests, one run per cell, same seed in both arms.
+learns the rate-limit quota; budget 400 requests, one run per cell, same seed in both arms. The closed-loop
+rows are the final-rule re-run of 2026-10-30 (final SQLi rule, `docs/data/rep11/`); the CRS-only arm is the earlier batch.
 
 | goal | requests reaching the app: CRS only | closed loop | identities used (closed) | valid logins harvested (CRS only / closed) |
 |---|---|---|---|---|
-| SQLi | 380 / 400 | **11 / 400** | 66 | n/a (never met in either arm) |
+| SQLi | 380 / 400 | **12 / 400** | 66 | n/a (never met in either arm) |
 | command injection | 323 / 400 | **40 / 400** | 58 | n/a (no sink) |
-| credential stuffing | 400 / 400 | 267 / 400 | 35 | **2 / 1** |
+| credential stuffing | 400 / 400 | 269 / 400 | 36 | **2 / 1** |
 
 The observer flagged every identity in the stuffing run (35/35), 65 of 66 in SQLi and 48 of 58 in
-command injection; the first AEGIS block came at request 98, 32 and 49 of 400. SQLi and command
-injection are largely stopped (97% and 88% of requests did not reach the app). Stuffing is slowed, not
+command injection; the first AEGIS block came at request 45, 33 and 49 of 400. SQLi and command
+injection are largely stopped (97% and 90% of requests did not reach the app). Stuffing is slowed, not
 stopped: the attacker still found one valid login before the rule landed, a per-identity rate limit
 only throttles, and an attack short enough to finish before the ~1-1.5 minute loop latency is
 unmitigated in both arms. An earlier, slower-client version of this experiment reported the opposite
 for stuffing (section 6, item 13), and a first closed-loop batch of these runs mitigated nothing in
 command injection because of a flawed canary check (item 19); those runs are superseded. Benign
-requests blocked by an AEGIS rule across the three closed-loop runs: **0 of 225,558**.
+requests blocked by an AEGIS rule across the three closed-loop runs: **0 of 230,949**.
 
 ### 5.12 A second and a third target app (`docs/E2E-RESULTS.md`)
 BookNook is a small deliberately vulnerable stdlib-Python app with different paths, parameter names
@@ -387,6 +388,14 @@ had it gone uncaught.
     logged in; PHP's built-in server serialises requests, so a ping to an unresolvable name (2+ s) stalled
     everything; DVWA locks accounts after three failed logins, so one stuffing run broke the next. Each
     would have produced a plausible but wrong "not mitigated" or "app broken" number.
+23. **A flat threshold in our own detector produced most of our false alarms.** The IDOR heuristic flagged
+    any actor touching 4+ distinct ids on one endpoint, which is right for baskets and wrong for product
+    reviews that every shopper browses: about 90 false campaigns per Juice Shop run, none of which became a
+    rule (the gate rejected them) but which crowded the controller's budget. The fix is a per-endpoint ceiling
+    measured offline from benign actors (362 of 12,290 real benign actors flagged before, 0 after; live false
+    triggers 100-136 per run before, 7-10 after, 3 replicates). It is a curated file, not runtime learning, so
+    an attacker cannot raise it. Limit: the ceiling comes from our own corpora, and our replay harness still
+    assigns random requests to pseudo-users, which I did not change (`docs/E2E-RESULTS.md`).
 
 ## 7. Threats to validity and limitations
 One main application (plus a small self-built second app and DVWA as a third), eight attack classes we wrote, one
@@ -399,7 +408,7 @@ hide its false positives. Canary traffic is replayed corpus requests, 60 req/s, 
 measurements (docs/HARDENING.md). The controller runs one live
 pipeline at a time (~57 s each), so campaigns queue. The benign corpus predates actor
 separation; the gate corpus is 20,262 distinct requests, partly generated by us, so "no false positives"
-means on those shapes (an earlier batch still blocked 3 of 138,611 live benign requests, all one generated string, which shows the corpus is not exhaustive). The adaptive-attacker runs (5.11) used the SQLi rule before its last tightening. The adaptive attacker (5.11) is one simple ladder, one seed, one run per cell.
+means on those shapes (an earlier batch still blocked 3 of 138,611 live benign requests, all one generated string, which shows the corpus is not exhaustive). The adaptive attacker (5.11) is one simple ladder, one seed, one run per cell.
 
 ## 8. Future work
 A stronger adaptive adversary (probing rule boundaries; pacing under thresholds from the start); actor linkage beyond a cookie (IP/ASN/TLS fingerprint on a real deployment); held-out attack
