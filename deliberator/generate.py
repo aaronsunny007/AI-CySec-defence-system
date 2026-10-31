@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
 def _endpoint_prefix(dossier: dict) -> str | None:
     """Most-targeted endpoint prefix, for blast-radius scoping."""
     eps = dossier.get("endpoints", [])
@@ -62,7 +63,11 @@ def candidates_for(attack_class: str, dossier: dict) -> list[dict]:
         # not/true/false/null). A bare "quote then and" matched the review text 'quoted' and
         # "double" on a second app (0.60% of its benign corpus) and was rightly rejected.
         ws = r"(?:\s|/\*.*?\*/)"
-        cmp_ = (r"(?:\d+" + ws + r"*[=<>]|'[^']*'" + ws + r"*[=<>]|\(|\bnot\b|\btrue\b|\bfalse\b|\bnull\b|\w+" + ws + r"*=)")
+        # A function call after quote+and/or is the time-based blind-injection shape (' AND SLEEP(5)--,
+        # ' OR BENCHMARK(...)); it was missing, so a campaign containing one could not be covered by any
+        # single candidate and no rule was made (found live).
+        cmp_ = (r"(?:\d+" + ws + r"*[=<>]|'[^']*'" + ws + r"*[=<>]|\(|\bnot\b|\btrue\b|\bfalse\b|\bnull\b|\w+" + ws + r"*="
+                r"|[a-z_]\w*" + ws + r"*\()")
         c.append(_ir("sqli", 3, "input_constraint", "args_and_body", "rx",
                      r"(?i)(union(?:\s|/\*.*?\*/)+(?:all(?:\s|/\*.*?\*/)+)?select|(?:^|[\w)%])('|%27)(?:\s|/\*.*?\*/|\)|%29)*--(?:[^a-z]|$)"
                      r"|('|%27)(?:\s|/\*.*?\*/|\)|%29)*\b(or|and)\b" + ws + r"*" + cmp_ +

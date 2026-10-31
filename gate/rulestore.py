@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import os
 import sys
 import time
@@ -54,6 +55,20 @@ def _norm(m: dict) -> dict:
     return m
 
 
+def _high_water(path: Path) -> int:
+    """The newest manifest version the gateway has ever loaded (<manifest>.hw, see gateway/rules.go).
+    0 when absent or when its signature does not verify."""
+    try:
+        h = json.loads(Path(str(path) + ".hw").read_text(encoding="utf-8"))
+        v = int(h["v"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return 0
+    key = secret("AEGIS_MANIFEST_KEY")
+    if key and not hmac.compare_digest(sign(key, f"aegis-hw:{v}"), str(h.get("sig", "")).lower()):
+        return 0
+    return max(v, 0)
+
+
 def load(path: Path = DEFAULT_MANIFEST) -> dict:
     if not path.exists():
         return {"version": 1, "rules": []}
@@ -62,10 +77,19 @@ def load(path: Path = DEFAULT_MANIFEST) -> dict:
     if isinstance(data, dict) and "payload" in data and "sig" in data:   # signed envelope
         if key and not hmac.compare_digest(sign(key, data["payload"]), str(data["sig"]).lower()):
             raise ValueError("manifest signature does not verify")
-        return _norm(json.loads(data["payload"]))
-    if key:
+        m = _norm(json.loads(data["payload"]))
+    elif key:
         raise ValueError("manifest is not signed but AEGIS_MANIFEST_KEY is set")
-    return _norm(data)
+    else:
+        m = _norm(data)
+    if key:
+        hw = _high_water(path)
+        if int(m.get("version", 0)) < hw:
+            # A validly signed but OLDER manifest. Refusing (instead of re-signing its rules at hw+1 on
+            # the next write) keeps a rollback visible; the operator restores the manifest or runs clear().
+            raise ValueError(f"manifest v{m.get('version')} is older than the high-water mark v{hw} "
+                             "(possible rollback); restore it or reset the rule store")
+    return m
 
 
 def save(m: dict, path: Path = DEFAULT_MANIFEST) -> None:
@@ -88,23 +112,44 @@ def save(m: dict, path: Path = DEFAULT_MANIFEST) -> None:
     os.replace(tmp, path)  # let the final failure surface
 
 
-def entry_from_ir(ir: dict, mode: str = "shadow", canary_pct: int = 0) -> dict:
-    """Validated IR -> manifest entry. Raises irc.IRError on invalid IR."""
+_ID_IN_RULE = re.compile(r"\bid:(\d+)")
+
+
+def _taken_numeric_ids(rules: list[dict], skip_id: str) -> set[int]:
+    """Coraza ids already used by the other sec rules of a manifest."""
+    return {int(n) for r in rules if r.get("id") != skip_id and r.get("type") == "sec"
+            for n in _ID_IN_RULE.findall(r.get("secrule", ""))}
+
+
+def free_numeric_id(ir: dict, taken: set[int]) -> int:
+    """The id irc.numeric_id(ir) gives, or the next free slot if another rule already holds it."""
+    rid = irc.numeric_id(ir)
+    if len(taken) >= 90000:
+        raise irc.IRError("rule store is full: no free Coraza id")
+    while rid in taken:
+        rid = 100000 + (rid - 100000 + 1) % 90000
+    return rid
+
+
+def entry_from_ir(ir: dict, mode: str = "shadow", canary_pct: int = 0, taken: set[int] | None = None) -> dict:
+    """Validated IR -> manifest entry. Raises irc.IRError on invalid IR. `taken`: Coraza ids held by the
+    manifest's other rules, so that a hash collision does not make the whole ruleset fail to load."""
     if ir["mechanism"] == "rate_limit":
         spec = irc.compile_rate(ir)
         return {"id": ir["id"], "type": "rate", "mode": mode, "canary_pct": canary_pct,
                 "attack_class": ir["attack_class"],
                 "endpoint_prefix": spec["endpoint_prefix"], "methods": spec["methods"],
                 "count": spec["count"], "window_s": spec["window_s"], "key": spec["key"]}
+    numeric = free_numeric_id(ir, taken) if taken is not None else None
     return {"id": ir["id"], "type": "sec", "mode": mode, "canary_pct": canary_pct,
             "attack_class": ir["attack_class"],
-            "secrule": irc.compile_rule(ir, deny=False)}
+            "secrule": irc.compile_rule(ir, deny=False, numeric=numeric)}
 
 
 def upsert(ir: dict, mode: str = "shadow", canary_pct: int = 0,
            path: Path = DEFAULT_MANIFEST) -> dict:
     m = load(path)
-    e = entry_from_ir(ir, mode, canary_pct)
+    e = entry_from_ir(ir, mode, canary_pct, taken=_taken_numeric_ids(m["rules"], ir["id"]))
     m["rules"] = [r for r in m["rules"] if r["id"] != e["id"]] + [e]
     m["version"] = m.get("version", 1) + 1
     save(m, path)

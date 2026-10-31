@@ -40,9 +40,10 @@ MAX_OUTPUT_TOKENS = 1400
 TIMEOUT_S = 240
 
 # --- fixed vocabulary: the ONLY things about traffic the model ever sees -------
-# name -> regex over the decoded path+query+body of a malicious request.
+# name -> regex over the decoded path+query+body of a malicious request. Gaps are bounded ({0,N}), never
+# `.*?`: a lazy gap before a closer that never comes is quadratic (a few KB of "{{" cost seconds).
 VOCAB: dict[str, re.Pattern] = {k: re.compile(v, re.I) for k, v in {
-    "sql_union_select": r"union(\s|/\*.*?\*/)+select",
+    "sql_union_select": r"union(\s|/\*.{0,100}?\*/)+select",
     "sql_quote_then_keyword": r"'\s*(or|and)\b",
     "sql_comment_marker": r"(--|#|/\*)",
     "script_tag": r"<\s*script",
@@ -55,10 +56,10 @@ VOCAB: dict[str, re.Pattern] = {k: re.compile(v, re.I) for k, v in {
     "internal_host_url": r"(127\.0\.0\.1|localhost|169\.254\.169\.254|\[::1\])",
     "url_scheme": r"\b(https?|file|gopher|ftp|ldap|jndi)\s*:",
     "nosql_operator": r"\$(ne|gt|lt|gte|lte|regex|where|or|and|in|nin|exists)\b",
-    "template_double_brace": r"\{\{.*?\}\}",
-    "template_dollar_brace": r"\$\{.*?\}",
-    "template_percent_tag": r"<%.*?%>",
-    "template_hash_brace": r"#\{.*?\}",
+    "template_double_brace": r"\{\{.{0,200}?\}\}",
+    "template_dollar_brace": r"\$\{.{0,200}?\}",
+    "template_percent_tag": r"<%.{0,200}?%>",
+    "template_hash_brace": r"#\{.{0,200}?\}",
     "xml_entity_decl": r"<!(entity|doctype)",
     "ldap_or_jndi_ref": r"(jndi|ldap)",
     "angle_brackets": r"[<>]",
@@ -72,10 +73,17 @@ VOCAB: dict[str, re.Pattern] = {k: re.compile(v, re.I) for k, v in {
 _PATH_OK = re.compile(r"^[A-Za-z0-9/_{}.\-]{1,100}$")
 
 
+_MAX_SCAN = 32 * 1024      # same bound as observer/detector.py: patterns never scan unbounded attacker text
+
+
 def _decoded(rec: dict) -> str:
     uri = rec.get("uri", "") or ""
     path, _, query = uri.partition("?")
-    return urllib.parse.unquote_plus(path + " " + query + " " + (rec.get("body", "") or ""))
+    raw = path + " " + query + " " + (rec.get("body", "") or "")
+    if len(raw) > _MAX_SCAN:
+        raw = raw[:24 * 1024] + " " + raw[-8 * 1024:]
+    text = urllib.parse.unquote_plus(raw)
+    return text if len(text) <= _MAX_SCAN else text[:24 * 1024] + " " + text[-8 * 1024:]
 
 
 def _routes(routes):

@@ -26,8 +26,15 @@ jobs:
           cd gateway
           go build -o ../bin/gateway .
           go build -o ../bin/replay ./cmd/replay
-      - name: Go tests
-        run: cd gateway && go test ./...
+      - name: Go vet
+        run: cd gateway && go vet ./...
+      - name: Go tests (race detector)
+        run: cd gateway && go test -race -count=1 ./...
+      - name: Known vulnerabilities in dependencies (govulncheck)
+        run: |
+          cd gateway
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          "$(go env GOPATH)/bin/govulncheck" ./...
       - name: Python tests (replay binary built, so the gate tests run instead of skipping)
         run: python -I -m unittest discover -s tests -v
       - name: Installer syntax

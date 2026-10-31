@@ -24,6 +24,8 @@ services:
       - aegis-secrets:/app/.aegis
       - aegis-logs:/app/logs
     restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
 
   juiceshop:
     image: bkimminich/juice-shop:v20.2.0

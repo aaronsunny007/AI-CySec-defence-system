@@ -151,3 +151,73 @@ func TestSignatureMatchesPythonVector(t *testing.T) {
 		t.Fatalf("HMAC mismatch: %s", got)
 	}
 }
+
+// A validly signed OLDER manifest put on disk while the gateway is down must not be loaded on the
+// next start: the high-water mark outlives the process.
+func TestHighWaterMarkSurvivesRestart(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "m.json")
+	g1 := &gateway{manifestPath: p, manifestKey: testKey}
+	if err := writeManifest(p, goodManifest(), testKey); err != nil { // v5
+		t.Fatal(err)
+	}
+	if err := g1.reload(); err != nil {
+		t.Fatal(err)
+	}
+	// "restart": a new gateway object that reads the persisted mark, as main() does
+	old := goodManifest()
+	old.Version = 3
+	writeManifest(p, old, testKey)
+	g2 := &gateway{manifestPath: p, manifestKey: testKey}
+	g2.hw = readHW(p, testKey)
+	if g2.hw != 5 {
+		t.Fatalf("high-water mark not persisted, got %d", g2.hw)
+	}
+	if err := g2.reload(); err == nil {
+		t.Error("older signed manifest was accepted after a restart")
+	}
+	// a forged mark (wrong key) is ignored, not trusted
+	os.WriteFile(hwPath(p), []byte(`{"v":999999,"sig":"00"}`), 0o644)
+	if got := readHW(p, testKey); got != 0 {
+		t.Errorf("forged high-water mark was honoured: %d", got)
+	}
+}
+
+// A corrupt or rolled-back manifest at startup is replaced by the last good one: no lost rules.
+func TestStartupRestoresLastGoodManifest(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "m.json")
+	g1 := &gateway{manifestPath: p, manifestKey: testKey}
+	if err := writeManifest(p, goodManifest(), testKey); err != nil { // v5
+		t.Fatal(err)
+	}
+	if err := g1.reload(); err != nil {
+		t.Fatal(err)
+	}
+	for name, corrupt := range map[string]func(){
+		"garbage":     func() { os.WriteFile(p, []byte("{not json"), 0o644) },
+		"unsigned":    func() { writeManifest(p, goodManifest(), nil) },
+		"rolled back": func() { old := goodManifest(); old.Version = 2; writeManifest(p, old, testKey) },
+	} {
+		corrupt()
+		g := &gateway{manifestPath: p, manifestKey: testKey}
+		g.hw = readHW(p, testKey)
+		if err := g.reload(); err == nil {
+			t.Fatalf("%s: the bad manifest was accepted", name)
+		}
+		if err := g.restoreLastGood(); err != nil {
+			t.Fatalf("%s: could not restore: %v", name, err)
+		}
+		if g.rs.Load() == nil || g.rs.Load().version != 5 {
+			t.Errorf("%s: last-good v5 not restored", name)
+		}
+		if _, err := readManifest(p, testKey); err != nil {
+			t.Errorf("%s: the manifest file was not healed: %v", name, err)
+		}
+	}
+	// with no last-good copy there is nothing to restore (caller falls back to CRS only)
+	os.Remove(goodPath(p))
+	os.WriteFile(p, []byte("{not json"), 0o644)
+	g := &gateway{manifestPath: p, manifestKey: testKey}
+	if err := g.restoreLastGood(); err == nil {
+		t.Error("restore with no last-good copy should fail")
+	}
+}

@@ -136,7 +136,9 @@ class Range:
             self.__exit__(None, None, None)
             raise RuntimeError("Juice Shop did not come up (see logs/juiceshop.*.log)")
         gw = subprocess.Popen(
-            [str(GATEWAY), "-mode", self.mode, "-log", self.log, "-manifest", self.manifest,
+            # -range: the lab's clients are all 127.0.0.1 and tell themselves apart with the aegis_vid cookie.
+            # Never pass it outside the lab: it makes a visitor-chosen cookie the visitor's identity.
+            [str(GATEWAY), "-mode", self.mode, "-log", self.log, "-manifest", self.manifest, "-range",
              *self.extra], cwd=ROOT, creationflags=flags,
             stdout=open(logs / "gateway.out.log", "w"), stderr=open(logs / "gateway.err.log", "w"))
         self.procs.append(gw)

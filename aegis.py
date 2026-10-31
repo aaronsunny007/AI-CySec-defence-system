@@ -74,16 +74,19 @@ def load_config() -> dict:
 
 def ensure_secrets() -> dict:
     """Manifest-signing key and admin token, generated once, readable only by this user."""
-    STATE.mkdir(exist_ok=True)
+    STATE.mkdir(mode=0o700, exist_ok=True)
+    try:
+        STATE.chmod(0o700)
+    except OSError:
+        pass
     out = {}
     for name in ("AEGIS_MANIFEST_KEY", "AEGIS_ADMIN_TOKEN"):
         p = STATE / (name.lower() + ".txt")
         if not p.exists():
-            p.write_text(secrets.token_hex(32), encoding="utf-8")
-            try:
-                p.chmod(0o600)
-            except OSError:
-                pass
+            # created 0600 from the first byte (write_text then chmod leaves a window where it is world-readable)
+            fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(secrets.token_hex(32))
         out[name + "_FILE"] = str(p)
     return out
 
@@ -116,6 +119,36 @@ def read_pids() -> dict:
         return {}
 
 
+def cmdline_of(pid: int) -> str:
+    """The command line of a process, or "" when it cannot be read."""
+    try:
+        if sys.platform.startswith("linux"):
+            return Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
+        if os.name == "nt":
+            out = subprocess.run(["powershell", "-NoProfile", "-Command",
+                                  f"(Get-CimInstance Win32_Process -Filter 'ProcessId={int(pid)}').CommandLine"],
+                                 capture_output=True, text=True, timeout=20)
+            return out.stdout.strip()
+        return subprocess.run(["ps", "-p", str(int(pid)), "-o", "command="], capture_output=True, text=True,
+                              timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+# What each recorded process must look like. A pid file that is stale (reboot, crash) or edited names a pid
+# that may now belong to something else; `aegis stop` must never kill that.
+MARKERS = {"gateway": "gateway", "controller": "loop.py"}
+
+
+def owned(pids: dict, kind: str) -> int | None:
+    """The pid recorded for `kind` if it is alive AND still our process, else None."""
+    pid = pids.get(kind)
+    if not pid or not alive(pid):
+        return None
+    cmd = cmdline_of(pid)
+    return pid if MARKERS[kind] in cmd else None
+
+
 def alive(pid: int | None) -> bool:
     if not pid:
         return False
@@ -129,12 +162,31 @@ def alive(pid: int | None) -> bool:
         return False
 
 
+def private_dir(d: Path) -> None:
+    d.mkdir(mode=0o700, parents=True, exist_ok=True)
+    try:
+        d.chmod(0o700)
+    except OSError:
+        pass
+
+
+def private_file(p: Path) -> Path:
+    """Create p (if absent) readable by this user only; logs hold request data."""
+    if not p.exists():
+        os.close(os.open(p, os.O_WRONLY | os.O_CREAT, 0o600))
+    return p
+
+
 def spawn(cmd: list[str], logname: str, env: dict) -> int:
-    (ROOT / "logs").mkdir(exist_ok=True)
-    out = open(ROOT / "logs" / f"{logname}.out.log", "ab")
-    err = open(ROOT / "logs" / f"{logname}.err.log", "ab")
+    private_dir(ROOT / "logs")
+    out = open(private_file(ROOT / "logs" / f"{logname}.out.log"), "ab")
+    err = open(private_file(ROOT / "logs" / f"{logname}.err.log"), "ab")
     kw = {"creationflags": 0x00000008 | 0x00000200} if os.name == "nt" else {"start_new_session": True}
-    return subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=out, stderr=err, stdin=subprocess.DEVNULL, **kw).pid
+    try:
+        return subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=out, stderr=err, stdin=subprocess.DEVNULL, **kw).pid
+    finally:
+        out.close()      # the child keeps its own copies
+        err.close()
 
 
 def terminate(pid: int | None) -> None:
@@ -159,26 +211,39 @@ def terminate(pid: int | None) -> None:
 
 # --- the learned corpus --------------------------------------------------------------
 
-def build_corpus() -> tuple[int, int]:
-    """Snapshot the learn-mode request log into the gate's benign corpus, dropping any actor the
-    observer itself flags as running a campaign (an attacker present while learning must not become
-    'normal'). Returns (requests, actors)."""
+def build_corpus() -> tuple[int, int, int]:
+    """Snapshot the learn-mode request log (and its rotated predecessor) into the gate's benign corpus,
+    dropping any actor the observer itself flags as running a campaign (an attacker present while
+    learning must not become 'normal'). Returns (requests, actors, attack_like): attack_like counts kept
+    requests that still carry an injection-style payload. They stay in the corpus on purpose -- it is the
+    safe direction for a gate (a rule that would block them is rejected, never approved) -- but a high
+    count means learning probably overlapped an attack and the operator should look."""
     sys.path.insert(0, str(ROOT / "observer"))
-    from actors import reconstruct          # noqa: E402
-    from detector import detect             # noqa: E402
-    if not REQ_LOG.exists():
-        return 0, 0
-    keep_n = actors_n = 0
-    CORPUS.parent.mkdir(parents=True, exist_ok=True)
-    with CORPUS.open("w", encoding="utf-8") as f:
-        for actor in reconstruct(REQ_LOG).values():
+    from actors import Actor, reconstruct   # noqa: E402
+    from detector import detect, has_payload  # noqa: E402
+    logs = [p for p in (Path(str(REQ_LOG) + ".1"), REQ_LOG) if p.exists()]
+    if not logs:
+        return 0, 0, 0
+    merged: dict[str, Actor] = {}
+    for lg in logs:
+        for k, a in reconstruct(lg).items():
+            merged.setdefault(k, Actor(key=k)).requests.extend(a.requests)
+    keep_n = actors_n = attack_like = 0
+    private_dir(CORPUS.parent)
+    tmp = CORPUS.with_suffix(".tmp")
+    private_file(tmp)
+    with tmp.open("w", encoding="utf-8") as f:
+        for actor in merged.values():
+            actor.requests.sort(key=lambda r: r.ts)
             if detect(actor):
                 continue
             actors_n += 1
             for r in actor.requests:
                 f.write(json.dumps(r.raw, ensure_ascii=False) + "\n")
                 keep_n += 1
-    return keep_n, actors_n
+                attack_like += has_payload(r)
+    os.replace(tmp, CORPUS)
+    return keep_n, actors_n, attack_like
 
 
 def log_requests() -> int:
@@ -190,6 +255,23 @@ def log_requests() -> int:
 
 # --- commands ------------------------------------------------------------------------
 
+def validate_config(cfg: dict) -> str | None:
+    """A problem with the config, or None. Catches typos at `init`, not at 3am."""
+    import urllib.parse
+    t = urllib.parse.urlsplit(str(cfg.get("target", "")))
+    if t.scheme not in ("http", "https") or not t.hostname:
+        return f"target must be an http(s) URL such as http://127.0.0.1:3000, got {cfg.get('target')!r}"
+    listen = str(cfg.get("listen", ""))
+    host, _, port = listen.rpartition(":")
+    if not host or not port.isdigit() or not (0 < int(port) < 65536):
+        return f"listen must be HOST:PORT such as 127.0.0.1:8080, got {listen!r}"
+    if f"{t.hostname}:{t.port or (443 if t.scheme == 'https' else 80)}" == f"{host}:{port}":
+        return "target and listen are the same address: AEGIS would proxy to itself"
+    if cfg.get("llm") not in ("none", "ollama"):
+        return f"llm must be none or ollama, got {cfg.get('llm')!r}"
+    return None
+
+
 def cmd_init(a) -> int:
     cfg = {**DEFAULTS}
     if CONFIG.exists():
@@ -198,6 +280,9 @@ def cmd_init(a) -> int:
         v = getattr(a, k, None)
         if v:
             cfg[k] = v
+    problem = validate_config(cfg)
+    if problem:
+        die(problem)
     CONFIG.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
     ensure_secrets()
     say(f"wrote {CONFIG.name}: protecting {cfg['target']} on {cfg['listen']}")
@@ -219,7 +304,7 @@ def cmd_doctor(a) -> int:
     check(GATEWAY.exists(), f"gateway binary {GATEWAY.relative_to(ROOT)}", "run the installer (install.sh / install.ps1)")
     check(REPLAY.exists(), f"replay tool {REPLAY.relative_to(ROOT)}", "run the installer (install.sh / install.ps1)")
     check(http_ok(cfg["target"]), f"target {cfg['target']} answers", "start your app, or fix `target` in aegis.json")
-    running = alive(read_pids().get("gateway"))
+    running = owned(read_pids(), "gateway") is not None
     if not running:
         check(port_free(cfg["listen"]), f"listen address {cfg['listen']} is free", "pick another with: aegis init --listen HOST:PORT")
         check(port_free("127.0.0.1:8081"), "admin port 127.0.0.1:8081 is free", "stop whatever uses 8081")
@@ -253,15 +338,19 @@ def _start_gateway(cfg: dict, mode: str, env: dict) -> int:
 def _stop_all() -> None:
     p = read_pids()
     for k in ("controller", "gateway"):         # controller first: it talks to the gateway
-        terminate(p.get(k))
+        pid = owned(p, k)
+        if pid:
+            terminate(pid)
+        elif p.get(k):
+            say(f"note: recorded {k} pid {p[k]} is not an AEGIS process any more; leaving it alone")
     PIDS.unlink(missing_ok=True)
 
 
 def cmd_learn(a) -> int:
     cfg = load_config()
-    if alive(read_pids().get("gateway")):
+    if owned(read_pids(), "gateway"):
         die("AEGIS is already running (aegis stop first)")
-    REQ_LOG.parent.mkdir(parents=True, exist_ok=True)
+    private_dir(REQ_LOG.parent)
     pid = _start_gateway(cfg, "detect", child_env())
     PIDS.write_text(json.dumps({"gateway": pid, "mode": "learn", "started": time.time()}), encoding="utf-8")
     say(f"LEARN mode: AEGIS is in front of {cfg['target']} on http://{cfg['listen']}  - it never blocks anything.")
@@ -273,11 +362,11 @@ def cmd_learn(a) -> int:
 def cmd_protect(a) -> int:
     cfg = load_config()
     prev = read_pids()
-    if prev.get("mode") == "protect" and alive(prev.get("gateway")):
+    if prev.get("mode") == "protect" and owned(prev, "gateway"):
         die("already protecting (aegis status)")
-    if alive(prev.get("gateway")):
+    if owned(prev, "gateway"):
         _stop_all()                              # leave learn mode; the request log is kept
-    reqs, actors = build_corpus()
+    reqs, actors, attack_like = build_corpus()
     if reqs < MIN_CORPUS_REQUESTS or actors < MIN_CORPUS_ACTORS:
         die(f"not enough learned traffic to judge a rule safe: {reqs} requests from {actors} visitors "
             f"(need {MIN_CORPUS_REQUESTS} from {MIN_CORPUS_ACTORS}). Run `aegis learn` longer. "
@@ -294,6 +383,10 @@ def cmd_protect(a) -> int:
     say(f"PROTECT mode: gateway enforcing on http://{cfg['listen']}, controller watching for campaigns.")
     say(f"Gate evidence: {reqs} learned requests from {actors} visitors. New rules go shadow -> canary -> enforce, "
         "and roll back automatically.")
+    if reqs and attack_like / reqs > 0.02:
+        say(f"WARNING: {attack_like} of {reqs} learned requests ({100 * attack_like / reqs:.1f}%) carry attack-like "
+            "payloads. Learning may have overlapped an attack; rules that would block those requests will be "
+            "rejected as 'breaks legitimate traffic'. Re-learn on trusted traffic if that is not what you want.")
     say("Watch it with: aegis status     Events: logs/controller/events.jsonl")
     return 0
 
@@ -306,11 +399,11 @@ def cmd_run(a) -> int:
         signal.signal(sig, lambda *_: stop.append(1))
     while not stop:
         p = read_pids()
-        if not alive(p.get("gateway")):
+        if not owned(p, "gateway"):
             say("gateway exited - see logs/gateway.err.log")
             _stop_all()
             return 1
-        if p.get("controller") and not alive(p["controller"]):
+        if p.get("controller") and not owned(p, "controller"):
             say("controller exited: traffic still flows and existing rules stay; restart to resume synthesis")
             p.pop("controller")
             PIDS.write_text(json.dumps(p), encoding="utf-8")
@@ -321,7 +414,7 @@ def cmd_run(a) -> int:
 
 def cmd_status(a) -> int:
     p = read_pids()
-    gw_up, ctl_up = alive(p.get("gateway")), alive(p.get("controller"))
+    gw_up, ctl_up = owned(p, "gateway") is not None, owned(p, "controller") is not None
     if not gw_up:
         say("AEGIS is not running.")
         return 0

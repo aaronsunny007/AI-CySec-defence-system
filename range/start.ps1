@@ -34,7 +34,8 @@ $js = Start-Process node -ArgumentList "build/app" -WorkingDirectory $JuiceShop 
     -RedirectStandardOutput "$logs\juiceshop.out.log" -RedirectStandardError "$logs\juiceshop.err.log"
 if (-not (Wait-Http "http://127.0.0.1:3000" 120)) { Stop-Process -Id $js.Id -Force; Write-Host "Juice Shop did not come up - see logs\juiceshop.*.log"; exit 1 }
 
-$gwArgs = "-mode $Mode -log logs/gateway/requests.jsonl"
+# -range: lab only. The range's clients share 127.0.0.1 and tell themselves apart with the aegis_vid cookie.
+$gwArgs = "-mode $Mode -log logs/gateway/requests.jsonl -range"
 if ($Rules -ne "") {
     if (-not (Test-Path $Rules)) { Stop-Process -Id $js.Id -Force; Write-Host "rules file not found: $Rules"; exit 1 }
     $gwArgs += " -rules `"$Rules`""

@@ -72,6 +72,28 @@ traffic is fine. Learn on a staging copy, a quiet period, or a replayed test-sui
   `aegis init --llm ollama`. In the measured ablation it promoted 0 of 16 rules
   ([M3-RESULTS](M3-RESULTS.md)), so leaving it off costs you little.
 
+## Behaviour you should know about
+
+- **Bodies over 1 MiB are refused (HTTP 413) by default.** A WAF can only judge what it reads; before this was
+  fixed, padding a request body past the inspected prefix carried a SQL-injection payload straight to the app.
+  If your app takes large uploads, either raise the limit or accept uninspected uploads explicitly: start the
+  gateway with `-max-body BYTES` and/or `-oversize pass` (the request is forwarded, only the first `-max-body`
+  bytes are inspected, and the log record is flagged `"oversize": true`). `aegis` does not expose these yet; pass
+  them to `bin/gateway` directly.
+- **Passwords and tokens are not logged.** Values of fields named like `password`, `token`, `secret`, `api_key`,
+  `card`, `cvv` ... in JSON, form, XML and query strings are replaced by `[redacted]` before a request is
+  written (the field name stays, so login detection still works). A value that looks like an attack payload is
+  kept, because the observer needs it. Redaction is by field name: a secret in a field named something else is
+  logged. Bodies are cut at 64 KiB in the log; the request log is created readable by you only, and rotates to
+  `requests.jsonl.1` at 1 GiB.
+- **Attackers who change identity on every request are still caught,** for injection-style payloads: requests
+  from small, caller-chosen identities (a fresh `Authorization` header or app cookie each time) are pooled by
+  client IP. This does not cover credential stuffing or id-walking by a rotating attacker beyond what the
+  account-keyed rate limit already did, and it cannot tell clients apart behind a load balancer that hides the
+  client IP (the gateway does not read `X-Forwarded-For` yet).
+- **`-range` is for the research lab only.** It makes the `aegis_vid` cookie the visitor identity, which an
+  attacker can set freely. `aegis` never passes it.
+
 ## What this install does not give you yet
 
 Honest list: the dashboard and alerting are not built (use `aegis status` and

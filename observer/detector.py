@@ -34,13 +34,17 @@ ROOT = Path(__file__).resolve().parents[1]
 CRS_THRESHOLD = 5
 
 # --- payload signatures (behavioural, independent of CRS) ----------------------
+# These run over text an attacker controls, so they must run in time linear in its length: no nested
+# or unbounded quantifiers around a repeated prefix. The previous sqli pattern used `\s*\)*\s*` and
+# `select.+from`; one request of a quote followed by 60,000 spaces cost 43 s of CPU, and 'select ' x 9000
+# cost 4 s, freezing the controller. gateway/redact.go carries a copy (tests/test_redaction_parity.py).
 SIGS = {
     # Comment markers and tautologies count only in injection context (after a
     # quote or paren). A bare `--` or `1=1` matched ordinary text ("late -- but
     # worth it", "1=1 perfect apples") AND socket.io session ids (which contain
     # `--`): 0.0755% of the 443k benign requests before this change.
-    "sqli": re.compile(r"('|%27)\s*\)*\s*(or|and)\s|union\s+select|('|%27|\))\s*(--|#)|"
-                       r"\bselect\b.+\bfrom\b|sqlite_master", re.I),
+    "sqli": re.compile(r"('|%27)[\s)]{0,100}(or|and)\s|union\s+select|('|%27|\))\s*(--|#)|"
+                       r"\bselect\b.{1,300}\bfrom\b|sqlite_master", re.I),
     "xss": re.compile(r"<script|onerror\s*=|onload\s*=|<svg|<iframe|javascript:", re.I),
     "traversal": re.compile(r"\.\./|\.\.%2f|%2e%2e|/etc/passwd|\.\.\\|%00|%2500", re.I),
     "cmdi": re.compile(r";\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(|`.*`|&&\s*(ping|cat)", re.I),
@@ -96,8 +100,51 @@ class Dossier:
     findings: list[dict] = field(default_factory=list)
 
 
+MAX_SCAN = 32 * 1024     # bytes of one request the observer's patterns look at (head 24 KiB + tail 8 KiB)
+
+
+def cap(text: str) -> str:
+    """Bound the text a pattern scans so an oversized request cannot cost unbounded CPU. The gateway's WAF
+    has already inspected the full body; this only limits the out-of-band observer."""
+    return text if len(text) <= MAX_SCAN else text[:24 * 1024] + " " + text[-8 * 1024:]
+
+
 def _decoded(r: Request) -> str:
-    return urllib.parse.unquote_plus(r.query + " " + r.body)
+    return cap(urllib.parse.unquote_plus(cap(r.query + " " + r.body)))
+
+
+ORPHAN_IDENTS = ("auth", "cookie")     # identities the caller chooses, and so can rotate per request
+
+
+def pooled_orphans(actors: dict[str, Actor], min_requests: int = 3) -> dict[str, tuple[list[str], Actor]]:
+    """Campaigns hidden by identity rotation. An attacker who changes the identity they control on every
+    request leaves one-request actors the detector never judges. Their payload-bearing requests are pooled by
+    client IP and judged together; returns {ip: (keys of the actors pooled, the pooled actor)} for each pool
+    the detector flags. Lab cookie identities (ident "vid") and records without an ident are never pooled."""
+    by_ip: dict[str, list[tuple[str, Request]]] = {}
+    for key, a in actors.items():
+        if len(a.requests) >= min_requests:
+            continue                                   # an actor the detector can judge by itself
+        for r in a.requests:
+            ip = r.raw.get("client_ip")
+            if ip and r.raw.get("ident") in ORPHAN_IDENTS and has_payload(r):
+                by_ip.setdefault(ip, []).append((key, r))
+    out: dict[str, tuple[list[str], Actor]] = {}
+    for ip, items in by_ip.items():
+        if len(items) < min_requests:
+            continue
+        pooled = Actor(key=f"orphans:{ip}", requests=sorted((r for _, r in items), key=lambda r: r.ts))
+        if detect(pooled):
+            out[ip] = (sorted({k for k, _ in items}), pooled)
+    return out
+
+
+def has_payload(r: Request) -> bool:
+    """True when this single request carries an injection-style payload (any SIGS family), judged on the
+    decoded query, body and path only. Cheap; used to pool requests across identities (see the
+    controller's orphan pool): a payload is evidence about the traffic, not about who sent it."""
+    text = _decoded(r) + " " + urllib.parse.unquote_plus(cap(r.path))
+    return any(rx.search(text) for rx in SIGS.values())
 
 
 def body_fields(body: str | None) -> dict:
@@ -227,8 +274,8 @@ def evidence(actor: Actor, technique: str) -> list[Request]:
         # Traversal rules inspect the URI; a '/etc/passwd' inside a POST body (e.g. a
         # command-injection payload) is not something a URI rule can be asked to block.
         return [r for r in actor.requests
-                if rx.search(urllib.parse.unquote_plus(r.path + "?" + r.query))]
-    return [r for r in actor.requests if rx.search(_decoded(r)) or rx.search(r.path)]
+                if rx.search(cap(urllib.parse.unquote_plus(cap(r.path + "?" + r.query))))]
+    return [r for r in actor.requests if rx.search(_decoded(r)) or rx.search(cap(r.path))]
 
 
 def _email_of(r: Request) -> str | None:

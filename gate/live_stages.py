@@ -44,7 +44,7 @@ for p in ("ir", "gate", "observer", "eval", "range/attacks"):
 import compile as irc                              # noqa: E402
 import rulestore                                   # noqa: E402
 from actors import Actor, actor_key, reconstruct, to_request  # noqa: E402
-from detector import detect                       # noqa: E402
+from detector import detect, pooled_orphans       # noqa: E402
 from traffic import ReplayDriver, AttackDriver, ATTACK_UA_MARKERS  # noqa: E402
 
 REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
@@ -133,7 +133,13 @@ def _flagged_actor_keys(records: list[dict]) -> set[str]:
         path = Path(td) / "w.jsonl"
         path.write_text("\n".join(json.dumps(r) for r in records), encoding="utf-8")
         actors = reconstruct(path)
-    return {k for k, a in actors.items() if len(a.requests) >= 3 and detect(a)}
+    flagged = {k for k, a in actors.items() if len(a.requests) >= 3 and detect(a)}
+    # An attacker rotating the identity they control leaves one-request actors; the controller pools them by
+    # client IP to detect the campaign, so the judge must count them as attackers too, or every match on them
+    # is "indeterminate" and a good rule is rejected for matching "unjudgeable" actors (seen live).
+    for keys, _ in pooled_orphans(actors).values():
+        flagged.update(keys)
+    return flagged
 
 
 MIN_ACTOR_REQUESTS = 3     # fewer than this and the observer cannot judge an actor either way
