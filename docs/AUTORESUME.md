@@ -5,7 +5,7 @@ memory of any conversation**, so everything it needs is here. A run does at most
 work item (or one coherent slice of it), commits to a branch, updates this file, and
 stops. If nothing is actionable it exits immediately (that costs almost nothing).
 
-Owner: Sunny Aaron. Repo: `C:\Users\denny\Documents\AI-CySec-defence-system`.
+Owner: Sunny Aaron. Repo: the local clone of this repository.
 Spec: `CLAUDE.md`. Decisions: `docs/DECISIONS.md`. Honest status: `README.md` and the
 `docs/*-RESULTS.md` files. **Auto-resume expires 2026-10-18**: after that date do nothing.
 
@@ -53,7 +53,7 @@ before then may be unable to start; that is normal, not an error.
 8. **Budget.** One run ~ at most 90 minutes of wall-clock and no more than ~3 range boots.
    Prefer finishing a small verified slice over starting a large unverified one.
 9. Do not edit `CLAUDE.md`, the PRD, or anything outside the repo except appending one dated
-   line to `C:\Users\denny\Documents\Claude Cowork\Log.md` at the end of a run that changed
+   line to the owner's local run log at the end of a run that changed
    something.
 
 ## 3. Queue (do the first `[ ]` item that is not blocked; update its status here)
