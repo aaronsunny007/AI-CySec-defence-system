@@ -63,6 +63,14 @@ class Live(unittest.TestCase):
         w = rotating(2, ip="198.51.100.1") + [dict(r, client_ip="198.51.100.2", session="h:z" + r["session"]) for r in rotating(2)]
         self.assertEqual(LS._flagged_actor_keys(w), set())
 
+    def test_ordinary_visitors_sharing_an_address_with_a_few_odd_searches_are_not_flagged(self):
+        w = rotating(6) + [rec(i, f"h:ok{i:03d}", f"/page{i % 9}") for i in range(200)]      # 3% payloads
+        self.assertEqual(LS._flagged_actor_keys(w), set())
+
+    def test_a_rotating_attacker_among_ordinary_traffic_is_still_flagged(self):
+        w = rotating(40) + [rec(i, f"h:ok{i:03d}", f"/page{i % 9}") for i in range(60)]     # 40% payloads
+        self.assertEqual(len(LS._flagged_actor_keys(w)), 40)
+
     def test_helper_returns_the_pooled_actor(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "w.jsonl"

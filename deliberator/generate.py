@@ -177,12 +177,15 @@ def _rate_ir(cls: str, dossier: dict) -> list[dict]:
         "idor_bola": ("/rest/basket", ["GET"], [(8, 30), (15, 60)]),
     }
     endpoint, methods, rates = cfg.get(cls, ("/rest", ["GET", "POST"], [(10, 60)]))
-    if cls == "credential_stuffing":
-        # scope to the endpoint the campaign actually hit (works on apps other than Juice Shop)
-        for e in dossier.get("endpoints", []):
-            if e not in ("", "/") and not e.startswith("/socket.io"):
-                endpoint = e.replace("{id}", "").rstrip("/") or endpoint
-                break
+    # Scope to the endpoint the campaign actually hit, so the rule works on apps other than Juice Shop. The
+    # defaults above are only a fallback for a dossier with no usable endpoint. This used to be done for
+    # credential stuffing alone: on any other app an id-walk or enumeration rule was scoped to Juice Shop's
+    # /rest/basket or /rest/user/security-question, never matched the attacker, failed the gate's attack
+    # replay, and no rule was made.
+    for e in dossier.get("endpoints", []):
+        if e not in ("", "/") and not e.startswith("/socket.io"):
+            endpoint = e.replace("{id}", "").rstrip("/") or endpoint
+            break
     out = []
     for i, (n, w) in enumerate(rates, 1):
         out.append({

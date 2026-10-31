@@ -114,24 +114,33 @@ def _decoded(r: Request) -> str:
 
 
 ORPHAN_IDENTS = ("auth", "cookie")     # identities the caller chooses, and so can rotate per request
+# A rotating attacker's traffic is mostly payloads; an office, a NAT or a load balancer full of ordinary visitors is
+# not (about 2% of ordinary requests contain an apostrophe, `select ... from` or similar). Pool an IP only when
+# payload-bearing requests are at least this share of everything seen from it, or innocent visitors sharing an
+# address pool into a false campaign (found by the demo: `O'Brien` searches became a "SQLi campaign").
+MIN_ORPHAN_SHARE = 0.30
 
 
 def pooled_orphans(actors: dict[str, Actor], min_requests: int = 3) -> dict[str, tuple[list[str], Actor]]:
     """Campaigns hidden by identity rotation. An attacker who changes the identity they control on every
     request leaves one-request actors the detector never judges. Their payload-bearing requests are pooled by
     client IP and judged together; returns {ip: (keys of the actors pooled, the pooled actor)} for each pool
-    the detector flags. Lab cookie identities (ident "vid") and records without an ident are never pooled."""
+    the detector flags and whose payload requests are at least MIN_ORPHAN_SHARE of that IP's traffic. Lab
+    cookie identities (ident "vid") and records without an ident are never pooled."""
     by_ip: dict[str, list[tuple[str, Request]]] = {}
+    total_by_ip: dict[str, int] = {}
     for key, a in actors.items():
-        if len(a.requests) >= min_requests:
-            continue                                   # an actor the detector can judge by itself
+        small = len(a.requests) < min_requests
         for r in a.requests:
             ip = r.raw.get("client_ip")
-            if ip and r.raw.get("ident") in ORPHAN_IDENTS and has_payload(r):
+            if not ip:
+                continue
+            total_by_ip[ip] = total_by_ip.get(ip, 0) + 1
+            if small and r.raw.get("ident") in ORPHAN_IDENTS and has_payload(r):
                 by_ip.setdefault(ip, []).append((key, r))
     out: dict[str, tuple[list[str], Actor]] = {}
     for ip, items in by_ip.items():
-        if len(items) < min_requests:
+        if len(items) < min_requests or len(items) < MIN_ORPHAN_SHARE * total_by_ip[ip]:
             continue
         pooled = Actor(key=f"orphans:{ip}", requests=sorted((r for _, r in items), key=lambda r: r.ts))
         if detect(pooled):

@@ -77,6 +77,64 @@ class Config(unittest.TestCase):
             self.assertTrue(self.ok(**kw), kw)
 
 
+class Windows(unittest.TestCase):
+    def ok(self, **kw):
+        return aegis.validate_config({**aegis.DEFAULTS, **kw})
+
+    def test_defaults_are_the_documented_ones(self):
+        self.assertEqual((aegis.DEFAULTS["shadow_s"], aegis.DEFAULTS["canary_s"]), (30.0, 45.0))
+
+    def test_short_but_sane_windows_are_allowed_and_silly_ones_are_not(self):
+        self.assertIsNone(self.ok(shadow_s=8, canary_s=12))
+        for bad in (0, 1, 4.9, -5, "soon", None):
+            self.assertTrue(self.ok(shadow_s=bad), bad)
+            self.assertTrue(self.ok(canary_s=bad), bad)
+
+
+class Events(unittest.TestCase):
+    def test_every_event_the_controller_emits_reads_as_a_sentence(self):
+        t = 1793415314.5
+        samples = [
+            {"t": t, "event": "controller_start", "ext_benign_actors": 30},
+            {"t": t, "event": "campaign_detected", "actor": "h:428e0be929d76de8", "technique": "sqli", "n_requests": 3, "ttd_s": 0.4},
+            {"t": t, "event": "mitigation", "technique": "sqli", "source": "fresh", "rule": "aegis-sqli-3", "ttm_s": 0.26},
+            {"t": t, "event": "mitigation", "technique": "sqli", "source": "none", "rule": None, "ttm_s": 0.5},
+            {"t": t, "event": "candidate", "id": "aegis-credential_stuffing-1", "ok": False, "rejected_at": "benign_accounts"},
+            {"t": t, "event": "live_start", "rule": "aegis-sqli-3", "shadow_s": 30.0, "canary_s": 45.0, "canary_pct": 25},
+            {"t": t, "event": "live_stage", "rule": "r", "stage": "shadow", "passed": True, "detail": "1838 live requests; suspected FPs 0/1759"},
+            {"t": t, "event": "enforced", "rule": "aegis-sqli-3"},
+            {"t": t, "event": "rejected_live", "rule": "aegis-sqli-3"},
+            {"t": t, "event": "rule_bypassed", "rule": "aegis-sqli-3", "leaked": 4, "of": 9},
+            {"t": t, "event": "cooldown_skip", "technique": "sqli"},
+            {"t": t, "event": "identity_rotation_detected", "identities": 3},
+            {"t": t, "event": "error", "where": "handle", "error": "boom"},
+            {"t": t, "event": "controller_stop"},
+        ]
+        for e in samples:
+            line = aegis.format_event(e)
+            self.assertTrue(line and len(line) < 220, e)
+            self.assertNotIn("{", line, "raw JSON leaked into the readable stream")
+        self.assertIn("ENFORCED", aegis.format_event(samples[7]))
+        self.assertIn("REJECTED at benign_accounts", aegis.format_event(samples[4]))
+        self.assertIn("none found", aegis.format_event(samples[3]))
+
+    def test_unknown_events_are_skipped_not_crashed_on(self):
+        self.assertIsNone(aegis.format_event({"t": 1.0, "event": "something_new"}))
+        self.assertIsNone(aegis.format_event({}))
+
+    def test_events_command_reads_the_file_and_tolerates_junk(self):
+        import io
+        from contextlib import redirect_stdout
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "events.jsonl"
+            f.write_text('{"t": 1, "event": "enforced", "rule": "aegis-x-1"}\nnot json\n{"t": 2, "event": "who_knows"}\n')
+            buf = io.StringIO()
+            with mock.patch.object(aegis, "EVENTS", f), redirect_stdout(buf):
+                aegis.cmd_events(type("A", (), {"follow": False})())
+            self.assertEqual(len(buf.getvalue().strip().splitlines()), 1)
+            self.assertIn("aegis-x-1", buf.getvalue())
+
+
 class Corpus(unittest.TestCase):
     def test_corpus_is_private_drops_attackers_and_counts_attack_like_requests(self):
         def rec(i, sess, uri, body=""):

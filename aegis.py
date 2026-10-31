@@ -41,8 +41,12 @@ ADMIN = "http://127.0.0.1:8081"
 MIN_CORPUS_REQUESTS = 2000
 MIN_CORPUS_ACTORS = 20
 
+# The live gate stages watch a new rule on real traffic: shadow (counts matches, never blocks), then canary
+# (blocks for a fraction of visitors, rolls back on trouble). Shorter windows = less evidence before enforcement.
+SHADOW_S, CANARY_S, MIN_WINDOW_S = 30.0, 45.0, 5.0
+
 DEFAULTS = {"target": "http://127.0.0.1:3000", "listen": "127.0.0.1:8080",
-            "llm": "none", "model": "qwen2.5-coder:7b"}
+            "llm": "none", "model": "qwen2.5-coder:7b", "shadow_s": SHADOW_S, "canary_s": CANARY_S}
 
 
 # --- small helpers -----------------------------------------------------------------
@@ -56,7 +60,8 @@ def die(msg: str, code: int = 1) -> "NoReturn":    # noqa: F821
     sys.exit(code)
 
 
-ENV_KEYS = {"AEGIS_TARGET": "target", "AEGIS_LISTEN": "listen", "AEGIS_LLM": "llm", "AEGIS_MODEL": "model"}
+ENV_KEYS = {"AEGIS_TARGET": "target", "AEGIS_LISTEN": "listen", "AEGIS_LLM": "llm", "AEGIS_MODEL": "model",
+            "AEGIS_SHADOW_S": "shadow_s", "AEGIS_CANARY_S": "canary_s"}
 
 
 def load_config() -> dict:
@@ -69,6 +74,11 @@ def load_config() -> dict:
     for env, key in ENV_KEYS.items():
         if os.environ.get(env):
             cfg[key] = os.environ[env]
+    for key in ("shadow_s", "canary_s"):
+        try:
+            cfg[key] = float(cfg[key])
+        except (TypeError, ValueError):
+            die(f"{key} must be a number of seconds, got {cfg[key]!r}")
     return cfg
 
 
@@ -123,7 +133,12 @@ def cmdline_of(pid: int) -> str:
     """The command line of a process, or "" when it cannot be read."""
     try:
         if sys.platform.startswith("linux"):
-            return Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
+            for _ in range(10):         # empty while the process is mid-exec: wait a moment rather than disown it
+                raw = Path(f"/proc/{pid}/cmdline").read_bytes()
+                if raw:
+                    return raw.replace(b"\0", b" ").decode("utf-8", "replace")
+                time.sleep(0.02)
+            return ""
         if os.name == "nt":
             out = subprocess.run(["powershell", "-NoProfile", "-Command",
                                   f"(Get-CimInstance Win32_Process -Filter 'ProcessId={int(pid)}').CommandLine"],
@@ -269,6 +284,13 @@ def validate_config(cfg: dict) -> str | None:
         return "target and listen are the same address: AEGIS would proxy to itself"
     if cfg.get("llm") not in ("none", "ollama"):
         return f"llm must be none or ollama, got {cfg.get('llm')!r}"
+    for key in ("shadow_s", "canary_s"):
+        try:
+            ok = float(cfg.get(key, 0)) >= MIN_WINDOW_S
+        except (TypeError, ValueError):
+            ok = False
+        if not ok:
+            return f"{key} must be a number of seconds, at least {MIN_WINDOW_S:g}, got {cfg.get(key)!r}"
     return None
 
 
@@ -276,7 +298,7 @@ def cmd_init(a) -> int:
     cfg = {**DEFAULTS}
     if CONFIG.exists():
         cfg.update(json.loads(CONFIG.read_text(encoding="utf-8")))
-    for k in ("target", "listen", "llm", "model"):
+    for k in ("target", "listen", "llm", "model", "shadow_s", "canary_s"):
         v = getattr(a, k, None)
         if v:
             cfg[k] = v
@@ -375,6 +397,7 @@ def cmd_protect(a) -> int:
     gw = _start_gateway(cfg, "enforce", env)
     ctl = [sys.executable, "-I", str(ROOT / "controller" / "loop.py"),
            "--benign-corpus", str(CORPUS), "--benign-actors", str(CORPUS)]
+    ctl += ["--shadow-s", str(cfg["shadow_s"]), "--canary-s", str(cfg["canary_s"])]
     if cfg["llm"] == "ollama":
         ctl += ["--llm", "ollama", "--model", cfg["model"]]
     cp = spawn(ctl, "controller", env)
@@ -384,10 +407,12 @@ def cmd_protect(a) -> int:
     say(f"Gate evidence: {reqs} learned requests from {actors} visitors. New rules go shadow -> canary -> enforce, "
         "and roll back automatically.")
     if reqs and attack_like / reqs > 0.02:
-        say(f"WARNING: {attack_like} of {reqs} learned requests ({100 * attack_like / reqs:.1f}%) carry attack-like "
-            "payloads. Learning may have overlapped an attack; rules that would block those requests will be "
-            "rejected as 'breaks legitimate traffic'. Re-learn on trusted traffic if that is not what you want.")
-    say("Watch it with: aegis status     Events: logs/controller/events.jsonl")
+        say(f"WARNING: {100 * attack_like / reqs:.1f}% of learned requests ({attack_like}) look like attacks. If that is "
+            "not normal for your app, learning overlapped an attack: re-learn on trusted traffic.")
+    if cfg["shadow_s"] < SHADOW_S or cfg["canary_s"] < CANARY_S:
+        say(f"NOTE: gate windows shortened (shadow {cfg['shadow_s']:g}s, canary {cfg['canary_s']:g}s; defaults "
+            f"{SHADOW_S:g}s/{CANARY_S:g}s). Every stage still runs, but a rule is watched for less time before it enforces.")
+    say("Watch it with: aegis events -f     Summary: aegis status")
     return 0
 
 
@@ -436,6 +461,73 @@ def cmd_status(a) -> int:
     return 0
 
 
+EVENTS = ROOT / "logs" / "controller" / "events.jsonl"
+
+
+def format_event(e: dict) -> str | None:
+    """One controller event as a line a person can read; None for events not worth a line."""
+    t = time.strftime("%H:%M:%S", time.localtime(e.get("t", 0)))
+    ev = e.get("event")
+    who = str(e.get("actor", ""))[:24]
+    if ev == "controller_start":
+        return f"{t}  controller started, watching {e.get('ext_benign_actors', 0)} learned visitors"
+    if ev == "campaign_detected":
+        return f"{t}  CAMPAIGN  {e.get('technique')} by {who} ({e.get('n_requests')} requests, detected {float(e.get('ttd_s', 0)):.1f}s after it began)"
+    if ev == "mitigation":
+        r = e.get("rule")
+        return f"{t}  RULE      {'made ' + r if r else 'none found'} [{e.get('source')}] in {float(e.get('ttm_s', 0)):.2f}s"
+    if ev == "candidate":
+        return f"{t}  gate      candidate {e.get('id')}: {'passed' if e.get('ok') else 'REJECTED at ' + str(e.get('rejected_at'))}"
+    if ev == "live_start":
+        return f"{t}  live      {e.get('rule')} on real traffic: shadow {e.get('shadow_s'):g}s, then canary {e.get('canary_s'):g}s at {e.get('canary_pct')}%"
+    if ev == "live_stage":
+        return f"{t}  live      {e.get('stage')}: {'PASSED' if e.get('passed') else 'FAILED'}  {str(e.get('detail', ''))[:110]}"
+    if ev == "enforced":
+        return f"{t}  ENFORCED  {e.get('rule')} is now blocking"
+    if ev == "rejected_live":
+        return f"{t}  REJECTED  {e.get('rule')} failed on real traffic and is off"
+    if ev == "rule_bypassed":
+        return f"{t}  BYPASSED  {e.get('rule')} let {e.get('leaked')} of {e.get('of')} campaign requests through"
+    if ev in ("cooldown_skip", "budget_skip", "no_template", "no_evidence"):
+        return f"{t}  skipped   {ev.replace('_', ' ')} ({e.get('technique', '')})"
+    if ev == "identity_rotation_detected":
+        return f"{t}  ROTATION  the attacker is changing identity ({e.get('identities')} seen)"
+    if ev == "error":
+        return f"{t}  ERROR     {e.get('where')}: {str(e.get('error', ''))[:100]}"
+    if ev == "controller_stop":
+        return f"{t}  controller stopped"
+    return None
+
+
+def cmd_events(a) -> int:
+    if not EVENTS.exists():
+        say("no events yet (aegis protect writes them)")
+        return 0
+    pos = 0
+    shown = 0
+    while True:
+        with EVENTS.open("rb") as f:
+            f.seek(pos)
+            data = f.read()
+            pos = f.tell()
+        lines = data.split(b"\n")
+        if not data.endswith(b"\n"):                  # a half-written last line: wait for the rest
+            pos -= len(lines[-1])
+            lines = lines[:-1]
+        for ln in lines:
+            if ln.strip():
+                try:
+                    out = format_event(json.loads(ln))
+                except (ValueError, TypeError):
+                    continue
+                if out:
+                    say(out)
+                    shown += 1
+        if not a.follow:
+            return 0
+        time.sleep(0.5)
+
+
 def cmd_stop(a) -> int:
     if not read_pids():
         say("AEGIS is not running.")
@@ -453,7 +545,12 @@ def main() -> int:
     p.add_argument("--listen", help="address AEGIS listens on (default 127.0.0.1:8080)")
     p.add_argument("--llm", choices=["none", "ollama"], help="LLM last-resort path (default none = templates only)")
     p.add_argument("--model", help="Ollama model name")
+    p.add_argument("--shadow-s", dest="shadow_s", type=float, help=f"seconds a new rule is only watched (default {SHADOW_S:g})")
+    p.add_argument("--canary-s", dest="canary_s", type=float, help=f"seconds a new rule blocks a fraction of visitors (default {CANARY_S:g})")
     p.set_defaults(fn=cmd_init)
+    p = sub.add_parser("events", help="what the controller has detected and decided, in plain words")
+    p.add_argument("-f", "--follow", action="store_true", help="keep printing new events")
+    p.set_defaults(fn=cmd_events)
     p = sub.add_parser("run", help="foreground (containers/systemd): learn or protect until stopped")
     p.add_argument("--mode", choices=["learn", "protect"], default="learn")
     p.set_defaults(fn=cmd_run)

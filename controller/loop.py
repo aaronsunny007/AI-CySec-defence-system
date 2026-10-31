@@ -45,7 +45,7 @@ import live_stages as LS                                # noqa: E402
 import mitigate as mit                                  # noqa: E402
 import rulestore                                        # noqa: E402
 from actors import Actor, actor_key, reconstruct, to_request  # noqa: E402
-from detector import ORPHAN_IDENTS, build_dossier, detect, evidence, has_payload, is_login_attempt  # noqa: E402
+from detector import MIN_ORPHAN_SHARE, ORPHAN_IDENTS, build_dossier, detect, evidence, has_payload, is_login_attempt  # noqa: E402
 from ratelimit import blocked_count                     # noqa: E402
 from store import Memory, signature                     # noqa: E402
 
@@ -180,6 +180,7 @@ class Controller:
         # Identity-rotation pool: payload-bearing requests from caller-chosen identities, by client IP.
         self.orphans: dict[str, collections.deque] = {}          # ip -> deque[(session_key, Request)]
         self.orphan_dirty: set[str] = set()
+        self.ip_seen: dict[str, collections.deque] = {}          # ip -> timestamps of every request, for the payload share
         self.dirty: set[str] = set()
         self.flagged: set[str] = set()
         self.handled: set[tuple[str, str]] = set()
@@ -230,6 +231,8 @@ class Controller:
             # An attacker who rotates the identity they control splits one campaign into many one-request
             # actors the detector never judges. Pool their payload-bearing requests by client IP.
             ip = rec.get("client_ip")
+            if ip:
+                self.ip_seen.setdefault(ip, collections.deque(maxlen=MAX_ORPHANS_PER_IP * 50)).append(ts)
             if ip and rec.get("ident") in ORPHAN_IDENTS and has_payload(req):
                 dq = self.orphans.setdefault(ip, collections.deque(maxlen=MAX_ORPHANS_PER_IP))
                 dq.append((k, req))
@@ -244,7 +247,7 @@ class Controller:
             reqs = [r for k, r in self.orphans.get(ip, ())
                     if k in self.actors and len(self.actors[k].requests) < self.cfg.min_requests]
             key = f"orphans:{ip}"
-            if len(reqs) < self.cfg.min_requests:
+            if len(reqs) < self.cfg.min_requests or len(reqs) < MIN_ORPHAN_SHARE * len(self.ip_seen.get(ip, ())):
                 continue
             self.actors[key] = Actor(key=key, requests=sorted(reqs, key=lambda r: r.ts))
             self.dirty.add(key)
@@ -265,6 +268,12 @@ class Controller:
             del self.actors[k]
             self.dirty.discard(k)
             self.flagged.discard(k)
+        for ip in list(self.ip_seen):
+            seen = self.ip_seen[ip]
+            while seen and seen[0] < cutoff:
+                seen.popleft()
+            if not seen:
+                del self.ip_seen[ip]
         for ip in list(self.orphans):
             dq = self.orphans[ip]
             while dq and dq[0][1].ts.timestamp() < cutoff:

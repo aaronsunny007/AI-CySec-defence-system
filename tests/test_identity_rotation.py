@@ -86,6 +86,47 @@ class Rotation(tc.Base):
         self.assertEqual(det[0]["actor"], "h:one")
 
 
+def mixed(n_payload, n_benign, ip="203.0.113.7"):
+    """n_payload rotating-identity payload requests among n_benign ordinary one-request visitors, interleaved."""
+    out, b, p = [], 0, 0
+    for i in range(n_payload + n_benign):
+        if p < n_payload and (b >= n_benign or i % (1 + n_benign // max(1, n_payload)) == 0):
+            r = tc.rec(i * 0.1, f"h:p{p:04d}", "GET", "/search?q=" + PAYLOADS[p % 5].replace(" ", "%20"))
+            p += 1
+        else:
+            r = tc.rec(i * 0.1, f"h:b{b:04d}", "GET", f"/page{b % 7}")
+            b += 1
+        r.update(ident="auth", client_ip=ip)
+        out.append(r)
+    return out
+
+
+class Share(tc.Base):
+    """Ordinary visitors sharing an address (an office, a NAT, a load balancer, a demo on loopback) send a few
+    odd-but-legitimate searches (O'Brien, SELECT * FROM). Those must not pool into a 'campaign'."""
+
+    def detections(self):
+        c = loop.Controller(self.cfg, self.mem, live=tc.Fake(), mitigate_fn=mock.Mock(
+            return_value={"source": "none", "rule": None, "ttm_s": 0.0, "signature": "s"}))
+        c.step()
+        return [e for e in self.events() if e["event"] == "campaign_detected"]
+
+    def test_a_few_odd_searches_among_many_ordinary_visitors_are_not_a_campaign(self):
+        self.feed(mixed(n_payload=8, n_benign=392))             # 2% of the address's traffic
+        self.assertEqual(self.detections(), [])
+
+    def test_a_rotating_attacker_hidden_among_ordinary_traffic_is_still_found(self):
+        self.feed(mixed(n_payload=40, n_benign=60))             # 40% of the address's traffic
+        self.assertEqual([d["technique"] for d in self.detections()], ["sqli"])
+
+    def test_the_boundary(self):
+        self.feed(mixed(n_payload=29, n_benign=71))             # 29%: below the bar
+        self.assertEqual(self.detections(), [])
+
+    def test_threshold_is_the_documented_one(self):
+        self.assertEqual(loop.MIN_ORPHAN_SHARE, 0.30)
+
+
 class Budgets(tc.Base):
     def test_actor_table_is_capped(self):
         with mock.patch.object(loop, "MAX_ACTORS", 100):

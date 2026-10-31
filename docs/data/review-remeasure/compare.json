@@ -1,0 +1,123 @@
+{
+  "corpus": "data/benign_corpus/benign_diverse_detect.jsonl",
+  "benign_requests": 15396,
+  "attack_requests": 590,
+  "base": "c47c8da",
+  "observer_signatures": {
+    "sqli": {
+      "benign": {
+        "old": 66,
+        "new": 66,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      },
+      "attack": {
+        "old": 42,
+        "new": 42,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      }
+    },
+    "xss": {
+      "benign": {
+        "old": 0,
+        "new": 0,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      },
+      "attack": {
+        "old": 30,
+        "new": 30,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      }
+    },
+    "traversal": {
+      "benign": {
+        "old": 20,
+        "new": 20,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      },
+      "attack": {
+        "old": 56,
+        "new": 56,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      }
+    },
+    "cmdi": {
+      "benign": {
+        "old": 64,
+        "new": 64,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      },
+      "attack": {
+        "old": 20,
+        "new": 20,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      }
+    },
+    "ssrf": {
+      "benign": {
+        "old": 0,
+        "new": 0,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      },
+      "attack": {
+        "old": 54,
+        "new": 54,
+        "only_old": 0,
+        "only_new": 0,
+        "examples_only_old": [],
+        "examples_only_new": []
+      }
+    }
+  },
+  "benign_actors_flagged": {
+    "actors_judged": 1386,
+    "old": 16,
+    "new": 16,
+    "only_new": [],
+    "only_old": []
+  },
+  "template_3": {
+    "old": {
+      "benign_matched": 0,
+      "benign_total": 15396,
+      "sqli_attack_matched": 60,
+      "sqli_attack_total": 101,
+      "all_attack_matched": 68,
+      "all_attack_total": 590
+    },
+    "new": {
+      "benign_matched": 0,
+      "benign_total": 15396,
+      "sqli_attack_matched": 60,
+      "sqli_attack_total": 101,
+      "all_attack_matched": 68,
+      "all_attack_total": 590
+    }
+  }
+}

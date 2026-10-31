@@ -26,7 +26,7 @@ import e2e_live as E                         # noqa: E402
 import attacks as A2                         # noqa: E402
 import benign as B2                          # noqa: E402
 import rulestore                             # noqa: E402
-from rangectl import Range                   # noqa: E402
+from rangectl import Range, _kill_pid                   # noqa: E402
 
 PY = sys.executable
 CORPUS = ROOT / "data" / "benign_corpus" / "booknook_corpus.jsonl"
@@ -93,7 +93,7 @@ def main() -> int:
             time.sleep(4)
             stop_b.set()
             final = rulestore.load()["rules"]
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(ctl.pid)], capture_output=True, check=False)
+            _kill_pid(ctl.pid)
     time.sleep(2)
 
     recs = E.load_log()

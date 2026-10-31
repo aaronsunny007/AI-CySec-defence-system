@@ -68,18 +68,23 @@ the unscoped ones remain.
 - **A rule that mirrors the observer's own signature is not offered**: tried, and the gate correctly rejected it
   at the mutation stage (it does not survive encoding and comment mutations).
 
-## What was not re-measured
+## What was re-measured afterwards, and what was not
 
-- The research results (Juice Shop, DVWA, 443,507-request benign corpus, adaptive attacker) were **not re-run**:
-  they need Juice Shop and the corpus, which this review did not have. Two changes can in principle move those
-  numbers and should be re-measured before any figure is quoted again: the observer's SQLi pattern (bounded
-  quantifiers; the unit and hard-negative tests pass, and it differs only for more than 100 characters of
-  whitespace or a `select ... from` gap over 300 characters) and template 3 (one added alternative).
-- `govulncheck` could not reach its database from the review environment; it runs in CI. `bandit` ran: its three
-  "High" findings are SHA-1/MD5 used as fingerprints, not for security.
-- `install.ps1` and the Docker image could not be executed in the review environment; CI builds the image and
-  parses the script.
-- No third-party penetration test. This is one reviewer, one pass.
+Re-measured the same day on Juice Shop v20.2.0 (details and caveats: [REMEASURE-2026-10-31.md](REMEASURE-2026-10-31.md)):
+the pre-review and post-review code behave **identically** on 15,396 benign requests, 590 attack requests and the
+closed-loop run's own 48,131-request log, so the observer-pattern and template-3 changes did not move detection or
+false positives. One closed-loop replicate enforced a rule in all six phases (56 to 185 s) and no AEGIS rule blocked any of
+46,823 benign requests.
+
+Not re-measured: the original 443,507-request corpus (a 15,396-request one was regenerated), five replicates, DVWA,
+the second app and the adaptive attacker. The closed-loop run flagged 242 benign actors where the earlier notes report
+7 to 10; the old and new detectors flag exactly the same ones, so it is not a regression from this review, but I did not
+establish why it differs (my best explanation is the traffic mix of the regenerated corpus).
+
+Other limits: `govulncheck` could not run in the review sandbox (it runs in CI, and found the Go standard-library
+issue fixed in `5f8fb74`). `bandit` ran: its three "High" findings are SHA-1/MD5 used as fingerprints, not for
+security. `install.ps1` and the Docker image were exercised by CI, not by me. No third-party penetration test: one
+reviewer, one pass.
 
 ## Reproducing
 
