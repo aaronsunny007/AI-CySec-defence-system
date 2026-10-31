@@ -24,8 +24,9 @@ application it defends.
 | M3 memory, repeat/variant speed-up | done | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
 | M3 LLM last-resort path | **0/16** ablation cells promoted a rule (Mistral 7B and Qwen2.5-Coder 7B, one-shot and repair loop, 4 novel campaigns); the gate absorbed all 124 candidates | [docs/M3-RESULTS.md](docs/M3-RESULTS.md) |
 | M2/M3 closed loop (the whole thing, no human) | **done and replicated**: `controller/loop.py` enforced a rule 58-80 s (mean) after a campaign began in 33 of 33 class-runs (5 replicates on Juice Shop, 3 on a second small app, 3 on DVWA), gate corpus of 20,262 distinct benign requests; 0 of 151,726 benign requests blocked on Juice Shop and 0 of 155,444 on the second app, 0 of 40,828 on DVWA; memory speeds the synthesis step by orders of magnitude but not end-to-end time; attacks shorter than the ~1-1.5 minute loop latency are not mitigated | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
-| Rule-store hardening | HMAC-signed manifest + admin bearer token implemented, unit-tested and **used in every end-to-end run since 2026-10-12**; tamper/replay against a live gateway untested | [docs/HARDENING.md](docs/HARDENING.md) |
+| Rule-store hardening | HMAC-signed manifest + admin bearer token implemented, unit-tested and **used in every end-to-end run since 2026-10-12**; tamper, unsigned, replay (running and across a restart) and corrupt manifests now **tested live** and refused, with the last-good rules restored | [docs/HARDENING.md](docs/HARDENING.md) |
 | M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; real-speed adaptive red agent: requests reaching the app 380 -> 11 of 400 (SQLi), 323 -> 40 (cmdi); credential stuffing slowed (400 -> 267) but not stopped (single runs); a first adaptive run found one real password blocked by the SQLi rule, fixed | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
+| Security review (2026-10-31) | attacked the running system and fixed what broke: a padded request body bypassed inspection, rotating the identity hid a campaign from detection, passwords were logged in plaintext, one 60 KB request froze the observer for 43 s, rule-id collisions wedged the rule store, and more. Each fix has a regression test. **Re-measured afterwards:** old and new code behave identically on 15k benign and 590 attack requests; one closed-loop replicate enforced in 6 of 6 phases with 0 of 46,823 benign requests blocked by an AEGIS rule (but 242 false triggers, unexplained, vs 7-10 documented) | [docs/SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md), [docs/REMEASURE-2026-10-31.md](docs/REMEASURE-2026-10-31.md) |
 | Baselines | CRS alone (above) and a static ML-WAF trained on public attack data (`docs/ML-BASELINE.md`): good on classic XSS/SSRF/traversal payloads, 0% on command injection, 37.5% on SQLi and 0% on the behavioural campaigns | [docs/ML-BASELINE.md](docs/ML-BASELINE.md) |
 | M5 write-up | **draft v0.3** (numbers trace to the results files; 15 methodology/engineering errors disclosed) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 
@@ -58,7 +59,22 @@ unprivileged and sees only a fixed-vocabulary feature summary, never raw traffic
 no rule reaches `enforce` without passing every stage; hard budgets (rules/hour,
 LLM calls/hour, tokens, candidates).
 
-## Run it (native Windows — no Docker, no WSL)
+## Quickstart (free, local, one command)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aaronsunny007/AI-CySec-defence-system/main/install.sh | sh   # Linux/macOS
+irm https://raw.githubusercontent.com/aaronsunny007/AI-CySec-defence-system/main/install.ps1 | iex      # Windows
+aegis init --target http://127.0.0.1:3000   # the app to protect
+aegis learn                                 # observe only; records your normal traffic
+aegis protect                               # enforce + autonomous, gated rule synthesis
+```
+
+See it work in a minute: [demo/](demo/README.md) (a recorded real run: a password-guessing bot that standard WAF rules cannot see, stopped by a rule AEGIS wrote and tested itself).
+
+Or `docker compose -f docker-compose.aegis.yml up -d`. Details, safety defaults and what is not
+built yet: [docs/INSTALL.md](docs/INSTALL.md).
+
+## Research range (native Windows — no Docker, no WSL)
 
 One-time: Go (zip) in `%USERPROFILE%\tools\go`, Juice Shop
 `juice-shop-20.2.0_node24_win32_x64.zip` in `%USERPROFILE%\tools\juice-shop`, Node 24,

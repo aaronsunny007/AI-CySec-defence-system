@@ -1,0 +1,40 @@
+# AEGIS in front of YOUR app. Free: only open-source images, no accounts.
+#
+#   AEGIS_TARGET=http://host.docker.internal:3000 docker compose -f docker-compose.aegis.yml up -d
+#   (starts in LEARN mode: observes, never blocks, records your normal traffic.)
+#   Later:  AEGIS_MODE=protect docker compose -f docker-compose.aegis.yml up -d
+#
+# Point your users / load balancer at port 8080. To try it with a demo app instead, add:
+#   --profile demo   (adds OWASP Juice Shop and targets it)
+services:
+  aegis:
+    build: .
+    command: ["run", "--mode", "${AEGIS_MODE:-learn}"]
+    ports:
+      - "${AEGIS_PORT:-8080}:8080"
+    environment:
+      AEGIS_TARGET: ${AEGIS_TARGET:-http://juiceshop:3000}
+      AEGIS_LLM: ${AEGIS_LLM:-none}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - aegis-corpus:/app/data/learned
+      - aegis-rules:/app/rules/active
+      - aegis-memory:/app/memory
+      - aegis-secrets:/app/.aegis
+      - aegis-logs:/app/logs
+    restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  juiceshop:
+    image: bkimminich/juice-shop:v20.2.0
+    profiles: ["demo"]
+    expose: ["3000"]
+
+volumes:
+  aegis-corpus:
+  aegis-rules:
+  aegis-memory:
+  aegis-secrets:
+  aegis-logs:

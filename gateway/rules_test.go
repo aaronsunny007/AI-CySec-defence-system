@@ -22,13 +22,60 @@ func TestValidateSecRule(t *testing.T) {
 		{"Include directive", "Include /etc/passwd", false},
 		{"engine directive", "SecRuleEngine Off", false},
 		{"empty", "  \n ", false},
-		{"regex mentioning exec/proxy/allow is fine", `SecRule ARGS "@rx (exec|proxy|allow|skip)" "id:5,phase:2,pass,log,msg:'AEGIS cmdi rule aegis-c-1',t:none"`, true},
+		{"regex mentioning exec/proxy/allow is fine", `SecRule ARGS "@rx (exec|proxy|allow|skip)" "id:100005,phase:2,pass,log,msg:'AEGIS cmdi rule aegis-c-1',t:none"`, true},
 		{"extra quoted argument", `SecRule ARGS "@rx a" "id:6,pass" "id:7,allow"`, false},
 	}
 	for _, c := range cases {
 		err := validateSecRule("t", c.text)
 		if (err == nil) != c.ok {
 			t.Errorf("%s: ok=%v but err=%v", c.name, c.ok, err)
+		}
+	}
+}
+
+// Each of these reached Coraza intact through the previous validator.
+func TestValidateSecRuleRejectsParserDifferentials(t *testing.T) {
+	const pre = `SecRule ARGS "@contains ZZTOP" "id:100778,phase:2,pass,log,`
+	const post = `,tag:'aegis-rule:aegis-other-9'"`
+	bad := map[string]string{
+		"escaped-quote smuggle of allow": pre + `msg:\'x,allow,tag:\'y` + post,
+		"escaped-quote smuggle of ctl":   pre + `msg:\'x,ctl:ruleEngine=Off,tag:\'y` + post,
+		"escaped-quote smuggle of deny":  pre + `msg:\'x,deny,status:418,tag:\'y` + post,
+		"backslash anywhere in actions":  pre + `msg:'a\b'` + post,
+		"unbalanced quote":               pre + `msg:'abc` + post,
+		"msg containing a quote":         pre + `msg:'a'b'` + post,
+		"msg without quotes":             pre + `msg:abc` + post,
+		"id below the AEGIS range":       `SecRule ARGS "@rx x" "id:942100,phase:2,pass"`,
+		"id above the AEGIS range":       `SecRule ARGS "@rx x" "id:200000,phase:2,pass"`,
+		"non-numeric id":                 `SecRule ARGS "@rx x" "id:abc,phase:2,pass"`,
+		"network operator":               `SecRule ARGS "@rbl sbl.spamhaus.org" "id:100001,phase:2,pass"`,
+		"external program operator":      `SecRule ARGS "@inspectFile /bin/sh" "id:100001,phase:2,pass"`,
+		"unknown transformation":         `SecRule ARGS "@rx x" "id:100001,phase:2,pass,t:base64Decode"`,
+		"value on a no-value action":     `SecRule ARGS "@rx x" "id:100001,phase:2,pass:1"`,
+		"variable list with a selector":  `SecRule ARGS:foo "@rx x" "id:100001,phase:2,pass"`,
+		"lower-case variable":            `SecRule args "@rx x" "id:100001,phase:2,pass"`,
+		"gap argument is not empty":      `SecRule ARGS "@rx x" x "id:100001,phase:2,pass"`,
+		"unicode line separator":         "SecRule ARGS \"@rx a\u2028b\" \"id:100001,phase:2,pass\"",
+		"NUL byte":                       "SecRule ARGS \"@rx a\x00b\" \"id:100001,phase:2,pass\"",
+	}
+	for name, text := range bad {
+		if err := validateSecRule("t", text); err == nil {
+			t.Errorf("%s: accepted, but must be refused:\n  %s", name, text)
+		}
+	}
+}
+
+// What ir/compile.py really emits must keep validating.
+func TestValidateSecRuleAcceptsCompilerOutput(t *testing.T) {
+	good := []string{
+		`SecRule ARGS|ARGS_NAMES "@rx union\s+select" "id:139878,phase:2,pass,log,msg:'AEGIS sqli rule aegis-sqli-1',tag:'aegis',tag:'aegis/sqli',tag:'aegis-rule:aegis-sqli-1',t:lowercase,t:urlDecodeUni"`,
+		"SecRule REQUEST_URI \"@beginsWith /rest/user\" \"id:100010,phase:2,pass,log,msg:'AEGIS other rule aegis-o-1',tag:'aegis',tag:'aegis-rule:aegis-o-1',t:none,chain\"\n" +
+			"    SecRule REQUEST_METHOD \"@pm POST PUT\" \"t:none,chain\"\n" +
+			"    SecRule ARGS \"@detectSQLi\" \"t:none\"",
+	}
+	for i, text := range good {
+		if err := validateSecRule("t", text); err != nil {
+			t.Errorf("compiler-shaped rule %d refused: %v", i, err)
 		}
 	}
 }
@@ -114,8 +161,8 @@ func TestAccountOf(t *testing.T) {
 		`{"email":5}`:                    "",
 		`not json`:                       "",
 		`username=Admin&password=x&Login=Login&user_token=ab12`: "admin",
-		`password=only`:                  "",
-		``:                               "",
+		`password=only`: "",
+		``:              "",
 	}
 	for in, want := range cases {
 		if got := accountOf([]byte(in)); got != want {

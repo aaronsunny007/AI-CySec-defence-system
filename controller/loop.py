@@ -45,7 +45,7 @@ import live_stages as LS                                # noqa: E402
 import mitigate as mit                                  # noqa: E402
 import rulestore                                        # noqa: E402
 from actors import Actor, actor_key, reconstruct, to_request  # noqa: E402
-from detector import build_dossier, detect, evidence, is_login_attempt  # noqa: E402
+from detector import MIN_ORPHAN_SHARE, ORPHAN_IDENTS, build_dossier, detect, evidence, has_payload, is_login_attempt  # noqa: E402
 from ratelimit import blocked_count                     # noqa: E402
 from store import Memory, signature                     # noqa: E402
 
@@ -62,6 +62,13 @@ BYPASS_MIN = 3              # unblocked evidence requests that make an enforcing
 ESCALATE_WINDOW_S = 600.0     # a 2nd identity running the same stuffing campaign within this => rotation
 COOLDOWN_S = 600.0          # a campaign signature that yielded no rule is not retried for this long
 MIN_BENIGN_ACTORS = 20      # the rate gate refuses to judge on less benign evidence
+
+# Hard budgets (invariant 7). An attacker who mints a fresh identity per request makes one actor per
+# request; without a cap the controller's memory grows with the attacker's request rate.
+MAX_ACTORS = 50_000         # distinct actors held; the stalest are dropped beyond this
+MAX_ACTOR_REQUESTS = 5_000  # requests kept per actor (the newest)
+MAX_RECENT = 200_000        # raw records kept as context for the live stages
+MAX_ORPHANS_PER_IP = 2_000  # pooled payload requests kept per client IP
 
 
 def account_of(body: str) -> str:
@@ -170,6 +177,10 @@ class Controller:
         self.tail = LogTail(cfg.log, cfg.from_start)
         self.actors: dict[str, Actor] = {}
         self.recent: collections.deque = collections.deque()    # raw records, for stage context
+        # Identity-rotation pool: payload-bearing requests from caller-chosen identities, by client IP.
+        self.orphans: dict[str, collections.deque] = {}          # ip -> deque[(session_key, Request)]
+        self.orphan_dirty: set[str] = set()
+        self.ip_seen: dict[str, collections.deque] = {}          # ip -> timestamps of every request, for the payload share
         self.dirty: set[str] = set()
         self.flagged: set[str] = set()
         self.handled: set[tuple[str, str]] = set()
@@ -211,21 +222,64 @@ class Controller:
             ts = req.ts.timestamp() if req.ts != datetime.min else 0.0
             self.newest_ts = max(self.newest_ts, ts)
             k = actor_key(rec)
-            self.actors.setdefault(k, Actor(key=k)).requests.append(req)
+            a = self.actors.setdefault(k, Actor(key=k))
+            a.requests.append(req)
+            if len(a.requests) > MAX_ACTOR_REQUESTS:
+                del a.requests[:len(a.requests) - MAX_ACTOR_REQUESTS]
             self.dirty.add(k)
             self.recent.append((ts, rec))
+            # An attacker who rotates the identity they control splits one campaign into many one-request
+            # actors the detector never judges. Pool their payload-bearing requests by client IP.
+            ip = rec.get("client_ip")
+            if ip:
+                self.ip_seen.setdefault(ip, collections.deque(maxlen=MAX_ORPHANS_PER_IP * 50)).append(ts)
+            if ip and rec.get("ident") in ORPHAN_IDENTS and has_payload(req):
+                dq = self.orphans.setdefault(ip, collections.deque(maxlen=MAX_ORPHANS_PER_IP))
+                dq.append((k, req))
+                self.orphan_dirty.add(ip)
+        self._pool_orphans()
         self._evict()
         return len(recs)
 
+    def _pool_orphans(self) -> None:
+        """Turn pooled payload requests of too-small actors into one synthetic actor per client IP."""
+        for ip in self.orphan_dirty:
+            reqs = [r for k, r in self.orphans.get(ip, ())
+                    if k in self.actors and len(self.actors[k].requests) < self.cfg.min_requests]
+            key = f"orphans:{ip}"
+            if len(reqs) < self.cfg.min_requests or len(reqs) < MIN_ORPHAN_SHARE * len(self.ip_seen.get(ip, ())):
+                continue
+            self.actors[key] = Actor(key=key, requests=sorted(reqs, key=lambda r: r.ts))
+            self.dirty.add(key)
+        self.orphan_dirty.clear()
+
     def _evict(self) -> None:
         cutoff = self.newest_ts - self.cfg.window_s
-        while self.recent and self.recent[0][0] < cutoff:
+        while self.recent and (self.recent[0][0] < cutoff or len(self.recent) > MAX_RECENT):
             self.recent.popleft()
-        for k in [k for k, a in self.actors.items()
-                  if a.requests and a.requests[-1].ts.timestamp() < cutoff]:
+        stale = [k for k, a in self.actors.items()
+                 if a.requests and a.requests[-1].ts.timestamp() < cutoff]
+        over = len(self.actors) - len(stale) - MAX_ACTORS
+        if over > 0:        # hard budget: drop the stalest of the rest
+            live = sorted((k for k in self.actors if k not in set(stale)),
+                          key=lambda k: self.actors[k].requests[-1].ts if self.actors[k].requests else datetime.min)
+            stale += live[:over]
+        for k in stale:
             del self.actors[k]
             self.dirty.discard(k)
             self.flagged.discard(k)
+        for ip in list(self.ip_seen):
+            seen = self.ip_seen[ip]
+            while seen and seen[0] < cutoff:
+                seen.popleft()
+            if not seen:
+                del self.ip_seen[ip]
+        for ip in list(self.orphans):
+            dq = self.orphans[ip]
+            while dq and dq[0][1].ts.timestamp() < cutoff:
+                dq.popleft()
+            if not dq:
+                del self.orphans[ip]
 
     def context_records(self) -> list[dict]:
         return [r for _, r in self.recent]

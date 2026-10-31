@@ -49,9 +49,10 @@ Covered:
 | Attacker capability | Outcome |
 |---|---|
 | Can write the manifest file but does not hold the key | Edits are rejected; previous rules stay live |
-| Can replace the manifest with an older signed copy | Refused (version must not go backwards) |
+| Can replace the manifest with an older signed copy | Refused while running, **and across a restart** (`<manifest>.hw` remembers the newest version loaded); the last-good copy is restored |
 | Another local process calls `/mode` or `/rollback` without the token | 401 |
-| Corrupts the file (partial write, garbage) | Refused; previous rules stay live (this was already true unsigned) |
+| Corrupts the file (partial write, garbage), or replaces it with an unsigned one | Refused; previous rules stay live. At a restart the last-good manifest (`<manifest>.good`) is restored instead of starting without rules |
+| Smuggles `allow` / `deny` / `ctl:` into a rule's actions with backslash-escaped quotes | Refused: the gateway's validator now has a closed grammar (no backslashes, balanced quotes, allowlisted actions, operators, transformations, ids 100000-199999) |
 
 **Not** covered (be honest about these):
 
@@ -64,13 +65,16 @@ Covered:
   gateway's action allowlist, not the signature.
 * A root/administrator attacker on the host (can read process memory, replace the binary).
 * Confidentiality: the manifest is signed, not encrypted.
-* Availability: an attacker who can delete or truncate the manifest cannot install rules, but
-  a restart with a missing or invalid manifest in signed mode will fail to load. The gateway
-  fails **loudly at start** (it will not run an unverified rule set) but keeps serving with its
-  loaded rules if the file goes bad while running.
+* Availability: with an invalid manifest and no usable `<manifest>.good` the gateway starts with the OWASP
+  Core Rule Set only and logs an ERROR (it no longer refuses to start, which took the protected app
+  down). It will not run an unverified rule set, and it keeps serving with its loaded rules if the file
+  goes bad while running.
 * The admin token is a bearer secret over loopback HTTP; a local attacker who can sniff
   loopback traffic as the same user can read it.
-* Rollback by deleting the manifest and restarting the gateway (no persisted version floor).
+* Rollback by deleting the manifest (and `.hw`/`.good`) and restarting: that is the documented way to reset
+  the store, so it cannot also be refused. It leaves the gateway with no AEGIS rules, not with old ones.
+* A root-level attacker can also rewrite `<manifest>.hw` and `<manifest>.good`; both are signed with the key,
+  so only a key holder can forge them.
 
 ## What was and was not tested
 
@@ -81,8 +85,12 @@ Covered:
 * Python unit tests: envelope shape and round trip, tamper and unsigned refusal, unsigned mode
   unchanged, key from a file, the token is sent on POST only, no key in source.
 * Cross-language HMAC vector.
-* One full live run with signing and the token on (see the status line). Not tested live: a
-  tampered manifest or a replayed old one against a running gateway (covered by the unit
-  tests of `reload()` only), and key rotation.
+* One full live run with signing and the token on (see the status line).
+* **Tested live against a running gateway (2026-10-31):** wrong signature, unsigned file, an older signed
+  manifest and a garbage file are each refused with the previous rule still blocking; an older signed manifest,
+  a corrupt one and an unsigned one put on disk before a restart are each replaced by the last-good manifest
+  (before the fix: the gateway refused to start, or silently lost the newer rule); admin calls without a token
+  get 401, with a GET 405; the admin API is not reachable through the proxy port; `-admin` on a non-loopback
+  address without a token refuses to start. Not tested: key rotation.
 * Found while doing it: `rulestore.clear()` crashed over a leftover *unsigned* manifest once a
   key was set; fixed and tested.

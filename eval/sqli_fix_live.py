@@ -27,7 +27,7 @@ for p in ("eval", "gate", "observer", "range/attacks"):
 import e2e_live as E                         # noqa: E402
 import rulestore                             # noqa: E402
 from adaptive import RedAgent                # noqa: E402
-from rangectl import Range                   # noqa: E402
+from rangectl import Range, _kill_pid                   # noqa: E402
 from traffic import ReplayDriver             # noqa: E402
 
 PY = sys.executable
@@ -113,7 +113,7 @@ def main() -> int:
             replay.stop()
             final = rulestore.load()["rules"]
             for pr in procs:
-                subprocess.run(["taskkill", "/F", "/T", "/PID", str(pr.pid)], capture_output=True, check=False)
+                _kill_pid(pr.pid)
     time.sleep(2)
     E.LOG, E.EVENTS = LOG, EVENTS
     recs = E.load_log()

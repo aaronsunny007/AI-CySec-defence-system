@@ -36,7 +36,7 @@ import campaigns as C                      # noqa: E402
 import rulestore                           # noqa: E402
 from actors import actor_key               # noqa: E402
 from client import Actor                   # noqa: E402
-from rangectl import Range                 # noqa: E402
+from rangectl import Range, _kill_pid      # noqa: E402
 from traffic import ReplayDriver           # noqa: E402
 sys.path.insert(0, str(ROOT / "range" / "benign"))
 import diverse                             # noqa: E402
@@ -278,8 +278,7 @@ def main() -> int:
             stop_div.set()
             final_rules = rulestore.load()["rules"]
             for pr in procs:                         # only processes started here, by PID
-                subprocess.run(["taskkill", "/F", "/T", "/PID", str(pr.pid)],
-                               capture_output=True, check=False)
+                _kill_pid(pr.pid)
         time.sleep(2)
 
     recs = load_log()

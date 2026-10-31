@@ -97,3 +97,38 @@ class Signing(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmptyStore(unittest.TestCase):
+    """A fresh gateway writes `"rules": null`; the controller iterates the list on startup."""
+
+    def test_null_rules_loads_as_empty_list_unsigned_and_signed(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "m.json"
+            p.write_text(json.dumps({"version": 1, "rules": None}), encoding="utf-8")
+            with mock.patch.dict(os.environ, {"AEGIS_MANIFEST_KEY": ""}):
+                self.assertEqual(rulestore.load(p)["rules"], [])
+            payload = json.dumps({"version": 1, "rules": None}, indent=2)
+            p.write_text(json.dumps({"payload": payload, "sig": rulestore.sign(KEY.encode(), payload)}), encoding="utf-8")
+            with mock.patch.dict(os.environ, {"AEGIS_MANIFEST_KEY": KEY}):
+                self.assertEqual(rulestore.load(p)["rules"], [])
+
+
+class Rollback(unittest.TestCase):
+    """The gateway persists the newest version it loaded; the Python store must not re-sign an older one."""
+
+    def test_older_signed_manifest_is_refused_not_resigned(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"AEGIS_MANIFEST_KEY": KEY}):
+            p = Path(d) / "m.json"
+            payload = json.dumps({"version": 3, "rules": []}, indent=2)
+            p.write_text(json.dumps({"payload": payload, "sig": rulestore.sign(KEY.encode(), payload)}), encoding="utf-8")
+            hw = json.dumps({"v": 9, "sig": rulestore.sign(KEY.encode(), "aegis-hw:9")})
+            Path(str(p) + ".hw").write_text(hw, encoding="utf-8")
+            with self.assertRaises(ValueError):
+                rulestore.load(p)
+            # a forged mark is ignored rather than trusted (it could otherwise lock the store)
+            Path(str(p) + ".hw").write_text(json.dumps({"v": 999999, "sig": "00"}), encoding="utf-8")
+            self.assertEqual(rulestore.load(p)["version"], 3)
+            # no mark file at all: no restriction
+            Path(str(p) + ".hw").unlink()
+            self.assertEqual(rulestore.load(p)["version"], 3)

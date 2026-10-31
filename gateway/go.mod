@@ -1,6 +1,6 @@
 module github.com/aaronsunny007/aegis/gateway
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/corazawaf/coraza-coreruleset/v4 v4.25.0

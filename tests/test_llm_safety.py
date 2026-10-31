@@ -5,6 +5,7 @@ Run:  .venv\\Scripts\\python -m unittest discover -s tests -v
 No network and no real model: a MockBackend stands in, so we can make it hostile.
 """
 
+import os
 import json
 import sys
 import unittest
@@ -144,7 +145,7 @@ class RepairFeedbackIsTrafficFree(unittest.TestCase):
     """Invariant 4 for the repair loop: feedback carries numbers, stage names and
     fixed-vocabulary token classes -- never request text."""
 
-    @unittest.skipUnless((ROOT / "bin" / "replay.exe").exists(), "bin/replay.exe not built")
+    @unittest.skipUnless((ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")).exists(), "replay binary not built")
     def test_no_sentinel_text_in_feedback_or_prompt(self):
         import tempfile
         sys.path.insert(0, str(ROOT / "deliberator"))

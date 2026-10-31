@@ -9,6 +9,7 @@ repeats (see docs/E2E-RESULTS.md: 443k rows, ~4.1k distinct non-socket.io reques
 
 from __future__ import annotations
 
+import os
 import collections
 import json
 import subprocess
@@ -22,7 +23,7 @@ for p in ("ir", "deliberator"):
 import compile as irc          # noqa: E402
 import generate as g           # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 EP = {"endpoints": ["/rest/products/search", "/rest/user/login"]}
 
 

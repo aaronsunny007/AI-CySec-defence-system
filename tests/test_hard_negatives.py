@@ -1,6 +1,7 @@
 """Regression: the SQLi template must not block the real user's password, and must still
 block the attack payloads. Needs bin/replay.exe (the real Coraza engine); skipped without it."""
 
+import os
 import json
 import subprocess
 import sys
@@ -15,7 +16,7 @@ import compile as irc        # noqa: E402
 import generate as g         # noqa: E402
 import gate as gate_mod      # noqa: E402
 
-REPLAY = ROOT / "bin" / "replay.exe"
+REPLAY = ROOT / "bin" / ("replay.exe" if os.name == "nt" else "replay")
 PAYLOADS = json.loads((ROOT / "data" / "attack_corpus" / "payloads.json").read_text(encoding="utf-8"))
 
 

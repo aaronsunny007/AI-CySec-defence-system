@@ -27,7 +27,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -101,7 +103,12 @@ var allowedActions = map[string]bool{
 }
 
 // splitActions splits an actions argument on commas that are outside single
-// quotes (msg and tag values are single-quoted).
+// quotes (msg and tag values are single-quoted). It is only safe to use after
+// checkActions has refused backslashes and unbalanced quotes: with no escape
+// character there is exactly one way to read the quoting, so this splitter and
+// Coraza's agree. (They did not when backslash-escaped quotes were allowed:
+// `msg:\'x,allow,tag:\'y` read as ONE msg action here and as three actions in
+// Coraza, which smuggled `allow`/`deny`/`ctl` past this check.)
 func splitActions(a string) []string {
 	var out []string
 	var cur strings.Builder
@@ -121,13 +128,83 @@ func splitActions(a string) []string {
 	return append(out, cur.String())
 }
 
+// allowedOperators are the only operators an AEGIS sec rule may use: the ones ir/compile.py emits.
+// The rest of Coraza's set includes network lookups (@rbl) and external programs (@inspectFile),
+// which have no place in the request path (invariant 8).
+var allowedOperators = map[string]bool{
+	"@rx": true, "@contains": true, "@streq": true, "@detectsqli": true, "@detectxss": true,
+	"@gt": true, "@ge": true, "@beginswith": true, "@pm": true,
+}
+
+var allowedTransforms = map[string]bool{
+	"none": true, "lowercase": true, "urldecodeuni": true, "removecomments": true,
+	"compresswhitespace": true, "removewhitespace": true, "htmlentitydecode": true,
+	"cmdline": true, "normalizepath": true, "length": true,
+}
+
+var (
+	secVarsRE = regexp.MustCompile(`^[A-Z][A-Z_]*(\|[A-Z][A-Z_]*)*$`)
+	quotedRE  = regexp.MustCompile(`^'[^'\\]*'$`)
+	numericRE = regexp.MustCompile(`^[0-9]+$`)
+	minRuleID = 100000 // ir/compile.py numeric_id range; CRS and Coraza use the rest
+	maxRuleID = 199999
+)
+
+// checkActions enforces a closed grammar on the actions argument: no escape characters, balanced
+// quotes, and only allowlisted `name` or `name:value` actions whose values have the expected shape.
+func checkActions(id, actions string) error {
+	if strings.Contains(actions, "\\") {
+		return fmt.Errorf("rule %s: backslash is not allowed in the actions argument", id)
+	}
+	if strings.Count(actions, "'")%2 != 0 {
+		return fmt.Errorf("rule %s: unbalanced quote in the actions argument", id)
+	}
+	for _, tok := range splitActions(actions) {
+		tok = strings.TrimSpace(tok)
+		name, val, hasVal := strings.Cut(tok, ":")
+		lname := strings.ToLower(name)
+		if !allowedActions[lname] {
+			return fmt.Errorf("rule %s: action %q is not allowed (sec rules may only pass; "+
+				"the gateway decides the mode)", id, tok)
+		}
+		switch lname {
+		case "msg", "tag":
+			if !hasVal || !quotedRE.MatchString(val) {
+				return fmt.Errorf("rule %s: %s must be a single-quoted string, got %q", id, lname, tok)
+			}
+		case "id":
+			n, err := strconv.Atoi(val)
+			if !hasVal || !numericRE.MatchString(val) || err != nil || n < minRuleID || n > maxRuleID {
+				return fmt.Errorf("rule %s: id must be %d-%d, got %q", id, minRuleID, maxRuleID, tok)
+			}
+		case "phase":
+			if !hasVal || len(val) != 1 || val[0] < '1' || val[0] > '5' {
+				return fmt.Errorf("rule %s: bad phase %q", id, tok)
+			}
+		case "t":
+			if !hasVal || !allowedTransforms[strings.ToLower(val)] {
+				return fmt.Errorf("rule %s: transformation %q is not allowed", id, tok)
+			}
+		default: // pass, log, chain take no value
+			if hasVal {
+				return fmt.Errorf("rule %s: action %q takes no value", id, tok)
+			}
+		}
+	}
+	return nil
+}
+
 // validateSecRule is a structural guard for the rule store: every line must be
-// `SecRule <vars> "<operator>" "<actions>"` with exactly two double-quoted
-// arguments (the compiler forbids quotes in values), and every action must be
-// on the allowlist.
+// `SecRule <VARS> "<operator> <arg>" "<actions>"` with exactly two double-quoted arguments (the
+// compiler forbids quotes in values), an allowlisted operator, and a closed actions grammar.
 func validateSecRule(id, text string) error {
 	if strings.TrimSpace(text) == "" {
 		return fmt.Errorf("rule %s: empty secrule", id)
+	}
+	for _, r := range text {
+		if (r < 0x20 && r != '\n' && r != '\t' && r != '\r') || r == 0x7f || r == 0x85 || r == 0x2028 || r == 0x2029 {
+			return fmt.Errorf("rule %s: control or line-separator character %U in rule text", id, r)
+		}
 	}
 	for _, ln := range strings.Split(text, "\n") {
 		ln = strings.TrimSpace(ln)
@@ -138,18 +215,18 @@ func validateSecRule(id, text string) error {
 			return fmt.Errorf("rule %s: only SecRule lines allowed, got %.40q", id, ln)
 		}
 		parts := strings.Split(ln, "\"")
-		if len(parts) != 5 || strings.TrimSpace(parts[4]) != "" {
+		if len(parts) != 5 || strings.TrimSpace(parts[4]) != "" || strings.TrimSpace(parts[2]) != "" {
 			return fmt.Errorf("rule %s: a SecRule line must have exactly an operator and an actions argument", id)
 		}
-		for _, tok := range splitActions(parts[3]) {
-			name := strings.ToLower(strings.TrimSpace(tok))
-			if i := strings.IndexByte(name, ':'); i >= 0 {
-				name = name[:i]
-			}
-			if !allowedActions[name] {
-				return fmt.Errorf("rule %s: action %q is not allowed (sec rules may only pass; "+
-					"the gateway decides the mode)", id, strings.TrimSpace(tok))
-			}
+		if !secVarsRE.MatchString(strings.TrimSpace(strings.TrimPrefix(parts[0], "SecRule "))) {
+			return fmt.Errorf("rule %s: bad variable list %.40q", id, parts[0])
+		}
+		op, _, _ := strings.Cut(strings.TrimSpace(parts[1]), " ")
+		if !allowedOperators[strings.ToLower(op)] {
+			return fmt.Errorf("rule %s: operator %q is not allowed", id, op)
+		}
+		if err := checkActions(id, parts[3]); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -418,6 +495,73 @@ func writeManifest(path string, m Manifest, key []byte) error {
 	return err2
 }
 
+// The high-water mark remembers the newest manifest version this gateway has loaded, in
+// <manifest>.hw, so that replay protection survives a restart. Without it a validly signed OLDER
+// manifest put on disk before a restart was accepted and silently dropped every newer rule.
+// Format: {"v":N,"sig":"<hex HMAC of 'aegis-hw:N'>"} (sig empty in unsigned mode).
+func hwPath(manifest string) string { return manifest + ".hw" }
+
+func readHW(manifest string, key []byte) int {
+	raw, err := os.ReadFile(hwPath(manifest))
+	if err != nil {
+		return 0
+	}
+	var h struct {
+		V   int    `json:"v"`
+		Sig string `json:"sig"`
+	}
+	if json.Unmarshal(raw, &h) != nil || h.V < 0 {
+		return 0
+	}
+	if len(key) > 0 && signPayload(key, "aegis-hw:"+strconv.Itoa(h.V)) != strings.ToLower(h.Sig) {
+		log.Printf("WARNING: %s has an invalid signature; ignoring it", hwPath(manifest))
+		return 0
+	}
+	return h.V
+}
+
+func writeHW(manifest string, v int, key []byte) error {
+	sig := ""
+	if len(key) > 0 {
+		sig = signPayload(key, "aegis-hw:"+strconv.Itoa(v))
+	}
+	b, _ := json.Marshal(map[string]any{"v": v, "sig": sig})
+	tmp := hwPath(manifest) + ".tmp"
+	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, hwPath(manifest))
+}
+
+// <manifest>.good is a copy of the last manifest that loaded successfully. At startup a manifest that
+// is corrupt, unsigned, wrongly signed or older than the high-water mark is replaced by it (still
+// verified and checked against the mark), so tampering or a half-written file costs nothing rather than
+// leaving the gateway without its rules.
+func goodPath(manifest string) string { return manifest + ".good" }
+
+func copyFileAtomic(src, dst string) error {
+	b, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	tmp := dst + ".tmp"
+	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, dst)
+}
+
+// restoreLastGood puts the last-good manifest back in place and loads it.
+func (g *gateway) restoreLastGood() error {
+	if _, err := readManifest(goodPath(g.manifestPath), g.manifestKey); err != nil {
+		return fmt.Errorf("no usable last-good manifest: %w", err)
+	}
+	if err := copyFileAtomic(goodPath(g.manifestPath), g.manifestPath); err != nil {
+		return err
+	}
+	return g.reload()
+}
+
 // reload builds a new ruleSet from the manifest and swaps it in. On any error
 // the previous ruleSet stays active.
 func (g *gateway) reload() error {
@@ -428,11 +572,15 @@ func (g *gateway) reload() error {
 	if err != nil {
 		return err
 	}
-	// Replay protection (signed mode): never go back to an older manifest, even a
-	// validly signed one.
+	// Replay protection (signed mode): never go back to an older manifest, even a validly
+	// signed one -- older than what is loaded now, or than anything this gateway ever loaded.
 	if len(g.manifestKey) > 0 {
-		if cur := g.rs.Load(); cur != nil && m.Version < cur.version {
-			return fmt.Errorf("manifest v%d is older than the loaded v%d (replay refused)", m.Version, cur.version)
+		floor := g.hw
+		if cur := g.rs.Load(); cur != nil && cur.version > floor {
+			floor = cur.version
+		}
+		if m.Version < floor {
+			return fmt.Errorf("manifest v%d is older than v%d already seen (replay refused)", m.Version, floor)
 		}
 	}
 	rs, err := buildRuleSet(m, g.staticInclude)
@@ -440,6 +588,15 @@ func (g *gateway) reload() error {
 		return err
 	}
 	g.rs.Store(rs)
+	if err := copyFileAtomic(g.manifestPath, goodPath(g.manifestPath)); err != nil {
+		log.Printf("could not save the last-good manifest: %v", err)
+	}
+	if m.Version > g.hw {
+		g.hw = m.Version
+		if err := writeHW(g.manifestPath, g.hw, g.manifestKey); err != nil {
+			log.Printf("could not persist the manifest high-water mark: %v", err)
+		}
+	}
 	log.Printf("reloaded manifest v%d: %d sec, %d rate rules in %v",
 		m.Version, len(rs.sec), len(rs.rate), time.Since(t0).Round(time.Millisecond))
 	return nil
@@ -506,6 +663,11 @@ func (g *gateway) adminMux() http.Handler {
 		}
 		if !validModes[mode] {
 			http.Error(w, "bad mode", http.StatusBadRequest)
+			return
+		}
+		if mode == "canary" && (pct < 1 || pct > 100) {
+			// Writing this and failing at reload would leave an invalid manifest on disk.
+			http.Error(w, "canary needs pct=1..100", http.StatusBadRequest)
 			return
 		}
 		g.reloadMu.Lock()

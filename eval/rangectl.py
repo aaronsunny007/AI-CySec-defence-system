@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 JUICE = Path(os.environ.get("AEGIS_JUICESHOP", str(Path.home() / "tools" / "juice-shop")))
-GATEWAY = ROOT / "bin" / "gateway.exe"
+GATEWAY = ROOT / "bin" / ("gateway.exe" if os.name == "nt" else "gateway")
 PIDFILE = ROOT / "logs" / "range.pids"
 
 
@@ -44,10 +44,28 @@ def _wait(url: str, seconds: int) -> bool:
     return False
 
 
+# CREATE_NO_WINDOW on Windows; nothing on POSIX (where a non-zero creationflags is an error).
+NO_WINDOW = 0x08000000 if os.name == "nt" else 0
+
+
 def _kill_pid(pid: int) -> None:
-    # /T also ends children; targeted by PID only.
-    subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)],
-                   capture_output=True, check=False)
+    """End exactly this process (by PID only, never by image name)."""
+    if os.name == "nt":
+        # /T also ends children
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, check=False)
+        return
+    import signal
+    try:
+        os.kill(pid, signal.SIGTERM)
+        for _ in range(50):
+            time.sleep(0.1)
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                return
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
 
 
 def stop_recorded() -> None:
@@ -66,7 +84,7 @@ def _reset_dvwa_state() -> None:
     subprocess.run([str(mysql), "-u", "root", "-h", "127.0.0.1", "-P", "3307", "-e",
                     "UPDATE dvwa.users SET failed_login=0, last_login=NULL; "
                     "DELETE FROM dvwa.guestbook WHERE comment_id>1;"], capture_output=True, check=False,
-                   creationflags=0x08000000)
+                   creationflags=NO_WINDOW)
 
 
 def _ensure_mariadb(logs: Path) -> None:
@@ -81,7 +99,7 @@ def _ensure_mariadb(logs: Path) -> None:
     tools = Path.home() / "tools"
     subprocess.Popen([str(tools / "mariadb" / "bin" / "mysqld.exe"), f"--datadir={tools / 'mariadb_data'}",
                       "--port=3307", "--bind-address=127.0.0.1", "--console"], cwd=ROOT,
-                     creationflags=0x08000000, stdout=open(logs / "mariadb.out.log", "w"),
+                     creationflags=NO_WINDOW, stdout=open(logs / "mariadb.out.log", "w"),
                      stderr=subprocess.STDOUT)
     for _ in range(60):
         time.sleep(1)
@@ -111,7 +129,7 @@ class Range:
                                "start; refusing to kill unknown processes")
         logs = ROOT / "logs"
         logs.mkdir(exist_ok=True)
-        flags = 0x08000000  # CREATE_NO_WINDOW
+        flags = NO_WINDOW
         if self.app == "booknook":
             import sys
             js = subprocess.Popen(
@@ -129,14 +147,16 @@ class Range:
                 stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
         else:
             js = subprocess.Popen(
-                ["node", "build/app"], cwd=JUICE, creationflags=flags,
+                ["node", "build/app" if (JUICE / "build" / "app.js").exists() else "app"], cwd=JUICE, creationflags=flags,
                 stdout=open(logs / "juiceshop.out.log", "w"), stderr=open(logs / "juiceshop.err.log", "w"))
         self.procs.append(js)
         if not _wait("http://127.0.0.1:3000", 180):
             self.__exit__(None, None, None)
             raise RuntimeError("Juice Shop did not come up (see logs/juiceshop.*.log)")
         gw = subprocess.Popen(
-            [str(GATEWAY), "-mode", self.mode, "-log", self.log, "-manifest", self.manifest,
+            # -range: the lab's clients are all 127.0.0.1 and tell themselves apart with the aegis_vid cookie.
+            # Never pass it outside the lab: it makes a visitor-chosen cookie the visitor's identity.
+            [str(GATEWAY), "-mode", self.mode, "-log", self.log, "-manifest", self.manifest, "-range",
              *self.extra], cwd=ROOT, creationflags=flags,
             stdout=open(logs / "gateway.out.log", "w"), stderr=open(logs / "gateway.err.log", "w"))
         self.procs.append(gw)

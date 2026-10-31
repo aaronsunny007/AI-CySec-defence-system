@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AEGIS Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* layout: one reading column; a dark terminal card is the only loud object, everything around it stays quiet */
+  --bg: #f3f6f4; --surface: #ffffff; --fg: #16201b; --muted: #55665d; --line: #d6dfd9;
+  --accent: #0a6a5b; --accent-fg: #ffffff; --note-bg: #fff3dc; --note-fg: #6e4300; --good: #0f7a3f;
+  --term-bg: #0b1210; --term-fg: #d0dad4; --term-line: #1d2a25; --t-dim: #72887c; --t-red: #ff7b72;
+  --t-green: #6fdc8c; --t-yellow: #e6c15a; --t-cyan: #56d4dd; --t-blue: #79b8ff;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1411; --surface: #141c18; --fg: #e2ebe6; --muted: #98ada1; --line: #26332d;
+  --accent: #4cc2a8; --accent-fg: #06120e; --note-bg: #2b2210; --note-fg: #efc56e; --good: #5fd48f; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1411; --surface: #141c18; --fg: #e2ebe6; --muted: #98ada1; --line: #26332d;
+  --accent: #4cc2a8; --accent-fg: #06120e; --note-bg: #2b2210; --note-fg: #efc56e; --good: #5fd48f; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--f-body);
+  padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 40px; }
+.wrap > * { min-width: 0; }
+h1 { font: 600 clamp(1.7rem, 4.5vw, 2.4rem)/1.15 var(--f-body); letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+h2 { font: 600 1.15rem/1.3 var(--f-body); margin: 0 0 14px; }
+p { margin: 0 0 12px; max-width: 68ch; }
+.lede { font-size: 1.1rem; color: var(--muted); }
+.kicker { font: 500 0.78rem/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.player { background: var(--term-bg); border: 1px solid var(--term-line); border-radius: 10px; overflow: hidden; min-width: 0; max-width: 100%; }
+.screen { margin: 0; padding: 16px 18px; height: min(62vh, 520px); overflow: auto; color: var(--term-fg);
+  font: 400 clamp(11px, 1.9vw, 13.5px)/1.5 var(--f-mono); white-space: pre; tab-size: 4; max-width: 100%; }
+@media (max-width: 700px) { .screen { white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px; } }
+.b { font-weight: 600; } .d { color: var(--t-dim); }
+.c36 { color: var(--t-cyan); } .c32 { color: var(--t-green); } .c33 { color: var(--t-yellow); } .c31 { color: var(--t-red); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px;
+  border-top: 1px solid var(--term-line); background: #0f1815; color: var(--term-fg); font: 500 0.82rem/1 var(--f-mono); }
+.controls button { font: inherit; color: #06120e; background: #4cc2a8; border: 0; border-radius: 6px; padding: 9px 14px; cursor: pointer; min-width: 5.5rem; }
+.controls button.quiet { background: transparent; color: var(--term-fg); border: 1px solid #2a3a33; min-width: 0; padding: 8px 11px; }
+.controls input[type=range] { flex: 1 1 160px; min-width: 120px; accent-color: #4cc2a8; }
+.time { font-variant-numeric: tabular-nums; color: var(--t-dim); white-space: nowrap; }
+.hint { color: var(--muted); font-size: 0.9rem; margin: 10px 0 0; }
+
+.chapters { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.chapters button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 4.2rem 1fr; gap: 12px; width: 100%;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+.chapters button:hover { background: var(--surface); }
+.chapters button:focus-visible { outline: 2px solid var(--accent); }
+.chapters .t { font: 500 0.85rem/1.6 var(--f-mono); color: var(--accent); font-variant-numeric: tabular-nums; }
+.chapters .h { font-weight: 600; } .chapters .s { display: block; color: var(--muted); font-size: 0.93rem; }
+
+.numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.numbers div { padding: 16px 18px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); margin: 0 -1px -1px 0; min-width: 0; }
+.numbers dt { color: var(--muted); font-size: 0.85rem; margin: 0 0 4px; }
+.numbers dd { margin: 0; font: 600 1.55rem/1.2 var(--f-body); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.numbers dd small { font: 400 0.85rem/1.4 var(--f-body); color: var(--muted); display: block; letter-spacing: 0; }
+.numbers .good dd { color: var(--good); }
+
+.note { background: var(--note-bg); color: var(--note-fg); border-radius: 10px; padding: 18px 20px; }
+.note h2 { color: inherit; } .note ul { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; } .note li { max-width: 70ch; }
+pre.cmd { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 0 0 12px; overflow-x: auto;
+  font: 400 0.88rem/1.6 var(--f-mono); }
+code { font-family: var(--f-mono); font-size: 0.92em; }
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <p class="kicker">AEGIS · autonomous web-app defence</p>
+    <h1>It noticed a password-guessing bot, wrote a rule, tested it on live traffic, and turned it on</h1>
+    <p class="lede">A real 56-second recording. Nobody touches anything after the attack starts.
+    The attack is one the standard rules (OWASP CRS) cannot see, because every request is a normal login.</p>
+  </header>
+
+  <section aria-label="Recording" id="player">
+    <div class="player">
+      <pre class="screen" id="screen" role="img" aria-label="Terminal recording of the AEGIS demo; the chapters below describe it"></pre>
+      <div class="controls">
+        <button type="button" id="play">Replay</button>
+        <button type="button" class="quiet" id="restart" aria-label="Restart from the beginning">Restart</button>
+        <input type="range" id="scrub" min="0" max="100" value="100" aria-label="Position in the recording">
+        <span class="time" id="clock">0:00 / 0:00</span>
+        <button type="button" class="quiet" id="speed" aria-label="Playback speed">1x</button>
+      </div>
+    </div>
+    <p class="hint">Shows the finished run. Press Replay to watch it happen in real time, or jump to a moment below.</p>
+  </section>
+
+  <section>
+    <h2>What you are watching</h2>
+    <ul class="chapters">
+<li><button type="button" data-seek="0.40"><span class="t">0:00</span><span><span class="h">Put AEGIS in front of the app</span><span class="s">It starts in learn mode, which only watches and never blocks anything.</span></span></button></li>
+<li><button type="button" data-seek="1.08"><span class="t">0:01</span><span><span class="h">Let it watch normal traffic</span><span class="s">2,398 requests from 481 ordinary visitors, including odd but legitimate ones like O&#x27;Brien and SELECT * FROM.</span></span></button></li>
+<li><button type="button" data-seek="11.76"><span class="t">0:11</span><span><span class="h">Protection on, then the attack starts</span><span class="s">A bot guesses leaked passwords at about 8 a second. Each request is an ordinary login, so the standard WAF rules see nothing wrong.</span></span></button></li>
+<li><button type="button" data-seek="12.97"><span class="t">0:12</span><span><span class="h">AEGIS spots it in 0.7 s and writes a rule</span><span class="s">A rate limit on the login endpoint, made in 0.01 s. It is not switched on yet.</span></span></button></li>
+<li><button type="button" data-seek="39.39"><span class="t">0:39</span><span><span class="h">The rule proves itself on live traffic, then enforces</span><span class="s">8 s watching only, 12 s blocking a quarter of visitors, then everyone. The bot&#x27;s guesses start coming back stopped.</span></span></button></li>
+<li><button type="button" data-seek="51.90"><span class="t">0:51</span><span><span class="h">The result</span><span class="s">Counted from the run, not written in advance.</span></span></button></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What happened, counted</h2>
+    <dl class="numbers">
+      <div class="good"><dt>Rule enforcing, after the attack began</dt><dd>27 s<small>no human involved</small></dd></div>
+      <div><dt>Password guesses made by the bot</dt><dd>307<small>94 reached the app, 213 were stopped</small></dd></div>
+      <div><dt>Real accounts cracked before the rule landed</dt><dd>2<small>the rule limits the damage, it does not undo it</small></dd></div>
+      <div class="good"><dt>A real user logging in while the rule is live</dt><dd>HTTP 200<small>works</small></dd></div>
+      <div class="good"><dt>Ordinary visitors blocked by an AEGIS rule</dt><dd>0<small>of 8,476 requests</small></dd></div>
+      <div><dt>Other alerts AEGIS looked at</dt><dd>6<small>it made 0 rules for them</small></dd></div>
+    </dl>
+  </section>
+
+  <section class="note">
+    <h2>Read this before you believe it</h2>
+    <ul>
+      <li>It is a small demo shop on one machine, not a production site. The app is BookNook, a deliberately simple target in this repository.</li>
+      <li>The gate's watching windows are shortened to 8 s and 12 s so the demo fits in a minute. The defaults are 30 s and 45 s. Every stage still runs, but a rule is watched for less time before it enforces.</li>
+      <li>This is one recording of one run, and the attack was chosen because the standard rules miss it. AEGIS did not cause the 2 cracked accounts, but it did not prevent them either: the first 94 guesses got through.</li>
+      <li>The testing behind these claims, and the places where AEGIS still falls short (slow attacks, a load balancer that hides client addresses, a gateway that stops), are in <a href="https://github.com/aaronsunny007/AI-CySec-defence-system/blob/main/docs/SECURITY-REVIEW.md" target="_blank" rel="noopener">the security review</a> and <a href="https://github.com/aaronsunny007/AI-CySec-defence-system/blob/main/docs/REMEASURE-2026-10-31.md" target="_blank" rel="noopener">the re-measurement</a>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Run it yourself</h2>
+    <p>Needs Python 3.10 or newer and the gateway built once (<a href="https://github.com/aaronsunny007/AI-CySec-defence-system/blob/main/docs/INSTALL.md" target="_blank" rel="noopener">install</a>). No accounts, no paid services.</p>
+    <pre class="cmd">python demo/run_demo.py</pre>
+    <p>To record your own: <code>python demo/record.py demo/aegis-demo.cast -- python demo/run_demo.py</code>, then <code>python demo/build_page.py demo/aegis-demo.cast demo/aegis-demo.html --standalone</code>.</p>
+  </section>
+</div>
+<script type="application/json" id="cast">
+{"version": 2, "width": 104, "height": 34, "timestamp": 1793426520, "env": {"TERM": "xterm-256color", "SHELL": "/bin/bash"}, "title": "AEGIS in about a minute"}
+[0.389, "o", "\u001b[1mAEGIS: an autonomous defence agent for a web app\u001b[0m   (free, local, open source)\r\nThe app: BookNook, a small shop with a login page, on port 3000.\r\n\r\n\u001b[1;36m[1/5]\u001b[0m \u001b[1mPut AEGIS in front of the app\u001b[0m\r\n\u001b[32m$ aegis init --target http://127.0.0.1:3000 --shadow-s 8 --canary-s 12\u001b[0m\r\n"]
+[0.463, "o", "  wrote aegis.json: protecting http://127.0.0.1:3000 on 127.0.0.1:8080\r\n  next:  aegis doctor   then   aegis learn\r\n\u001b[32m$ aegis learn\u001b[0m\r\n"]
+[1.079, "o", "  LEARN mode: AEGIS is in front of http://127.0.0.1:3000 on http://127.0.0.1:8080  - it never blocks anything.\r\n  Send your normal traffic through that address (real users, your test-suite, a staging copy).\r\n  When `aegis status` shows >= 2000 requests, run: aegis protect\r\n\r\n\u001b[1;36m[2/5]\u001b[0m \u001b[1mLet it watch normal traffic first (it never blocks while learning)\u001b[0m\r\n"]
+[2.586, "o", "  ... 496 requests from ordinary visitors"]
+[2.586, "o", "\r\n"]
+[4.087, "o", "  ... 1,031 requests from ordinary visitors"]
+[4.087, "o", "\r\n"]
+[5.587, "o", "  ... 1,543 requests from ordinary visitors\r\n"]
+[7.087, "o", "  ... 2,072 requests from ordinary visitors\r\n"]
+[8.63, "o", "  ... 2,409 requests from ordinary visitors\r\n"]
+[9.631, "o", "\u001b[32m$ aegis protect\u001b[0m\r\n"]
+[11.759, "o", "  PROTECT mode: gateway enforcing on http://127.0.0.1:8080, controller watching for campaigns.\r\n  Gate evidence: 2398 learned requests from 481 visitors. New rules go shadow -> canary -> enforce, and roll back automatically.\r\n  WARNING: 2.1% of learned requests (51) look like attacks. If that is not normal for your app, learning overlapped an attack: re-learn on trusted traff\r\n  NOTE: gate windows shortened (shadow 8s, canary 12s; defaults 30s/45s). Every stage still runs, but a rule is watched for less time before it enforces\r\n  Watch it with: aegis events -f     Summary: aegis status\r\n\r\n\u001b[1;36m[3/5]\u001b[0m \u001b[1mProtection is on. Now an attack that looks like normal traffic\u001b[0m\r\n  A bot replays leaked passwords against /api/login, ~8 guesses a second.\r\n  Each request is an ordinary login: the standard WAF rules (OWASP CRS) see nothing wrong.\r\n\r\n"]
+[11.771, "o", "\r\n\u001b[1;36m[4/5]\u001b[0m \u001b[1mAEGIS on its own (nobody touches anything now)\u001b[0m"]
+[11.772, "o", "\r\n"]
+[12.173, "o", "\u001b[33m        bot so far: 3 guesses | 3 reached the app | 0 stopped by AEGIS | real accounts found: 0\u001b[0m\r\n"]
+[12.973, "o", "  \u001b[2m+   1s\u001b[0m CAMPAIGN  credential_stuffing by h:f8093b12cb488d55 (8 requests, detected 0.7s after it began)\r\n  \u001b[2m+   1s\u001b[0m gate      candidate aegis-credential_stuffing-1: passed\r\n"]
+[12.973, "o", "  \u001b[2m+   1s\u001b[0m RULE      made aegis-credential_stuffing-1 [fresh] in 0.01s\r\n"]
+[12.973, "o", "  \u001b[2m+   1s\u001b[0m live      aegis-credential_stuffing-1 on real traffic: shadow 8s, then canary 12s at 25%\r\n"]
+[15.375, "o", "\u001b[33m        bot so far: 28 guesses | 28 reached the app | 0 stopped by AEGIS | real accounts found: 1\u001b[0m\r\n"]
+[18.577, "o", "\u001b[33m        bot so far: 53 guesses | 53 reached the app | 0 stopped by AEGIS | real accounts found: 1\u001b[0m\r\n"]
+[21.779, "o", "\u001b[33m        bot so far: 77 guesses | 77 reached the app | 0 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[24.981, "o", "\u001b[33m        bot so far: 102 guesses | 94 reached the app | 8 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[28.183, "o", "\u001b[33m        bot so far: 127 guesses | 94 reached the app | 33 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[31.385, "o", "\u001b[33m        bot so far: 152 guesses | 94 reached the app | 58 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[34.587, "o", "\u001b[33m        bot so far: 177 guesses | 94 reached the app | 83 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[37.789, "o", "\u001b[33m        bot so far: 202 guesses | 94 reached the app | 108 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[39.39, "o", "  \u001b[2m+  27s\u001b[0m live      shadow: PASSED  2042 live requests; suspected FPs 0/1956 (+0 indeterminate, actors with <3 requests) non-campaign requests (al\r\n"]
+[39.39, "o", "  \u001b[2m+  27s\u001b[0m live      canary: PASSED  12s at 25%: no regression; rule blocked 114 requests from actors the observer flags as attackers and 0 from un\r\n  \u001b[2m+  27s\u001b[0m ENFORCED  aegis-credential_stuffing-1 is now blocking\r\n"]
+[40.992, "o", "\u001b[33m        bot so far: 226 guesses | 94 reached the app | 132 stopped by AEGIS | real accounts found: 2\u001b[0m"]
+[40.992, "o", "\r\n"]
+[44.195, "o", "\u001b[33m        bot so far: 251 guesses | 94 reached the app | 157 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[47.397, "o", "\u001b[33m        bot so far: 276 guesses | 94 reached the app | 182 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[50.599, "o", "\u001b[33m        bot so far: 301 guesses | 94 reached the app | 207 stopped by AEGIS | real accounts found: 2\u001b[0m\r\n"]
+[51.9, "o", "\r\n\u001b[1;36m[5/5]\u001b[0m \u001b[1mWhat happened\u001b[0m\r\n"]
+[51.904, "o", "  rule enforcing \u001b[1;32m27s\u001b[0m after the attack began, with no human involved\r\n  the bot made 307 guesses: \u001b[1m94\u001b[0m reached the app, \u001b[1;32m213\u001b[0m were stopped by AEGIS\r\n  real accounts the bot cracked before the rule: 2 (admin@booknook.test, ada@booknook.test)\r\n  a real user logging in while the rule is live: HTTP 200 (works)\r\n  ordinary visitors blocked by an AEGIS rule: \u001b[1;32m0\u001b[0m of 8,476 requests\r\n"]
+[51.904, "o", "  AEGIS also investigated 6 other alerts (ordinary visitors with odd searches, and the bot's side effects) and made \u001b[1m0\u001b[0m rules for them\r\n\u001b[2m\r\n  (gate windows shortened to 8s + 12s for this demo; defaults are 30s + 45s)\u001b[0m\r\n"]
+[51.904, "o", "\u001b[32m$ aegis stop\u001b[0m\r\n"]
+[56.026, "o", "  stopped. (Your app is unchanged and reachable directly - AEGIS only proxied it.)\r\n"]
+</script>
+<script>
+(function () {
+  var cast = document.getElementById('cast').textContent.trim().split('\n').map(function (l) { return JSON.parse(l); });
+  var frames = cast.slice(1).map(function (f) { return { t: f[0], s: f[2] }; });
+  var DUR = frames[frames.length - 1].t + 1;
+  var screen = document.getElementById('screen'), play = document.getElementById('play'), scrub = document.getElementById('scrub'),
+      clock = document.getElementById('clock'), speedBtn = document.getElementById('speed'), restart = document.getElementById('restart');
+  var pos = DUR, playing = false, last = 0, speed = 1, shown = -1;
+  var CLS = { 36: 'c36', 32: 'c32', 33: 'c33', 31: 'c31' };
+
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function toHtml(text) {
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '');
+    var re = /\x1b\[([0-9;]*)m/g, out = '', at = 0, m, st = { b: false, d: false, c: '' };
+    function span(chunk) {
+      if (!chunk) return '';
+      var cl = (st.b ? 'b ' : '') + (st.d ? 'd ' : '') + st.c;
+      return cl.trim() ? '<span class="' + cl.trim() + '">' + esc(chunk) + '</span>' : esc(chunk);
+    }
+    while ((m = re.exec(text))) {
+      out += span(text.slice(at, m.index)); at = re.lastIndex;
+      (m[1] === '' ? ['0'] : m[1].split(';')).forEach(function (c) {
+        c = +c;
+        if (c === 0) { st = { b: false, d: false, c: '' }; } else if (c === 1) { st.b = true; } else if (c === 2) { st.d = true; }
+        else if (c === 22) { st.b = false; st.d = false; } else if (c === 39) { st.c = ''; } else if (CLS[c]) { st.c = CLS[c]; }
+      });
+    }
+    return out + span(text.slice(at));
+  }
+  function upto(t) { var n = 0; while (n < frames.length && frames[n].t <= t) n++; return n; }
+  function draw() {
+    var n = upto(pos);
+    if (n !== shown) {
+      shown = n;
+      screen.innerHTML = toHtml(frames.slice(0, n).map(function (f) { return f.s; }).join(''));
+      screen.scrollTop = screen.scrollHeight;
+    }
+    scrub.value = Math.round(pos * 100);
+    var s = Math.floor(pos), d = Math.floor(DUR);
+    clock.textContent = '0:' + String(s).padStart(2, '0') + ' / 0:' + String(d).padStart(2, '0');
+    play.textContent = playing ? 'Pause' : (pos >= DUR ? 'Replay' : 'Play');
+  }
+  function tick(now) {
+    if (!playing) return;
+    pos = Math.min(DUR, pos + (now - last) / 1000 * speed); last = now;
+    if (pos >= DUR) playing = false;
+    draw();
+    if (playing) requestAnimationFrame(tick);
+  }
+  function start() { if (pos >= DUR) pos = 0; playing = true; last = performance.now(); requestAnimationFrame(tick); draw(); }
+  function stop() { playing = false; draw(); }
+  play.addEventListener('click', function () { playing ? stop() : start(); });
+  restart.addEventListener('click', function () { pos = 0; shown = -1; start(); });
+  speedBtn.addEventListener('click', function () { speed = speed === 1 ? 2 : 1; speedBtn.textContent = speed + 'x'; });
+  scrub.max = Math.round(DUR * 100);
+  scrub.addEventListener('input', function () { pos = scrub.value / 100; draw(); });
+  document.querySelectorAll('[data-seek]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      pos = +b.getAttribute('data-seek'); draw();
+      document.getElementById('player').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  });
+  draw();
+})();
+</script>
+
+</body></html>

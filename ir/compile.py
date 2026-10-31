@@ -64,9 +64,68 @@ def _safe_text(s, what: str, max_len: int) -> None:
         raise IRError(f"{what} contains a control character")
     if '"' in s:
         raise IRError(f"{what} may not contain a double quote")
+    if "%{" in s:
+        # SecRule operator arguments are macro-expanded (%{REQUEST_HEADERS.x}, %{TX.y}): a value
+        # derived from attacker traffic must not read request data back into the rule.
+        raise IRError(f"{what} may not contain a macro expansion")
+    if any(ch in s for ch in "\u2028\u2029\x85"):
+        raise IRError(f"{what} contains a Unicode line separator")
     trailing = len(s) - len(s.rstrip("\\"))
     if trailing % 2 == 1:
         raise IRError(f"{what} ends with an unescaped backslash")
+
+
+# Constructs Python's `re` accepts but Coraza's engine (Go RE2) does not: lookaround, atomic groups,
+# possessive quantifiers, back-references. RE2 is linear-time, which is why the request path can run
+# untrusted-length patterns at all (invariant 8); a pattern it cannot compile would be rejected by the
+# gateway at reload time and wedge the rule store, so refuse it here.
+_NON_RE2_GROUPS = ("(?=", "(?!", "(?<=", "(?<!", "(?>", "(?P=", "(?P>", "(?(")
+
+
+def _unsupported_by_re2(val: str) -> str | None:
+    """Name the first regex construct Go's RE2 lacks, looking only at real syntax: escaped characters
+    and the inside of [...] character classes are skipped (`[*+/-]` is not a possessive quantifier)."""
+    skel: list[str] = []
+    i, n = 0, len(val)
+    while i < n:
+        c = val[i]
+        if c == "\\":
+            if i + 1 < n and val[i + 1] in "123456789":
+                return "back-reference"
+            skel.append("_")
+            i += 2
+        elif c == "[":
+            i += 1
+            if i < n and val[i] == "^":
+                i += 1
+            if i < n and val[i] == "]":      # a leading ] is a literal member
+                i += 1
+            while i < n and val[i] != "]":
+                i += 2 if val[i] == "\\" else 1
+            skel.append("C")
+            i += 1
+        else:
+            skel.append(c)
+            i += 1
+    flat = "".join(skel)
+    for g in _NON_RE2_GROUPS:
+        if g in flat:
+            return f"{g}...)"
+    if re.search(r"[*+?}]\+", flat):
+        return "possessive quantifier"
+    return None
+
+
+def _check_regex(val: str) -> None:
+    try:
+        re.compile(val)
+    except re.error as e:
+        raise IRError(f"match.value is not a valid regex: {e}")
+    bad = _unsupported_by_re2(val)
+    if bad:
+        raise IRError(f"match.value uses {bad}, which the enforcement engine (RE2) does not support")
+    if re.search(val, ""):
+        raise IRError("match.value matches the empty string, i.e. every request")
 
 
 def _require(cond: bool, msg: str) -> None:
@@ -74,15 +133,32 @@ def _require(cond: bool, msg: str) -> None:
         raise IRError(msg)
 
 
+def _in(value, allowed) -> bool:
+    """`value in allowed` that is False (not a TypeError) for unhashable values such as lists/dicts."""
+    return isinstance(value, str) and value in allowed
+
+
 def validate(ir: dict) -> None:
+    """Raise IRError for anything not on the whitelist. Never any other exception: the IR comes from a
+    model, so a wrongly typed field is a rejected candidate, not a crash."""
+    try:
+        _validate(ir)
+    except IRError:
+        raise
+    except (TypeError, ValueError, AttributeError, KeyError, RecursionError) as e:
+        raise IRError(f"malformed IR ({type(e).__name__})") from e
+
+
+def _validate(ir: dict) -> None:
     _require(isinstance(ir, dict), "IR must be an object")
-    _require(bool(_ID_RE.match(ir.get("id", ""))), "id must match aegis-<campaign>-<n>")
-    _require(ir.get("attack_class") in ATTACK_CLASS, f"bad attack_class: {ir.get('attack_class')}")
-    _require(ir.get("mechanism") in MECHANISM, f"bad mechanism: {ir.get('mechanism')}")
+    _require(isinstance(ir.get("id"), str) and bool(_ID_RE.fullmatch(ir["id"])),
+             "id must match aegis-<campaign>-<n>")
+    _require(_in(ir.get("attack_class"), ATTACK_CLASS), f"bad attack_class: {ir.get('attack_class')}")
+    _require(_in(ir.get("mechanism"), MECHANISM), f"bad mechanism: {ir.get('mechanism')}")
     _require(ir.get("action") == "block", "action must be 'block'")
 
     ttl = ir.get("ttl_s", 86400)
-    _require(isinstance(ttl, int) and 60 <= ttl <= 2592000, "ttl_s out of range")
+    _require(isinstance(ttl, int) and not isinstance(ttl, bool) and 60 <= ttl <= 2592000, "ttl_s out of range")
 
     sc = ir.get("scope", {})
     _require(isinstance(sc, dict), "scope must be an object")
@@ -90,34 +166,37 @@ def validate(ir: dict) -> None:
         _require(isinstance(sc["endpoint_prefix"], str) and len(sc["endpoint_prefix"]) <= 200,
                  "bad endpoint_prefix")
         _safe_text(sc["endpoint_prefix"], "endpoint_prefix", 200)
-    for meth in sc.get("methods", []):
-        _require(meth in METHODS, f"bad method: {meth}")
+    methods = sc.get("methods", [])
+    _require(isinstance(methods, list), "scope.methods must be a list")
+    for meth in methods:
+        _require(_in(meth, METHODS), f"bad method: {meth!r}")
 
     # Rate-limit rules are stateful and have no payload match; validate the rate
     # block and the (required) scope instead, then return.
     if ir["mechanism"] == "rate_limit":
         rate = ir.get("rate")
         _require(isinstance(rate, dict), "rate_limit needs a rate block")
-        _require(isinstance(rate.get("count"), int) and rate["count"] >= 1, "rate.count >= 1")
-        _require(isinstance(rate.get("window_s"), int) and rate["window_s"] >= 1, "rate.window_s >= 1")
-        _require(ir.get("key", "actor") in ("actor", "account"), "rate_limit key must be 'actor' or 'account'")
+        _require(isinstance(rate.get("count"), int) and not isinstance(rate["count"], bool)
+                 and rate["count"] >= 1, "rate.count >= 1")
+        _require(isinstance(rate.get("window_s"), int) and not isinstance(rate["window_s"], bool)
+                 and rate["window_s"] >= 1, "rate.window_s >= 1")
+        _require(_in(ir.get("key", "actor"), ("actor", "account")), "rate_limit key must be 'actor' or 'account'")
         _require(bool(sc.get("endpoint_prefix")), "rate_limit needs scope.endpoint_prefix")
         return
 
     m = ir.get("match")
     _require(isinstance(m, dict), "match required")
-    _require(m.get("target") in TARGET, f"bad target: {m.get('target')}")
-    _require(m.get("operator") in OPERATOR, f"bad operator: {m.get('operator')}")
+    _require(_in(m.get("target"), TARGET), f"bad target: {m.get('target')!r}")
+    _require(_in(m.get("operator"), OPERATOR), f"bad operator: {m.get('operator')!r}")
     val = m.get("value")
-    _require(val is not None, "match.value required")
+    _require(isinstance(val, (str, int)) and not isinstance(val, bool), "match.value must be a string or integer")
     _require(len(str(val)) <= 500, "match.value too long")
-    for t in m.get("transformations", []):
-        _require(t in TRANSFORM, f"bad transformation: {t}")
+    transforms = m.get("transformations", [])
+    _require(isinstance(transforms, list), "match.transformations must be a list")
+    for t in transforms:
+        _require(_in(t, TRANSFORM), f"bad transformation: {t!r}")
     if m["operator"] == "rx":
-        try:
-            re.compile(str(val))
-        except re.error as e:
-            raise IRError(f"match.value is not a valid regex: {e}")
+        _check_regex(str(val))
     if m["operator"] in ("gt", "ge"):
         _require(str(val).lstrip("-").isdigit(), "gt/ge value must be numeric")
 
@@ -159,7 +238,7 @@ def _esc(s: str) -> str:
     return str(s)
 
 
-def compile_rule(ir: dict, deny: bool = True) -> str:
+def compile_rule(ir: dict, deny: bool = True, numeric: int | None = None) -> str:
     """Compile validated IR to a Coraza SecRule string.
 
     deny=True  : the rule itself denies (403). Used by the gate's replay tool,
@@ -167,13 +246,19 @@ def compile_rule(ir: dict, deny: bool = True) -> str:
     deny=False : the rule only matches and logs (`pass`). Used for the gateway
                  manifest, where the GATEWAY decides per rule mode
                  (off/shadow/canary/enforce) whether a match blocks.
-    Either way the rule carries tag aegis-rule:<id> so a match is attributable."""
+    Either way the rule carries tag aegis-rule:<id> so a match is attributable.
+
+    numeric: the Coraza id to use instead of the id derived from the IR id. The derived ids are a
+    90,000-slot hash, so two different rules can share one (89 collisions among 3,990 plausible ids)
+    and Coraza refuses a ruleset with a duplicate id; the rule store passes a free one."""
     validate(ir)
     if ir["mechanism"] == "rate_limit":
         raise IRError("rate_limit compilation is deferred to M2b; "
                       "use signature/input_constraint for now")
 
-    rid = numeric_id(ir)
+    rid = numeric_id(ir) if numeric is None else numeric
+    if not 100000 <= rid <= 199999:
+        raise IRError(f"numeric id {rid} outside the AEGIS range 100000-199999")
     m = ir["match"]
     target = TARGET[m["target"]]
     op = OPERATOR[m["operator"]]

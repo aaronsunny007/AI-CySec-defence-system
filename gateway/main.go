@@ -48,9 +48,15 @@ import (
 
 const schemaVersion = 1
 
-// maxBody caps how much request body we buffer and inspect. Larger bodies are
-// forwarded but only the first maxBody bytes are inspected and logged.
-const maxBody = 1 << 20 // 1 MiB
+// defaultMaxBody caps how much request body we buffer and inspect (flag -max-body). A body larger
+// than this cannot be inspected in full; what happens then is the -oversize policy: "reject" (the
+// default, 413) or "pass" (forward uninspected beyond the cap, flagged in the log). It must not be
+// silent: padding a body past the cap used to carry a SQLi payload straight through.
+const defaultMaxBody = 1 << 20 // 1 MiB
+
+// defaultLogBodyMax caps how much of a body is written to the request log (the WAF still sees all of
+// what -max-body allows). Keeps one huge POST from filling the disk.
+const defaultLogBodyMax = 64 << 10
 
 var scoreRE = regexp.MustCompile(`Total Score:\s*(\d+)`)
 
@@ -74,7 +80,13 @@ type Record struct {
 	// observer reconstruct one actor across requests without logging secrets.
 	// NOT a detection signal on its own -- actors are grouped by it, then judged
 	// on behaviour.
-	Session      string   `json:"session"`
+	Session string `json:"session"`
+	// Ident says where Session came from: "vid" (range-only visitor cookie), "auth" (Authorization
+	// header), "cookie" (an app session cookie) or "ip". Everything but "ip" is chosen by the caller, so
+	// an attacker can mint a fresh one per request; the observer uses this to know which actors it can
+	// trust to be one client.
+	Ident        string   `json:"ident,omitempty"`
+	Oversize     bool     `json:"oversize,omitempty"` // body exceeded -max-body
 	Body         string   `json:"body"`
 	BodyLen      int      `json:"body_len"`
 	Status       int      `json:"status"`
@@ -104,7 +116,7 @@ type Record struct {
 
 // gtLabel derives the range-only ground-truth label from the aegis_vid cookie.
 func gtLabel(r *http.Request) string {
-	c, err := r.Cookie("aegis_vid")
+	c, err := r.Cookie("aegis_vid") // caller only invokes this in -range mode
 	if err != nil {
 		return ""
 	}
@@ -129,8 +141,14 @@ type gateway struct {
 	rl      *rateLimiter
 	dropped atomic.Int64
 
+	rangeMode  bool   // honour the lab-only aegis_vid cookie (visitor identity + ground truth)
+	maxBody    int64  // largest body inspected in full
+	oversize   string // "reject" | "pass"
+	logBodyMax int    // bytes of body written to the log
+
 	rs            atomic.Pointer[ruleSet]
 	manifestPath  string
+	hw            int    // highest manifest version ever loaded (persisted in <manifest>.hw)
 	manifestKey   []byte // HMAC key for the signed manifest; nil = unsigned mode
 	adminToken    []byte // bearer token for mutating admin endpoints; nil = none required
 	staticInclude string
@@ -167,24 +185,24 @@ func newWAF(extra string) (coraza.WAF, error) {
 // range's per-client nonce, standing in for distinct source IPs; see
 // docs/DECISIONS.md) wins, then bearer token, then Juice Shop cookies, then the
 // client IP. The raw value is hashed so no token or cookie reaches the log.
-func sessionID(r *http.Request, ip string) string {
+func sessionID(r *http.Request, ip string, rangeMode bool) (id, ident string) {
 	raw := ""
-	if c, err := r.Cookie("aegis_vid"); err == nil && c.Value != "" {
-		raw = "v:" + c.Value
+	if c, err := r.Cookie("aegis_vid"); rangeMode && err == nil && c.Value != "" {
+		raw, ident = "v:"+c.Value, "vid" // lab only: in production this cookie is attacker-chosen like any other
 	} else if a := r.Header.Get("Authorization"); a != "" {
-		raw = "b:" + a
+		raw, ident = "b:"+a, "auth"
 	} else if c, err := r.Cookie("token"); err == nil && c.Value != "" {
-		raw = "t:" + c.Value
+		raw, ident = "t:"+c.Value, "cookie"
 	} else if c, err := r.Cookie("continueCode"); err == nil && c.Value != "" {
-		raw = "c:" + c.Value
+		raw, ident = "c:"+c.Value, "cookie"
 	} else if c, err := r.Cookie("connect.sid"); err == nil && c.Value != "" {
-		raw = "s:" + c.Value
+		raw, ident = "s:"+c.Value, "cookie"
 	}
 	if raw == "" {
-		return "ip:" + ip
+		return "ip:" + ip, "ip"
 	}
 	sum := sha256.Sum256([]byte(raw))
-	return "h:" + hex.EncodeToString(sum[:8])
+	return "h:" + hex.EncodeToString(sum[:8]), ident
 }
 
 func newID() string {
@@ -323,34 +341,51 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ContentType:   r.Header.Get("Content-Type"),
 		CookiePresent: r.Header.Get("Cookie") != "",
 		AuthPresent:   r.Header.Get("Authorization") != "",
-		Session:       sessionID(r, ip),
 		RuleIDs:       []string{},
 		AttackTags:    []string{},
 		Mode:          map[bool]string{true: "enforce", false: "detect"}[g.enforce],
 		RulesVersion:  rs.version,
-		GTLabel:       gtLabel(r),
+	}
+	rec.Session, rec.Ident = sessionID(r, ip, g.rangeMode)
+	if g.rangeMode {
+		rec.GTLabel = gtLabel(r)
 	}
 	bucket := bucketOf(rec.Session)
 	rec.Canary = rs.maxCanary > 0 && bucket < rs.maxCanary
 
-	// Buffer up to maxBody for inspection; stitch the rest back on for the app.
+	// Buffer up to maxBody (+1, to notice an overflow) for inspection; stitch the rest back on for the app.
 	var body []byte
+	oversize := false
 	if r.Body != nil {
 		var err error
-		body, err = io.ReadAll(io.LimitReader(r.Body, maxBody))
+		full, err := io.ReadAll(io.LimitReader(r.Body, g.maxBody+1))
 		if err != nil {
 			rec.FailOpen, rec.FailReason = true, "body read: "+err.Error()
+		}
+		body = full
+		if int64(len(full)) > g.maxBody {
+			body, oversize = full[:g.maxBody], true
 		}
 		r.Body = struct {
 			io.Reader
 			io.Closer
-		}{io.MultiReader(bytes.NewReader(body), r.Body), r.Body}
+		}{io.MultiReader(bytes.NewReader(full), r.Body), r.Body}
 	}
-	rec.Body = string(body)
+	if r.ContentLength > g.maxBody {
+		oversize = true
+	}
+	rec.Oversize = oversize
+	logged := body
+	if len(logged) > g.logBodyMax {
+		logged = logged[:g.logBodyMax]
+	}
+	rec.Body = redactText(string(logged))
+	rec.URI = redactText(rec.URI)
 	rec.BodyLen = len(body)
 	if r.ContentLength > int64(len(body)) {
 		rec.BodyLen = int(r.ContentLength)
 	}
+	rejectOversize := oversize && g.oversize == "reject"
 
 	blockedBy, blockStatus := "", 0
 	apply := func(id string, cfg ManifestRule) {
@@ -382,7 +417,7 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	var it *types.Interruption
-	if !rec.FailOpen {
+	if !rec.FailOpen && !rejectOversize {
 		wafStart := time.Now()
 		var err error
 		var aegisIDs []string
@@ -407,6 +442,11 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	aegisBlocked := blockedBy != ""
 	served := false
 	switch {
+	case rejectOversize:
+		rec.Blocked = true
+		sw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		sw.WriteHeader(http.StatusRequestEntityTooLarge)
+		fmt.Fprintf(sw, "Request body larger than the %d bytes AEGIS can inspect (ref %s)\n", g.maxBody, rec.ID)
 	case aegisBlocked:
 		rec.Blocked = true
 		sw.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -440,17 +480,24 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func writeLogs(path string, in <-chan Record) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+// writeLogs appends records to path, mode 0600 in a 0700 directory (it holds request data). When the
+// file passes maxBytes it is renamed to path+".1" (replacing the previous one) and a fresh file is
+// started, so the log cannot fill the disk.
+func writeLogs(path string, in <-chan Record, maxBytes int64) {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		log.Fatalf("log dir: %v", err)
 	}
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if err != nil {
-		log.Fatalf("open log: %v", err)
+	open := func() (*os.File, *bufio.Writer, *json.Encoder) {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+		if err != nil {
+			log.Fatalf("open log: %v", err)
+		}
+		bw := bufio.NewWriterSize(f, 64<<10)
+		enc := json.NewEncoder(bw)
+		enc.SetEscapeHTML(false)
+		return f, bw, enc
 	}
-	bw := bufio.NewWriterSize(f, 64<<10)
-	enc := json.NewEncoder(bw)
-	enc.SetEscapeHTML(false)
+	f, bw, enc := open()
 	tick := time.NewTicker(500 * time.Millisecond)
 	for {
 		select {
@@ -460,6 +507,15 @@ func writeLogs(path string, in <-chan Record) {
 			}
 		case <-tick.C:
 			_ = bw.Flush()
+			if maxBytes > 0 {
+				if st, err := f.Stat(); err == nil && st.Size() > maxBytes {
+					_ = f.Close()
+					if err := os.Rename(path, path+".1"); err != nil {
+						log.Printf("log rotate: %v", err)
+					}
+					f, bw, enc = open()
+				}
+			}
 		}
 	}
 }
@@ -490,10 +546,21 @@ func main() {
 	rules := flag.String("rules", "", "optional static SecRule file included after CRS (deny-style, always enforced)")
 	rateRulesPath := flag.String("raterules", "", "optional static JSON of rate rules (all enforce)")
 	manifest := flag.String("manifest", "rules/active/manifest.json", "hot-reloadable AEGIS rule manifest (created empty if missing)")
+	rangeMode := flag.Bool("range", false, "LAB ONLY: trust the aegis_vid cookie as visitor identity and ground-truth label. Never in production: an attacker can set it freely")
+	maxBodyFlag := flag.Int64("max-body", defaultMaxBody, "largest request body (bytes) inspected in full")
+	oversize := flag.String("oversize", "reject", "bodies over -max-body: reject (413) | pass (forward, only the first -max-body bytes inspected)")
+	logBodyMax := flag.Int("log-body-max", defaultLogBodyMax, "bytes of request body written to the log")
+	logMaxMB := flag.Int64("log-max-mb", 1024, "rotate the request log to <log>.1 above this size in MiB; 0 = never")
 	flag.Parse()
 
 	if *mode != "enforce" && *mode != "detect" {
 		log.Fatalf("-mode must be enforce or detect")
+	}
+	if *oversize != "reject" && *oversize != "pass" {
+		log.Fatalf("-oversize must be reject or pass")
+	}
+	if *maxBodyFlag < 1 || *logBodyMax < 0 {
+		log.Fatalf("-max-body must be positive and -log-body-max non-negative")
 	}
 	target, err := url.Parse(*backend)
 	if err != nil {
@@ -505,6 +572,13 @@ func main() {
 		rl: newRateLimiter(), manifestPath: *manifest,
 		manifestKey: secretFrom("AEGIS_MANIFEST_KEY"), adminToken: secretFrom("AEGIS_ADMIN_TOKEN"),
 		cnt: map[string]*ruleCounters{}, slices: [2]*sliceStats{newSlice(), newSlice()},
+		rangeMode: *rangeMode, maxBody: *maxBodyFlag, oversize: *oversize, logBodyMax: *logBodyMax,
+	}
+	if *admin != "" && !isLoopbackAddr(*admin) && len(g.adminToken) == 0 {
+		log.Fatalf("-admin %s is not a loopback address and AEGIS_ADMIN_TOKEN is not set: refusing to expose the rule-store API unauthenticated", *admin)
+	}
+	if *rangeMode {
+		log.Printf("WARNING: -range is on: the aegis_vid cookie is trusted as identity. Lab use only.")
 	}
 	if *rules != "" {
 		g.staticInclude = "Include " + filepath.ToSlash(*rules)
@@ -515,6 +589,8 @@ func main() {
 		log.Fatalf("manifest dir: %v", err)
 	}
 	if _, err := os.Stat(*manifest); os.IsNotExist(err) {
+		_ = os.Remove(hwPath(*manifest)) // a deliberate reset (manifest removed) also resets the replay mark
+		_ = os.Remove(goodPath(*manifest))
 		if err := writeManifest(*manifest, Manifest{Version: 1}, g.manifestKey); err != nil {
 			log.Fatalf("create manifest: %v", err)
 		}
@@ -544,8 +620,23 @@ func main() {
 	}
 	log.Printf("rule store: signed manifest %v, admin token %v",
 		len(g.manifestKey) > 0, len(g.adminToken) > 0)
+	g.hw = readHW(*manifest, g.manifestKey)
 	if err := g.reload(); err != nil {
-		log.Fatalf("initial rule load: %v", err)
+		// Do NOT refuse to start: that takes the protected app down because of a bad or tampered rule
+		// file (invariant 1, fail open). First try the last manifest that loaded cleanly; failing that
+		// start with Coraza + CRS only. Say so loudly either way and keep watching the manifest.
+		log.Printf("ERROR: initial rule load failed: %v", err)
+		if err2 := g.restoreLastGood(); err2 == nil {
+			log.Printf("restored the last-good manifest (v%d); the rejected file was replaced", g.rs.Load().version)
+		} else {
+			log.Printf("ERROR: %v. Starting with the OWASP Core Rule Set ONLY and NO AEGIS rules. "+
+				"Restore the manifest (or delete it, to start empty).", err2)
+			base, e3 := buildRuleSet(Manifest{}, g.staticInclude)
+			if e3 != nil {
+				log.Fatalf("cannot build the baseline rule set: %v", e3)
+			}
+			g.rs.Store(base)
+		}
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(target)
@@ -554,7 +645,7 @@ func main() {
 		w.WriteHeader(http.StatusBadGateway)
 	}
 	g.proxy = proxy
-	go writeLogs(*logPath, g.logs)
+	go writeLogs(*logPath, g.logs, *logMaxMB<<20)
 	go g.watchManifest(500 * time.Millisecond)
 	go func() {
 		for range time.Tick(time.Minute) {
@@ -576,4 +667,17 @@ func main() {
 	}
 	log.Printf("AEGIS gateway: %s -> %s  mode=%s  manifest=%s  log=%s", *listen, *backend, *mode, *manifest, *logPath)
 	log.Fatal(srv.ListenAndServe())
+}
+
+// isLoopbackAddr reports whether a listen address binds loopback only.
+func isLoopbackAddr(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	if host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
