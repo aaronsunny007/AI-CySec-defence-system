@@ -42,3 +42,6 @@ data/route_shapes.json
 aegis.json
 .aegis/
 data/learned/
+
+# graphify knowledge-graph output (regenerable)
+graphify-out/
