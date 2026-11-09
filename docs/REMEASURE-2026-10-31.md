@@ -1,5 +1,8 @@
 # Re-measurement after the security review, 2026-10-31
 
+> **Update 2026-11-09:** the 242 false triggers below were caused by the replay driver, not the observer. See
+> [FALSE-TRIGGERS-2026-11-09.md](FALSE-TRIGGERS-2026-11-09.md). The explanation in section 3 below ("traffic mix") was a guess and is superseded.
+
 The review changed two things that can affect the research numbers: the observer's SQL-injection pattern
 (bounded quantifiers) and rule template 3 (one added alternative). This document re-measures the lab on
 the final code, with Juice Shop v20.2.0 (the original version) on Linux, and says plainly what it can and cannot
