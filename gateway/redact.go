@@ -24,10 +24,10 @@ const redacted = "[redacted]"
 
 // injectionSigs mirrors observer/detector.py SIGS (case-insensitive).
 var injectionSigs = map[string]string{
-	"sqli":      `('|%27)[\s)]{0,100}(or|and)\s|union\s+select|('|%27|\))\s*(--|#)|\bselect\b.{1,300}\bfrom\b|sqlite_master`,
+	"sqli":      `('|%27)[\s)]{0,100}(or|and)\s{1,100}\({0,10}('|%27|\d+\s*([=<>]|--|#)|\"?\w+\"?\s*([=<>]|like\b)|\w+\(|not\b|true\b|false\b|null\b)|union\s+select|('|%27|\))\s*(--|#)(\W|$)|\bselect\b.{1,300}\bfrom\b|sqlite_master`,
 	"xss":       `<script|onerror\s*=|onload\s*=|<svg|<iframe|javascript:`,
 	"traversal": `\.\./|\.\.%2f|%2e%2e|/etc/passwd|\.\.\\|%00|%2500`,
-	"cmdi":      `;\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(|` + "`.*`" + `|&&\s*(ping|cat)`,
+	"cmdi":      `;\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(\s*([\w.-]{0,20}/){0,3}(sleep|id|whoami|cat|ls|ping|uname|curl|wget|nc|echo|nslookup|bash|sh|python|perl|env|pwd|hostname)\b|` + "`" + `\s*(sleep|id|whoami|cat|ls|ping|uname|curl|wget|nc|echo|nslookup|bash|sh|python|perl|env|pwd|hostname)\b[^` + "`" + `]{0,100}` + "`" + `|&&\s*(ping|cat)`,
 	"ssrf":      `(https?|file|gopher)://(127\.0\.0\.1|localhost|169\.254\.169\.254|\[::1\]|0\.0\.0\.0)`,
 }
 
