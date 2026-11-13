@@ -9,7 +9,7 @@ Please report privately, not in a public issue.
 1. Use GitHub's private report form: <https://github.com/aaronsunny007/AI-CySec-defence-system/security/advisories/new>.
 2. If that form is not available, open a public issue titled "Security contact request" with **no details**, and I will arrange a private channel.
 
-Include what you found, how to reproduce it, and the commit you tested. I will acknowledge a report within a few days. This is a one-person project, so there is no guaranteed fix time, but real bypasses of the validation gate or the gateway are the highest priority.
+Include what you found, how to reproduce it, and the commit you tested. This is a one-person, spare-time project, so there is no guaranteed response or fix time; I will reply when I can. That said, real bypasses of the validation gate or the gateway are the highest priority.
 
 ## In scope
 

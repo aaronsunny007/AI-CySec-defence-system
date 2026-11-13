@@ -79,7 +79,7 @@ false positives. One closed-loop replicate enforced a rule in all six phases (56
 Not re-measured: the original 443,507-request corpus (a 15,396-request one was regenerated), five replicates, DVWA,
 the second app and the adaptive attacker. The closed-loop run flagged 242 benign actors where the earlier notes report
 7 to 10; the old and new detectors flag exactly the same ones, so it is not a regression from this review, but I did not
-establish why it differs (my best explanation is the traffic mix of the regenerated corpus).
+establish why it differs (my best explanation is the traffic mix of the regenerated corpus). **Later explained:** it was the replay driver's random pseudo-users, see `FALSE-TRIGGERS-2026-11-09.md`.
 
 Other limits: `govulncheck` could not run in the review sandbox (it runs in CI, and found the Go standard-library
 issue fixed in `5f8fb74`). `bandit` ran: its three "High" findings are SHA-1/MD5 used as fingerprints, not for

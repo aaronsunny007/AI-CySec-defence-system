@@ -34,7 +34,7 @@ import rulestore                             # noqa: E402
 from actors import actor_key                 # noqa: E402
 from adaptive import RedAgent                # noqa: E402
 from rangectl import Range, _kill_pid                   # noqa: E402
-from traffic import ReplayDriver             # noqa: E402
+from traffic import ReplayDriver, default_replay_corpus             # noqa: E402
 
 PY = sys.executable
 TECH = {"credential_stuffing": "credential_stuffing", "sqli": "sqli", "command_injection": "cmdi"}
@@ -90,7 +90,7 @@ def run_arm(arm: str, goals: list[str], args) -> dict:
     for f in (log, events_f, stop, db):
         f.unlink(missing_ok=True)
     rulestore.clear()
-    corpus = [f for f in sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) if not f.name.startswith("benign_00")][0]
+    corpus = default_replay_corpus()
     m1 = ROOT / "logs" / "gateway" / "m1_episode.jsonl"
     runs: list[dict] = []
     run_start = time.time()

@@ -26,7 +26,7 @@ application it defends.
 | M2/M3 closed loop (the whole thing, no human) | **done and replicated**: `controller/loop.py` enforced a rule 58-80 s (mean) after a campaign began in 33 of 33 class-runs (5 replicates on Juice Shop, 3 on a second small app, 3 on DVWA), gate corpus of 20,262 distinct benign requests; 0 of 151,726 benign requests blocked on Juice Shop and 0 of 155,444 on the second app, 0 of 40,828 on DVWA; memory speeds the synthesis step by orders of magnitude but not end-to-end time; attacks shorter than the ~1-1.5 minute loop latency are not mitigated | [docs/E2E-RESULTS.md](docs/E2E-RESULTS.md) |
 | Rule-store hardening | HMAC-signed manifest + admin bearer token implemented, unit-tested and **used in every end-to-end run since 2026-10-12**; tamper, unsigned, replay (running and across a restart) and corrupt manifests now **tested live** and refused, with the last-good rules restored | [docs/HARDENING.md](docs/HARDENING.md) |
 | M4 adaptive adversary, induced self-DoS | self-DoS 0.62% -> 0.008% with the gate; real-speed adaptive red agent: requests reaching the app 380 -> 11 of 400 (SQLi), 323 -> 40 (cmdi); credential stuffing slowed (400 -> 267) but not stopped (single runs); a first adaptive run found one real password blocked by the SQLi rule, fixed | [docs/M4-RESULTS.md](docs/M4-RESULTS.md) |
-| Security review (2026-10-31) | attacked the running system and fixed what broke: a padded request body bypassed inspection, rotating the identity hid a campaign from detection, passwords were logged in plaintext, one 60 KB request froze the observer for 43 s, rule-id collisions wedged the rule store, and more. Each fix has a regression test. **Re-measured afterwards:** old and new code behave identically on 15k benign and 590 attack requests; one closed-loop replicate enforced in 6 of 6 phases with 0 of 46,823 benign requests blocked by an AEGIS rule (but 242 false triggers, unexplained, vs 7-10 documented) | [docs/SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md), [docs/REMEASURE-2026-10-31.md](docs/REMEASURE-2026-10-31.md) |
+| Security review (2026-10-31) | attacked the running system and fixed what broke: a padded request body bypassed inspection, rotating the identity hid a campaign from detection, passwords were logged in plaintext, one 60 KB request froze the observer for 43 s, rule-id collisions wedged the rule store, and more. Each fix has a regression test. **Re-measured afterwards:** old and new code behave identically on 15k benign and 590 attack requests; one closed-loop replicate enforced in 6 of 6 phases with 0 of 46,823 benign requests blocked by an AEGIS rule (but 242 false triggers, **since explained**: they were the test driver's random pseudo-users, see [docs/FALSE-TRIGGERS-2026-11-09.md](docs/FALSE-TRIGGERS-2026-11-09.md); with a driver that replays real visitors, 18 per run over 3 replicates, 0 of ~22k benign requests blocked by an AEGIS rule, and 18 is not zero) | [docs/SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md), [docs/REMEASURE-2026-10-31.md](docs/REMEASURE-2026-10-31.md) |
 | Baselines | CRS alone (above) and a static ML-WAF trained on public attack data (`docs/ML-BASELINE.md`): good on classic XSS/SSRF/traversal payloads, 0% on command injection, 37.5% on SQLi and 0% on the behavioural campaigns | [docs/ML-BASELINE.md](docs/ML-BASELINE.md) |
 | M5 write-up | **draft v0.3** (numbers trace to the results files; 15 methodology/engineering errors disclosed) | [docs/PAPER-DRAFT.md](docs/PAPER-DRAFT.md) |
 
@@ -128,10 +128,14 @@ gateway runs in `detect` mode.
 
 ## Limitations (headline ones)
 
-One app (Juice Shop), eight attack classes we wrote, one laptop. Actor
+One main app (Juice Shop; a second small app and DVWA also tested), eight attack
+classes we wrote, one laptop, lab apps only, no outside penetration test. Actor
 reconstruction uses a per-client cookie that stands in for distinct source IPs; a
-real deployment's IP rotation is not handled. Rate limits throttle rather than
-prevent. The manifest and admin API are unauthenticated. See each results file.
+real deployment's IP rotation, `X-Forwarded-For`, and slow-and-low pacing are not
+handled. Rate limits throttle rather than prevent. The manifest is HMAC-signed with a
+shared secret and the admin API needs a bearer token. About 1 in 80 real benign
+visitors is still flagged by the command-injection and SQLi detectors, and a rule born
+from such a false alarm can pass the gate and be enforced. See each results file.
 
 ## Licence
 

@@ -37,7 +37,7 @@ import rulestore                           # noqa: E402
 from actors import actor_key               # noqa: E402
 from client import Actor                   # noqa: E402
 from rangectl import Range, _kill_pid      # noqa: E402
-from traffic import ReplayDriver           # noqa: E402
+from traffic import ReplayDriver, default_replay_corpus           # noqa: E402
 sys.path.insert(0, str(ROOT / "range" / "benign"))
 import diverse                             # noqa: E402
 import threading                           # noqa: E402
@@ -233,7 +233,7 @@ def main() -> int:
     ap.add_argument("--journey-workers", type=int, default=3)
     args = ap.parse_args()
 
-    corpus = [f for f in sorted((ROOT / "data" / "benign_corpus").glob("benign_*detect*.jsonl")) if not f.name.startswith("benign_00")][0]
+    corpus = default_replay_corpus()
     m1 = ROOT / "logs" / "gateway" / "m1_episode.jsonl"
     for f in (LOG, EVENTS, DB, STOP):
         f.unlink(missing_ok=True)

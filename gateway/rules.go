@@ -699,6 +699,8 @@ func (g *gateway) adminMux() http.Handler {
 			http.Error(w, "reload failed: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8") // id echoes the query string: never render as HTML
+		w.Header().Set("X-Content-Type-Options", "nosniff")
 		fmt.Fprintf(w, "%s -> %s\n", id, mode)
 	}
 	mux.HandleFunc("/mode", requireToken(g.adminToken, func(w http.ResponseWriter, r *http.Request) {
