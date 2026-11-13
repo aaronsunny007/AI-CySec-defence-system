@@ -61,3 +61,45 @@ no AEGIS rule blocked a benign request.
   numbers for those were produced with the old driver and are still the published ones.
 * A short unrelated offline check (`driver_artefact_check.py`) ran for about 40 seconds at the start of replicate 2.
 * `bin/gateway.exe` was stale (built before the `-range` flag existed) and was rebuilt from source before these runs.
+
+## 5. Follow-up: tightening the cmdi and sqli signatures (not yet re-run live)
+
+What the 34 flagged real sessions had in common, from `observer/detector.py` run over `benign_diverse_detect.jsonl`:
+
+* **Random passwords.** A password containing a backtick, `$(`, `'#` or `)#` matched once at registration and once at
+  login (same string, two requests), which satisfies `injection_min = 2` on its own. Most of the 34 (I read the first dozen cmdi cases and all six sqli; I did not tabulate every one).
+* **Deliberate hard negatives** in free text: `$(10) off`, `` `code` ``, `' and '`, `select * from happiness`.
+
+Changes (`SIGS` in `observer/detector.py` and the copy in `gateway/redact.go`, kept identical by
+`tests/test_redaction_parity.py`):
+
+* cmdi: `$(` and backticks must be followed by a known command word (`sleep id whoami cat ls ping uname curl wget nc echo nslookup bash sh python perl env pwd hostname`), optionally behind a short path.
+* sqli: a comment marker (`--`, `#`) after a quote or `)` must end a token; `or`/`and` after a quote counts only when SQL follows (a quote, `1=1`, `a=b`, `like`, `f(`, `not/true/false/null`).
+
+Measured by re-scoring stored logs with the new signatures (`python observer/detector.py --log ... --eval`; no new traffic):
+
+| Log | Benign actors flagged, before | after | Attack actors detected, before and after |
+|---|---|---|---|
+| Real visitor sessions (`driver_artefact_check.py`, 2,681 actors) | 34 | **2** | n/a |
+| `e2e.jsonl` (a stored live Juice Shop run) | 18 | **2** | 54/54, p50 0.8 s, unchanged |
+| `dvwa.jsonl` | 2 | **0** | 44/44, unchanged |
+| `app2.jsonl` (second app) | 56 | **23** | 54/54, unchanged |
+| `m1_episode`, `adaptive_closed`, `adaptive_crs` | 0, 6, 1 | 0, 6, 1 | 17/18, 35/36, 3/3, unchanged (same single miss each) |
+
+Caveats:
+
+* **Not a live re-run.** These re-score logs recorded earlier; the controller, gate and enforcement path did not run. The
+  live three-replicate measurement in section 3 has not been repeated with the new signatures.
+* **Recall cost, not measured outside the stored logs.** The observer no longer sees a shell substitution whose command is
+  not in the list (`$(nmap ...)`), or an `or`/`and` injection followed by something other than the shapes above. CRS and the
+  gateway still inspect those requests; only the campaign detector is blinder. The staged campaigns use `| whoami`, `$(sleep 3)`,
+  `` `id` ``, `&& ping` and the SQLi payloads in `data/attack_corpus/payloads.json`, all still matched. Payloads written after
+  these signatures were chosen would be a fair test; I have not run one.
+* **The remaining flags are the generator's own hard negatives.** Both remaining Juice Shop-corpus sessions typed two of
+  them (`select * from happiness`, `' and '`). The generator inserts them at about 1% of tokens, so the residual rate says
+  something about the generator, not about real shoppers.
+* **The e2e leftover traversal flag (13 requests) is unexplained.** It matches the actor behind `aegis-traversal-1`. The
+  traversal signature was not changed, and the same sessions replayed offline produce no traversal flag, so I could not
+  reproduce its cause offline. The gate still has no defence against a rule born from a false alarm.
+* `tests/test_aegis_cli.py` used `' or x` as its "attack-like" request; that no longer matches, so the fixture is now
+  `' or 1=1`.

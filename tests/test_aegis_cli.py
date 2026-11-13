@@ -144,7 +144,7 @@ class Corpus(unittest.TestCase):
         lines = [rec(i, f"h:user{u}", f"/{pages[i]}") for u in range(25) for i in range(5)]
         lines += [rec(i, "h:atk", "/search?q=" + q) for i, q in enumerate(
             ["'%20OR%201=1--", "'%20UNION%20SELECT%20a%20FROM%20b--", "1;%20DROP%20TABLE%20x--", "'%20AND%20SLEEP(5)--"])]
-        lines += [rec(30, "h:oddball", "/search?q=O'Brien%27%20or%20x")]      # one attack-like request, one visit
+        lines += [rec(30, "h:oddball", "/search?q=O'Brien%27%20or%201=1")]      # one attack-like request, one visit
         with tempfile.TemporaryDirectory() as d:
             d = Path(d)
             log = d / "gateway" / "requests.jsonl"

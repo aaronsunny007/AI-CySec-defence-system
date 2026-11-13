@@ -43,11 +43,19 @@ SIGS = {
     # quote or paren). A bare `--` or `1=1` matched ordinary text ("late -- but
     # worth it", "1=1 perfect apples") AND socket.io session ids (which contain
     # `--`): 0.0755% of the 443k benign requests before this change.
-    "sqli": re.compile(r"('|%27)[\s)]{0,100}(or|and)\s|union\s+select|('|%27|\))\s*(--|#)|"
+    # The comment marker must end a token (`(\W|$)`): random passwords like `B'#67..` or `..)#R..` are not a
+    # comment, `admin'--"` is. cmdi `$(` and backticks must start with a known command word: `$(10) off` and
+    # `code` in backticks are prose, `$(sleep 3)` and `id` in backticks are not. The cost is recall: a
+    # command outside the list (`$(nmap ...)`) is not seen by the observer (CRS still inspects it). Go's
+    # regexp has no lookahead, so both copies use only constructs RE2 accepts.
+    # `or`/`and` after a quote counts only when SQL follows (a quote, `1=1`, `a=b`, `like`, `f(`, not/true/false/null):
+    # `'quoted' and "double"` is prose.
+    "sqli": re.compile(r"('|%27)[\s)]{0,100}(or|and)\s{1,100}\({0,10}('|%27|\d+\s*([=<>]|--|#)|\"?\w+\"?\s*([=<>]|like\b)|\w+\(|not\b|true\b|false\b|null\b)|union\s+select|('|%27|\))\s*(--|#)(\W|$)|"
                        r"\bselect\b.{1,300}\bfrom\b|sqlite_master", re.I),
     "xss": re.compile(r"<script|onerror\s*=|onload\s*=|<svg|<iframe|javascript:", re.I),
     "traversal": re.compile(r"\.\./|\.\.%2f|%2e%2e|/etc/passwd|\.\.\\|%00|%2500", re.I),
-    "cmdi": re.compile(r";\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(|`.*`|&&\s*(ping|cat)", re.I),
+    "cmdi": re.compile(r";\s*(cat|id|whoami|ls|ping)\b|\|\s*(whoami|id|cat)\b|\$\(\s*([\w.-]{0,20}/){0,3}(sleep|id|whoami|cat|ls|ping|uname|curl|wget|nc|echo|nslookup|bash|sh|python|perl|env|pwd|hostname)\b|"
+                       r"`\s*(sleep|id|whoami|cat|ls|ping|uname|curl|wget|nc|echo|nslookup|bash|sh|python|perl|env|pwd|hostname)\b[^`]{0,100}`|&&\s*(ping|cat)", re.I),
     "ssrf": re.compile(r"(https?|file|gopher)://(127\.0\.0\.1|localhost|169\.254\.169\.254|\[::1\]|0\.0\.0\.0)", re.I),
 }
 
